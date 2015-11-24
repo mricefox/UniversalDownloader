@@ -30,6 +30,12 @@ public class Entrance {
 
         System.out.println("b:" + 1452 / (1 << 8));
         System.out.println("b:" + 1452 % (1 << 8));
+
+        int a = 3;
+
+        int b_size = 3 + a-- <= 0 ? 0 : 1;
+
+        System.out.println("b_size:" + b_size);
     }
 
     public static void fun() throws CustomException {

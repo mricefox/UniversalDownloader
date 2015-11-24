@@ -1,6 +1,6 @@
 package com.mf.bourne.mfdownloader;
 
-import java.net.HttpURLConnection;
+import java.util.List;
 
 /**
  * Author:zengzifeng email:zeng163mail@163.com
@@ -9,16 +9,19 @@ import java.net.HttpURLConnection;
  */
 public class Download {
     private final String url;
+    private final IDownload iDownload;
 
 //    public final static class Builder {
 //        public
 //    }
 
-    public Download(String url) {
+    public Download(String url, IDownload iDownload) {
         this.url = url;
+        this.iDownload = iDownload;
     }
 
     private SubDownload[] splitDownload() {
+        List<Block> blocks = iDownload.split2Block(iDownload.getRemoteFileLength(url));
         return null;
     }
 

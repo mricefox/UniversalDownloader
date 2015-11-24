@@ -12,7 +12,4 @@ public interface IDownload {
 
     public List<Block> split2Block(long len);
 
-    public static class Block {
-        long startPos, endPos;
-    }
 }

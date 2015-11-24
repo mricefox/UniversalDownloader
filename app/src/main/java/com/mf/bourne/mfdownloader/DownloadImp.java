@@ -33,18 +33,18 @@ public class DownloadImp implements IDownload {
 
     @Override
     public List<Block> split2Block(long len) {
-        final int block_num = 1 << 2;// TODO: 2015/11/24 by zengzifeng block num
+        final int block_num = 1 << 3;// TODO: 2015/11/24 by zengzifeng block num
 
         List<Block> blocks = new ArrayList<>(block_num);
         long size = len / block_num;
-        int re = (int) (len % block_num);
+        int extra = (int) (len % block_num);
         long offset = -1;
 
         for (int i = 0; i < block_num; ++i) {
             Block b = new Block();
             b.startPos = offset + 1;
-            int b_size = size + re-- <= 0 ? 0 : 1;
-            offset = b.endPos = b.startPos + i * b_size - 1;
+            long b_size = size + (extra-- <= 0 ? 0 : 1);
+            offset = b.endPos = b.startPos + b_size - 1;
             blocks.add(b);
         }
         return blocks;

@@ -36,12 +36,12 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         textView.setText("len = " + len);
-                        List<IDownload.Block> blocks = imp.split2Block(15);
+                        List<Block> blocks = imp.split2Block(45678);
                         for (int i = 0; i < blocks.size(); ++i) {
                             Log.d("zzf", "blocks" + i + "s=" + blocks.get(i).startPos + "e=" + blocks.get(i).endPos);
                         }
                     }
-                }, 1000);
+                }, 200);
             }
         }).start();
 
