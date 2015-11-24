@@ -1,5 +1,7 @@
 package com.mf.bourne.mfdownloader;
 
+import java.net.HttpURLConnection;
+
 /**
  * Author:zengzifeng email:zeng163mail@163.com
  * Description:
@@ -14,6 +16,10 @@ public class Download {
 
     public Download(String url) {
         this.url = url;
+    }
+
+    private SubDownload[] splitDownload() {
+        return null;
     }
 
 

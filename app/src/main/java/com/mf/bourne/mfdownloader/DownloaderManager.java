@@ -8,6 +8,11 @@ package com.mf.bourne.mfdownloader;
 public class DownloaderManager {
 
 
+    public DownloaderManager(Configuration configuration) {
+
+    }
+
+
     public long enqueue(Download download) {
 
 

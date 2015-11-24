@@ -1,33 +1,51 @@
 package com.mf.bourne.mfdownloader;
 
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
+import android.os.Handler;
+
+import java.util.List;
 
 /**
  * Author:zengzifeng email:zeng163mail@163.com
  * Description:
  * Date:2015/11/23
  */
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        
-    }
+        final TextView textView = (TextView) findViewById(R.id.text);
 
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                final DownloadImp imp = new DownloadImp();
+
+                final long len = imp.getRemoteFileLength("http://dldir1.qq.com/qqfile/qq/QQ7.8/16379/QQ7.8.exe");
+
+                new Handler(getMainLooper()).postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        textView.setText("len = " + len);
+                        List<IDownload.Block> blocks = imp.split2Block(15);
+                        for (int i = 0; i < blocks.size(); ++i) {
+                            Log.d("zzf", "blocks" + i + "s=" + blocks.get(i).startPos + "e=" + blocks.get(i).endPos);
+                        }
+                    }
+                }, 1000);
+            }
+        }).start();
+
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

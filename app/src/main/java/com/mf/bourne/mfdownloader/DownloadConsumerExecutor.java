@@ -1,5 +1,7 @@
 package com.mf.bourne.mfdownloader;
 
+import java.util.concurrent.Executors;
+
 /**
  * Author:zengzifeng email:zeng163mail@163.com
  * Description:
@@ -10,5 +12,6 @@ public class DownloadConsumerExecutor {
 
     public DownloadConsumerExecutor() {
         threadGroup = new ThreadGroup("DownlaodConsumers");
+
     }
 }
