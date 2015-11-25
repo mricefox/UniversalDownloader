@@ -1,4 +1,4 @@
-package com.mf.bourne.mfdownloader;
+package com.mricefox.mfdownloader.lib;
 
 /**
  * Author:zengzifeng email:zeng163mail@163.com

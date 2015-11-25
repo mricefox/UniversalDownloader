@@ -1,4 +1,4 @@
-package com.mf.bourne.mfdownloader;
+package com.mricefox.mfdownloader.lib;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -12,7 +12,7 @@ import java.util.List;
  * Description:
  * Date:2015/11/24
  */
-public class DownloadImp implements IDownload {
+public abstract class BaseDownloadOperator implements DownloadOperator {
     @Override
     public long getRemoteFileLength(String urlStr) {
         HttpURLConnection connection = null;

@@ -1,13 +1,14 @@
-package com.mf.bourne.mfdownloader;
+package com.mricefox.mfdownloader.sample;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
-import android.os.Handler;
+import com.mricefox.mfdownloader.lib.BaseDownloadOperator;
 
 import java.util.List;
 
@@ -28,22 +29,23 @@ public class MainActivity extends AppCompatActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                final DownloadImp imp = new DownloadImp();
+//                final BaseDownloadOperator imp = new BaseDownloadOperator();
 
-                final long len = imp.getRemoteFileLength("http://dldir1.qq.com/qqfile/qq/QQ7.8/16379/QQ7.8.exe");
+//                final long len = imp.getRemoteFileLength("http://dldir1.qq.com/qqfile/qq/QQ7.8/16379/QQ7.8.exe");
 
                 new Handler(getMainLooper()).postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        textView.setText("len = " + len);
-                        List<Block> blocks = imp.split2Block(45678);
-                        for (int i = 0; i < blocks.size(); ++i) {
-                            Log.d("zzf", "blocks" + i + "s=" + blocks.get(i).startPos + "e=" + blocks.get(i).endPos);
-                        }
+//                        textView.setText("len = " + len);
+//                        List<Block> blocks = imp.split2Block(45678);
+//                        for (int i = 0; i < blocks.size(); ++i) {
+//                            Log.d("zzf", "blocks" + i + "s=" + blocks.get(i).startPos + "e=" + blocks.get(i).endPos);
+//                        }
                     }
                 }, 200);
             }
         }).start();
+
 
     }
 

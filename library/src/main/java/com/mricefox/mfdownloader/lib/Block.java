@@ -1,8 +1,8 @@
-package com.mf.bourne.mfdownloader;
+package com.mricefox.mfdownloader.lib;
 
 /**
  * Created by Bourne on 15/11/25.
  */
-public class Block {
+class Block {
     long startPos, endPos;
 }
