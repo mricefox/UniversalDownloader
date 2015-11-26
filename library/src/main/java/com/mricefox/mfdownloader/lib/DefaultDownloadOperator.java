@@ -12,7 +12,7 @@ import java.util.List;
  * Description:
  * Date:2015/11/24
  */
-public abstract class BaseDownloadOperator implements DownloadOperator {
+public abstract class DefaultDownloadOperator implements DownloadOperator {
     @Override
     public long getRemoteFileLength(String urlStr) {
         HttpURLConnection connection = null;
