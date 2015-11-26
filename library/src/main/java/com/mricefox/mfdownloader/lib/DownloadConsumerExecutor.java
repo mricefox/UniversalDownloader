@@ -1,5 +1,8 @@
 package com.mricefox.mfdownloader.lib;
 
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+
 /**
  * Author:zengzifeng email:zeng163mail@163.com
  * Description:
@@ -7,9 +10,13 @@ package com.mricefox.mfdownloader.lib;
  */
 class DownloadConsumerExecutor {
     private final ThreadGroup threadGroup;
+    private Executor downloadExecutor;
 
     public DownloadConsumerExecutor() {
-        threadGroup = new ThreadGroup("DownlaodConsumers");
-
+        threadGroup = new ThreadGroup("downlaod-consumers");
+//        downloadExecutor = Executors.newSingleThreadExecutor(threadGroup);
+// TODO: 15/11/26  
     }
+
+    
 }

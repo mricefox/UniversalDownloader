@@ -3,14 +3,9 @@ package com.mricefox.mfdownloader.sample;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
-
-import com.mricefox.mfdownloader.lib.BaseDownloadOperator;
-
-import java.util.List;
 
 /**
  * Author:zengzifeng email:zeng163mail@163.com
