@@ -6,15 +6,15 @@ package com.mricefox.mfdownloader.lib;
  * Date:2015/11/23
  */
 public class DownloaderManager {
-
+    private DownloadConsumerExecutor downloadConsumerExecutor;
 
     public DownloaderManager(Configuration configuration) {
-
+        downloadConsumerExecutor =
+                new DownloadConsumerExecutor(configuration.getMaxDownloadNum(), configuration.getDownloadOperator());
     }
 
-
     public long enqueue(Download download) {
-
+        downloadConsumerExecutor.submitDownload(download);
 
         return -1L;
     }

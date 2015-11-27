@@ -1,26 +1,25 @@
 package com.mricefox.mfdownloader.lib;
 
-import java.util.List;
-
 /**
  * Author:zengzifeng email:zeng163mail@163.com
  * Description:
  * Date:2015/11/23
  */
 public class Download {
-    private final String urlStr;
-    private final DownloadOperator downloadOperator;
+    private final String uri;
+    private final String targetFilePath;
 
-    public Download(String urlStr, DownloadOperator downloadOperator) {
-        this.urlStr = urlStr;
-        this.downloadOperator = downloadOperator;
+    public Download(String uri, String targetFilePath) {
+        this.uri = uri;
+        this.targetFilePath = targetFilePath;
     }
 
-    private DownloadConsumer[] splitDownload() {
-        final long fileLength = downloadOperator.getRemoteFileLength(urlStr);
-        List<Block> blocks = downloadOperator.split2Block(fileLength);
-        return null;
+    public String getUri() {
+        return uri;
     }
 
+    public String getTargetFilePath() {
+        return targetFilePath;
+    }
 
 }

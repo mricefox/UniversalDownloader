@@ -1,8 +1,10 @@
 package com.mricefox.mfdownloader.lib;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,29 +14,50 @@ import java.util.List;
  * Description:
  * Date:2015/11/24
  */
-public abstract class DefaultDownloadOperator implements DownloadOperator {
+public class DefaultDownloadOperator implements DownloadOperator {
+    /**
+     * {@value}
+     */
+    public static final int DEFAULT_HTTP_CONNECT_TIMEOUT = 5 * 1000; // milliseconds
+    /**
+     * {@value}
+     */
+    public static final int DEFAULT_HTTP_READ_TIMEOUT = 20 * 1000; // milliseconds
+
+    /**
+     * {@value}
+     */
+    public static final int BUFFER_SIZE = 32 * 1024; // 32 Kb
+
+    /**
+     * {@value}
+     */
+    protected static final int DEFAULT_BLOCK_NUM = 1 << 3;
+
+//    @Override
+//    public long getRemoteFileLength(String urlStr) {
+//        HttpURLConnection connection = null;
+//        try {
+//            URL url = new URL(urlStr);
+//            connection = (HttpURLConnection) url.openConnection();
+//            return connection.getContentLength();
+//        } catch (MalformedURLException e) {
+//            e.printStackTrace();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        } finally {
+//            if (connection != null)
+//                connection.disconnect();
+//        }
+//        return -1;
+//    }
+
     @Override
-    public long getRemoteFileLength(String urlStr) {
-        HttpURLConnection connection = null;
-        try {
-            URL url = new URL(urlStr);
-            connection = (HttpURLConnection) url.openConnection();
-            return connection.getContentLength();
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (connection != null)
-                connection.disconnect();
+    public List<Block> split2Block(long len) throws IllegalArgumentException {
+        if (len < 0) {
+            throw new IllegalArgumentException("Illegal Length");
         }
-        return -1;
-    }
-
-    @Override
-    public List<Block> split2Block(long len) {
-        final int block_num = 1 << 3;// TODO: 2015/11/24 by zengzifeng block num
-
+        final int block_num = DEFAULT_BLOCK_NUM;// TODO: 2015/11/24 by zengzifeng block num
         List<Block> blocks = new ArrayList<>(block_num);
         long size = len / block_num;
         int extra = (int) (len % block_num);
@@ -49,4 +72,52 @@ public abstract class DefaultDownloadOperator implements DownloadOperator {
         }
         return blocks;
     }
+
+    @Override
+    public void downloadBlock(Block block, InputStream is, File targetFile, CopyListener listener, int bufferSize) throws IOException {
+        final byte[] bytes = new byte[bufferSize];
+        int count;
+        int current = 0;
+        RandomAccessFile raf = new RandomAccessFile(targetFile, "rw");
+        raf.seek(block.startPos);
+        is.skip(block.startPos);
+
+        while ((count = is.read(bytes, 0, bufferSize)) != -1
+                && current < block.endPos - block.startPos + 1) {
+            raf.write(bytes, 0, count);
+            current += count;
+        }
+        //should not close InputStream until all downlaod thread finish
+        raf.close();
+    }
+
+
+    @Override
+    public InputStream openStream(String urlStr) throws IOException {
+        HttpURLConnection connection;
+        InputStream stream = null;
+
+        connection = (HttpURLConnection) new URL(urlStr).openConnection();
+        connection.setConnectTimeout(DEFAULT_HTTP_CONNECT_TIMEOUT);
+        connection.setReadTimeout(DEFAULT_HTTP_READ_TIMEOUT);
+
+        if (connection.getResponseCode() == 200)//todo redirectCount
+            stream = connection.getInputStream();
+        return stream;
+    }
+
+    /**
+     * create temp file of download
+     *
+     * @param fileLength
+     * @param fileUri
+     * @throws IOException
+     */
+    @Override
+    public void createFile(long fileLength, String fileUri) throws IOException {
+        RandomAccessFile raf = new RandomAccessFile(fileUri, "rw");
+        raf.setLength(fileLength);
+        raf.close();
+    }
+
 }
