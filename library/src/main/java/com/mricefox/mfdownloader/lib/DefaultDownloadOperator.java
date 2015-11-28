@@ -33,7 +33,7 @@ public class DefaultDownloadOperator implements DownloadOperator {
     /**
      * {@value}
      */
-    protected static final int DEFAULT_BLOCK_NUM = 1 ;
+    protected static final int DEFAULT_BLOCK_NUM = 1<<1;
 
 //    @Override
 //    public long getRemoteFileLength(String urlStr) {
@@ -59,10 +59,15 @@ public class DefaultDownloadOperator implements DownloadOperator {
             throw new IllegalArgumentException("Illegal Length");
         }
         final int block_num = DEFAULT_BLOCK_NUM;// TODO: 2015/11/24 by zengzifeng block num
+
+        /**
+         * e.g. split 15 bytes file into 4 block, each block size is 4, 4, 4, 3 bytes
+         * each block start position and end position is 1-4, 5-8, 9-12, 13-15
+         */
         List<Block> blocks = new ArrayList<>(block_num);
         long size = len / block_num;
         int extra = (int) (len % block_num);
-        long offset = -1;
+        long offset = 0;
 
         for (int i = 0; i < block_num; ++i) {
             Block b = new Block();
@@ -77,18 +82,35 @@ public class DefaultDownloadOperator implements DownloadOperator {
     @Override
     public void downloadBlock(Block block, InputStream is, File targetFile, CopyListener listener, int bufferSize) throws IOException {
         final byte[] bytes = new byte[bufferSize];
-        int count;
+        int count = 0;
         int current = 0;
         RandomAccessFile raf = new RandomAccessFile(targetFile, "rw");
-        raf.seek(block.startPos);
-        is.skip(block.startPos);
+        raf.seek(block.startPos - 1);
+        is.skip(block.startPos - 1);
 
-        while ((count = is.read(bytes, 0, bufferSize)) != -1
-                && current < block.endPos - block.startPos + 1) {
+        long size = block.endPos - block.startPos + 1;
+        long remain = 0;
+
+        while (current < size) {
+            remain = size - current;
+            bufferSize = remain < bufferSize ? (int) remain : bufferSize;
+            if (remain == 0) break;
+            count = is.read(bytes, 0, bufferSize);
+            if (current + count > size) break;
+//            L.d("current:"+current+"count:"+count);
+            L.d("block s:" + block.startPos + " e:" + block.endPos + " buf size:" + bufferSize + " current:" + current + " count:" + count);
             raf.write(bytes, 0, count);
             current += count;
-            L.d("block s:" + block.startPos + " e:" + block.endPos + " current:" + current + " count:" + count);
+//            L.d("block s:" + block.startPos + " e:" + block.endPos + "buf size:" + bufferSize + " current:" + current + " count:" + count);
         }
+
+
+//        while ((count = is.read(bytes, 0, bufferSize)) != -1
+//                && current < block.endPos - block.startPos + 1) {
+//            raf.write(bytes, 0, count);
+//            current += count;
+//            L.d("block s:" + block.startPos + " e:" + block.endPos + " current:" + current + " count:" + count);
+//        }
         //should not close InputStream until all downlaod thread finish
         raf.close();
     }
