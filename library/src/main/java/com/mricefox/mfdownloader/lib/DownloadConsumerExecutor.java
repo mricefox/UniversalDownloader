@@ -56,10 +56,12 @@ class DownloadConsumerExecutor {
 
                 if (is != null) {
                     List<Block> blocks = downloadOperator.split2Block(is.available());
+                    L.d("file size:" + is.available());
                     downloadOperator.createFile(is.available(), download.getTargetFilePath());
                     for (int i = 0, size = blocks.size(); i < size; ++i) {
                         DownloadConsumer consumer =
                                 new DownloadConsumer(targetFile, blocks.get(i), is);
+                        L.d("block pos s:" + blocks.get(i).startPos + " e:" + blocks.get(i).endPos);
                         downloadExecutor.execute(consumer);
                     }
                 } else {

@@ -1,5 +1,6 @@
 package com.mricefox.mfdownloader.lib;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,7 +33,7 @@ public class DefaultDownloadOperator implements DownloadOperator {
     /**
      * {@value}
      */
-    protected static final int DEFAULT_BLOCK_NUM = 1 << 3;
+    protected static final int DEFAULT_BLOCK_NUM = 1 ;
 
 //    @Override
 //    public long getRemoteFileLength(String urlStr) {
@@ -86,6 +87,7 @@ public class DefaultDownloadOperator implements DownloadOperator {
                 && current < block.endPos - block.startPos + 1) {
             raf.write(bytes, 0, count);
             current += count;
+            L.d("block s:" + block.startPos + " e:" + block.endPos + " current:" + current + " count:" + count);
         }
         //should not close InputStream until all downlaod thread finish
         raf.close();
@@ -93,7 +95,7 @@ public class DefaultDownloadOperator implements DownloadOperator {
 
 
     @Override
-    public InputStream openStream(String urlStr) throws IOException {
+    public ContentLengthInputStream openStream(String urlStr) throws IOException {
         HttpURLConnection connection;
         InputStream stream = null;
 
@@ -103,7 +105,9 @@ public class DefaultDownloadOperator implements DownloadOperator {
 
         if (connection.getResponseCode() == 200)//todo redirectCount
             stream = connection.getInputStream();
-        return stream;
+        else
+            throw new IOException("open stream fail with response code " + connection.getResponseCode());
+        return new ContentLengthInputStream(new BufferedInputStream(stream), connection.getContentLength());
     }
 
     /**

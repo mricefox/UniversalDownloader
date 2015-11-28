@@ -60,4 +60,11 @@ public class L {
             Log.e(TAG, createLog(logContent));
         }
     }
+
+    public static void d(String logContent) {
+        if (DEBUG) {
+            getMethodNames(new Throwable().getStackTrace());
+            Log.d(TAG, createLog(logContent));
+        }
+    }
 }
