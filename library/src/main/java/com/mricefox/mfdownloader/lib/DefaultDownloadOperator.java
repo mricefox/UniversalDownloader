@@ -7,6 +7,8 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,7 +35,7 @@ public class DefaultDownloadOperator implements DownloadOperator {
     /**
      * {@value}
      */
-    protected static final int DEFAULT_BLOCK_NUM = 1<<1;
+    protected static final int DEFAULT_BLOCK_NUM = 1 << 1;
 
 //    @Override
 //    public long getRemoteFileLength(String urlStr) {
@@ -86,7 +88,9 @@ public class DefaultDownloadOperator implements DownloadOperator {
         int current = 0;
         RandomAccessFile raf = new RandomAccessFile(targetFile, "rw");
         raf.seek(block.startPos - 1);
-        is.skip(block.startPos - 1);
+        long skip = is.skip(block.startPos - 1);
+
+        L.d("actually skip:" + skip + " skip:" + (block.startPos - 1));
 
         long size = block.endPos - block.startPos + 1;
         long remain = 0;
