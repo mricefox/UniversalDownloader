@@ -16,7 +16,7 @@ public interface DownloadOperator {
 
     List<Block> split2Block(long len) throws IllegalArgumentException;
 
-    void downloadBlock(Block block, String urlStr, File targetFile, CopyListener listener, int bufferSize);
+    void downloadBlock(long downloadId, Block block, String urlStr, File targetFile, BlockDownloadListener listener, int bufferSize);
 
 //    InputStream openStream(String urlStr) throws IOException;
 

@@ -1,5 +1,6 @@
 package com.mricefox.mfdownloader.lib;
 
+import java.io.BufferedInputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
@@ -34,7 +35,7 @@ public class DefaultDownloadOperator implements DownloadOperator {
     /**
      * {@value}
      */
-    protected static final int DEFAULT_BLOCK_NUM = 1 << 3;
+    protected static final int DEFAULT_BLOCK_NUM = 1 << 1;
 
     @Override
     public long getRemoteFileLength(String urlStr) {
@@ -63,8 +64,8 @@ public class DefaultDownloadOperator implements DownloadOperator {
 
     @Override
     public List<Block> split2Block(long len) throws IllegalArgumentException {
-        if (len < 0) {
-            throw new IllegalArgumentException("Illegal Length");
+        if (len <= 0) {
+            throw new IllegalArgumentException("Illegal Length:" + len);
         }
         final int block_num = DEFAULT_BLOCK_NUM;// TODO: 2015/11/24 by zengzifeng block num
 
@@ -79,6 +80,7 @@ public class DefaultDownloadOperator implements DownloadOperator {
 
         for (int i = 0; i < block_num; ++i) {
             Block b = new Block();
+            b.id = i;
             b.startPos = offset + 1;
             long b_size = size + (extra-- <= 0 ? 0 : 1);
             offset = b.endPos = b.startPos + b_size - 1;
@@ -88,7 +90,7 @@ public class DefaultDownloadOperator implements DownloadOperator {
     }
 
     @Override
-    public void downloadBlock(Block block, String urlStr, File targetFile, CopyListener listener, int bufferSize) {
+    public void downloadBlock(long downloadId, Block block, String urlStr, File targetFile, BlockDownloadListener listener, int bufferSize) {
         HttpURLConnection connection = null;
         RandomAccessFile raf = null;
         InputStream is = null;
@@ -104,13 +106,16 @@ public class DefaultDownloadOperator implements DownloadOperator {
             int count = 0;
             int current = 0;
             raf = new RandomAccessFile(targetFile, "rw");
-            raf.seek(block.startPos );
-            is = connection.getInputStream();
+            raf.seek(block.startPos);
+            is = new ContentLengthInputStream(new BufferedInputStream(connection.getInputStream()),
+                    connection.getContentLength());
 
             while ((count = is.read(bytes, 0, bufferSize)) != -1) {
                 raf.write(bytes, 0, count);
                 current += count;
                 L.d("block s:" + block.startPos + " e:" + block.endPos + " buf size:" + bufferSize + " current:" + current + " count:" + count);
+                if (listener != null && !listener.onBytesDownload(downloadId, block.id, current, is.available(), count))
+                    break;
             }
 //            } else {
 //                throw new IOException("open stream fail with response code " + connection.getResponseCode());
@@ -121,6 +126,7 @@ public class DefaultDownloadOperator implements DownloadOperator {
             close(raf);
             close(is);
             if (connection != null) connection.disconnect();
+            if (listener != null) listener.onComplete(downloadId, block.id);
         }
 
 //        long size = block.endPos - block.startPos + 1;

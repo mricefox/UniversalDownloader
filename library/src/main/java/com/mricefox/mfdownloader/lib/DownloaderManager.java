@@ -1,5 +1,7 @@
 package com.mricefox.mfdownloader.lib;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * Author:zengzifeng email:zeng163mail@163.com
  * Description:
@@ -14,8 +16,20 @@ public class DownloaderManager {
     }
 
     public long enqueue(Download download) {
-        downloadConsumerExecutor.submitDownload(download);
+        DownloadWrapper wrapper = new DownloadWrapper();
+        wrapper.download = download;
+        return downloadConsumerExecutor.addDownload(wrapper);
+    }
 
-        return -1L;
+    public void pause(long id) {
+
+    }
+
+    public void resume(long id) {
+
+    }
+
+    public void cancel(long id) {
+
     }
 }

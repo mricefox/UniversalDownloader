@@ -30,6 +30,9 @@ public class MainActivity extends AppCompatActivity {
     private final static String SampleUri1 = "http://dldir1.qq.com/qqfile/qq/QQ7.8/16379/QQ7.8.exe";
     private final static String SampleUri2 = "http://sqdd.myapp.com/myapp/qqteam/AndroidQQ/mobileqq_android.apk";
     private final static String SampleUri3 = "http://file.txtbook.com.cn/20110730/web/down20090411/2015-11/201511271444197407.zip";
+    private final static String SampleUri4 = "http://file.txtbook.com.cn/20110730/web/down20090411/2015-11/201511271438127289.zip";
+    private final static String SampleUri5 = "http://file.txtbook.com.cn/20110730/web/down20090411/2015-11/201511271434586180.zip";
+    private final static String SampleUri6 = "http://file.txtbook.com.cn/20110730/web/down20090411/2015-11/201511271423353240.zip";
     private final static String TargetDir
             = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "tmp";
 
@@ -82,11 +85,17 @@ public class MainActivity extends AppCompatActivity {
                 .build();
         DownloaderManager downloaderManager = new DownloaderManager(configuration);
 
-//        Download download = new Download(SampleUri3, TargetDir + File.separator + "novel.zip");
-        Download download = new Download(SampleUri2, TargetDir + File.separator + "qq.apk");
+        Download download1 = new Download(SampleUri3, TargetDir + File.separator + "novel1.zip");
+        Download download2 = new Download(SampleUri4, TargetDir + File.separator + "novel2.zip");
+        Download download3 = new Download(SampleUri5, TargetDir + File.separator + "novel3.zip");
+        Download download4 = new Download(SampleUri6, TargetDir + File.separator + "novel4.zip");
+//        Download download = new Download(SampleUri2, TargetDir + File.separator + "qq.apk");
 //        Download download = new Download(SampleUri1, TargetDir + File.separator + "qq.exe");
 
-        downloaderManager.enqueue(download);
+        downloaderManager.enqueue(download1);
+        downloaderManager.enqueue(download2);
+        downloaderManager.enqueue(download3);
+        downloaderManager.enqueue(download4);
     }
 
     private class Task implements Runnable {
