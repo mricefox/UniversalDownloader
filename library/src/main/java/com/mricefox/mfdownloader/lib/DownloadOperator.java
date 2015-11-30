@@ -12,13 +12,13 @@ import java.util.List;
  * Date:2015/11/24
  */
 public interface DownloadOperator {
-//    long getRemoteFileLength(String urlStr);
+    long getRemoteFileLength(String urlStr);
 
     List<Block> split2Block(long len) throws IllegalArgumentException;
 
-    void downloadBlock(Block block, InputStream is, File targetFile, CopyListener listener, int bufferSize) throws IOException;
+    void downloadBlock(Block block, String urlStr, File targetFile, CopyListener listener, int bufferSize);
 
-    InputStream openStream(String urlStr) throws IOException;
+//    InputStream openStream(String urlStr) throws IOException;
 
     /**
      * create temp file of download
@@ -27,5 +27,5 @@ public interface DownloadOperator {
      * @param fileUri
      * @throws IOException
      */
-    void createFile(long fileLength, String fileUri) throws IOException;
+    boolean createFile(long fileLength, String fileUri) throws IOException;
 }

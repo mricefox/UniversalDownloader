@@ -83,7 +83,8 @@ public class MainActivity extends AppCompatActivity {
         DownloaderManager downloaderManager = new DownloaderManager(configuration);
 
 //        Download download = new Download(SampleUri3, TargetDir + File.separator + "novel.zip");
-        Download download = new Download(SampleUri3, TargetDir + File.separator + "qq.apk");
+        Download download = new Download(SampleUri2, TargetDir + File.separator + "qq.apk");
+//        Download download = new Download(SampleUri1, TargetDir + File.separator + "qq.exe");
 
         downloaderManager.enqueue(download);
     }

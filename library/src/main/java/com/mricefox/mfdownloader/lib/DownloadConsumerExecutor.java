@@ -2,7 +2,6 @@ package com.mricefox.mfdownloader.lib;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -49,26 +48,27 @@ class DownloadConsumerExecutor {
 
         @Override
         public void run() {
-//            final long fileLength = downloadOperator.getRemoteFileLength(download.getUrlStr());
             try {
-                InputStream is = downloadOperator.openStream(download.getUri());
-                File targetFile = new File(download.getTargetFilePath());
-
-                if (is != null) {
-                    List<Block> blocks = downloadOperator.split2Block(is.available());
-                    L.d("file size:" + is.available());
-                    downloadOperator.createFile(is.available(), download.getTargetFilePath());
+                final long fileLength = downloadOperator.getRemoteFileLength(download.getUri());
+                if (fileLength != -1) {
+                    File targetFile = new File(download.getTargetFilePath());
+                    List<Block> blocks = downloadOperator.split2Block(fileLength);
+                    L.d("file size:" + fileLength);
+                    downloadOperator.createFile(fileLength, download.getTargetFilePath());
                     for (int i = 0, size = blocks.size(); i < size; ++i) {
                         DownloadConsumer consumer =
-                                new DownloadConsumer(targetFile, blocks.get(i), is);
+                                new DownloadConsumer(targetFile, blocks.get(i), download.getUri());
                         L.d("block pos s:" + blocks.get(i).startPos + " e:" + blocks.get(i).endPos);
                         downloadExecutor.execute(consumer);
                     }
                 } else {
-                    L.e("InputStream == null");
+                    L.e("Remote file length = -1");
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
             }
         }
     }
@@ -77,22 +77,18 @@ class DownloadConsumerExecutor {
         //        private Download download;
         private File targetFile;
         private Block block;
-        private InputStream is;
+        private String uri;
 
-        DownloadConsumer(File targetFile, Block block, InputStream is) {
+        DownloadConsumer(File targetFile, Block block, String uri) {
 //            this.download = download;
-            this.is = is;
+            this.uri = uri;
             this.block = block;
             this.targetFile = targetFile;
         }
 
         @Override
         public void run() {
-            try {
-                downloadOperator.downloadBlock(block, is, targetFile, null, DefaultDownloadOperator.BUFFER_SIZE);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            downloadOperator.downloadBlock(block, uri, targetFile, null, DefaultDownloadOperator.BUFFER_SIZE);
         }
     }
 
