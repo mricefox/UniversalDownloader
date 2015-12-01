@@ -35,7 +35,7 @@ public class DefaultDownloadOperator implements DownloadOperator {
     /**
      * {@value}
      */
-    protected static final int DEFAULT_BLOCK_NUM = 1 << 1;
+    protected static final int DEFAULT_BLOCK_NUM = 1 << 2;
 
     @Override
     public long getRemoteFileLength(String urlStr) {
@@ -80,7 +80,7 @@ public class DefaultDownloadOperator implements DownloadOperator {
 
         for (int i = 0; i < block_num; ++i) {
             Block b = new Block();
-            b.id = i;
+            b.index = i;
             b.startPos = offset + 1;
             long b_size = size + (extra-- <= 0 ? 0 : 1);
             offset = b.endPos = b.startPos + b_size - 1;
@@ -113,20 +113,21 @@ public class DefaultDownloadOperator implements DownloadOperator {
             while ((count = is.read(bytes, 0, bufferSize)) != -1) {
                 raf.write(bytes, 0, count);
                 current += count;
-                L.d("block s:" + block.startPos + " e:" + block.endPos + " buf size:" + bufferSize + " current:" + current + " count:" + count);
-                if (listener != null && !listener.onBytesDownload(downloadId, block.id, current, is.available(), count))
+//                L.d("block s:" + block.startPos + " e:" + block.endPos + " buf size:" + bufferSize + " current:" + current + " count:" + count);
+                if (listener != null && !listener.onBytesDownload(downloadId, block.index, current, is.available(), count))
                     break;
             }
+            if (listener != null) listener.onDownloadStop(downloadId, block.index, current);
 //            } else {
 //                throw new IOException("open stream fail with response code " + connection.getResponseCode());
 //            }
         } catch (IOException e) {
             e.printStackTrace();
+            if (listener != null) listener.onDownloadFail(downloadId, block.index);
         } finally {
             close(raf);
             close(is);
             if (connection != null) connection.disconnect();
-            if (listener != null) listener.onComplete(downloadId, block.id);
         }
 
 //        long size = block.endPos - block.startPos + 1;

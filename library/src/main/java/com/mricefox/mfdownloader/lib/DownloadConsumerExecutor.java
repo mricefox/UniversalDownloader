@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -19,8 +19,8 @@ class DownloadConsumerExecutor {
     private int maxDownloadCount;
 
     //    private final Executor initializeExecutor;
-    private final Executor downloadExecutor;
-    private ThreadGroup initDownloadThreadGroup;
+    private final ExecutorService downloadExecutor;
+    //    private ThreadGroup initDownloadThreadGroup;
     //    private BlockingQueue downloadQueue;
     private DownloadOperator downloadOperator;
     private ConcurrentHashMap<Long, DownloadWrapper> runningDownloads;
@@ -40,25 +40,34 @@ class DownloadConsumerExecutor {
     private BlockDownloadListener blockDownloadListener = new BlockDownloadListener() {
 
         @Override
-        public boolean onBytesDownload(long downloadId, int blockId, long current, long total, long bytes) {
+        public boolean onBytesDownload(long downloadId, int blockIndex, long current, long total, long bytesThisStep) {
             final DownloadWrapper wrapper = runningDownloads.get(downloadId);
-            DownloadingListener listener = wrapper.download.getDownloadingListener();
-            long currentBytes = wrapper.currentBytes.addAndGet(bytes);
-            L.d("downloadId:" + downloadId + " current:" + currentBytes + " total:" + wrapper.totalBytes);
-
-            if (listener != null) {
-                listener.onProgressUpdate(downloadId, currentBytes, wrapper.totalBytes.get(), 0);
-            }
-            return wrapper.status.get() != Download.STATUS_PAUSED;
+//            long currentBytes = wrapper.currentBytes.addAndGet(bytesThisStep);
+            wrapper.currentBytes += bytesThisStep;
+//            L.d("downloadId:" + downloadId + " current:" + currentBytes + " total:" + wrapper.totalBytes);
+            fireProgressEvent(wrapper);
+//            return wrapper.status.get() != Download.STATUS_PAUSED;
+            return wrapper.status != Download.STATUS_PAUSED;
         }
 
         @Override
-        public void onComplete(long downloadId, int blockId) {
+        public void onDownloadStop(long downloadId, int blockIndex, long currentBytes) {
             final DownloadWrapper wrapper = runningDownloads.get(downloadId);
-            DownloadingListener listener = wrapper.download.getDownloadingListener();
-            if (wrapper.currentBytes.get() == wrapper.totalBytes.get()) {
-                listener.onComplete(downloadId);
+//            if (wrapper.currentBytes.get() == wrapper.totalBytes.get())
+            if (wrapper.currentBytes == wrapper.totalBytes)
+                fireCompleteEvent(wrapper);
+//            else if (wrapper.status.get() == Download.STATUS_PAUSED) {
+            else if (wrapper.status == Download.STATUS_PAUSED) {
+                //stream I/O loop interrupt by paused
+                wrapper.blocks.get(blockIndex).downloadedBytes = currentBytes;
+                wrapper.blocks.get(blockIndex).stop = true;
+                if (wrapper.allBlockStopped()) firePauseEvent(wrapper);
             }
+        }
+
+        @Override
+        public void onDownloadFail(long downloadId, int blockIndex) {
+
         }
     };
 
@@ -77,16 +86,46 @@ class DownloadConsumerExecutor {
         return true;
     }
 
-    void pauseDownload(long id) {
+    void setDownloadPaused(long id) {
         if (!runningDownloads.containsKey(id))
             throw new IllegalArgumentException("can not pause a not running download");
-        final DownloadWrapper wrapper = runningDownloads.get(downloadId);
-
-        wrapper.status.set(Download.STATUS_PAUSED);
+        final DownloadWrapper wrapper = runningDownloads.get(id);
+//        wrapper.status.set(Download.STATUS_PAUSED);
+        wrapper.status = Download.STATUS_PAUSED;
     }
 
-    private long generateDownloadId() {
+    void resumeDownload(long id) {
+
+    }
+
+    private long generateDownloadId() {// TODO: 2015/12/1
         return downloadId++;
+    }
+
+    private void fireStartEvent(DownloadWrapper wrapper) {
+        DownloadingListener listener = wrapper.download.getDownloadingListener();
+        if (listener != null) listener.onStart(wrapper.id);
+    }
+
+    private void fireFailEvent(DownloadWrapper wrapper) {
+        DownloadingListener listener = wrapper.download.getDownloadingListener();
+        if (listener != null) listener.onFailed(wrapper.id);
+    }
+
+    private void fireProgressEvent(DownloadWrapper wrapper) {
+        DownloadingListener listener = wrapper.download.getDownloadingListener();
+        if (listener != null)
+            listener.onProgressUpdate(wrapper.id, wrapper.currentBytes, wrapper.totalBytes, 0);
+    }
+
+    private void fireCompleteEvent(final DownloadWrapper wrapper) {
+        DownloadingListener listener = wrapper.download.getDownloadingListener();
+        if (listener != null) listener.onComplete(wrapper.id);
+    }
+
+    private void firePauseEvent(final DownloadWrapper wrapper) {
+        DownloadingListener listener = wrapper.download.getDownloadingListener();
+        if (listener != null) listener.onPaused(wrapper.id);
     }
 
     private class InitDownloadTask implements Runnable {
@@ -99,16 +138,21 @@ class DownloadConsumerExecutor {
         @Override
         public void run() {
             //call back on start
-            DownloadingListener listener = wrapper.download.getDownloadingListener();
-            if (listener != null) listener.onStart(wrapper.id);
+            fireStartEvent(wrapper);
             try {
                 initDownload(wrapper);
             } catch (IOException e) {
                 e.printStackTrace();
-                listener.onFailed(wrapper.id);
+                fireFailEvent(wrapper);
+                return;
             } catch (Exception e) {
                 e.printStackTrace();
-                listener.onFailed(wrapper.id);
+                fireFailEvent(wrapper);
+                return;
+            }
+            if (wrapper.status == Download.STATUS_PAUSED) {
+                firePauseEvent(wrapper);
+                return;
             }
             List<Block> blocks = wrapper.blocks;
             for (int i = 0, size = blocks.size(); i < size; ++i) {
@@ -132,7 +176,12 @@ class DownloadConsumerExecutor {
 //                DownloadWrapper wrapper = new DownloadWrapper();
 //                wrapper.download = download;
                     wrapper.blocks = blocks;
-                    wrapper.totalBytes.set(fileLength);
+                    /**
+                     * wrapper blocks access by every thread of download block
+                     */
+//                    wrapper.blocks = Collections.synchronizedList(blocks);
+//                    wrapper.totalBytes.set(fileLength);
+                    wrapper.totalBytes = fileLength;
 //                return wrapper;
                 } else
                     throw new IOException("Create file fail");
@@ -141,29 +190,6 @@ class DownloadConsumerExecutor {
             }
         }
     }
-
-    private interface BlockDispatcher {
-        boolean onProgressUpdate(long total, long current);
-    }
-
-//    private class DownloadWrapper implements BlockDispatcher, BlockDownloadListener {
-//        Download download;
-//        long id;
-//        List<Block> blocks;
-//        long totalBytes;
-//        AtomicLong currentBytes = new AtomicLong(0L);
-//
-//        @Override
-//        public boolean onProgressUpdate(long total, long current) {
-//            return false;
-//        }
-//
-//        @Override
-//        public boolean onBytesCopied(int blockId, long current, long total) {
-//            currentBytes.getAndAdd(current);
-//            return false;
-//        }
-//    }
 
     private class DownloadConsumer implements Runnable {
         private Block block;
@@ -210,6 +236,4 @@ class DownloadConsumerExecutor {
             return t;
         }
     }
-
-
 }

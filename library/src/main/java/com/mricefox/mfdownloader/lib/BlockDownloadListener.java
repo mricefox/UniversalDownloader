@@ -8,13 +8,15 @@ package com.mricefox.mfdownloader.lib;
 interface BlockDownloadListener {
     /**
      * @param downloadId    download id
-     * @param blockId       block id
+     * @param blockIndex    block index
      * @param current       Loaded bytes
      * @param total         Total bytes for loading
-     * @param bytesThisTime bytes count this download
+     * @param bytesThisStep bytes count this download
      * @return <b>true</b> - if copying should be continued; <b>false</b> - if copying should be interrupted
      */
-    boolean onBytesDownload(long downloadId, int blockId, long current, long total, long bytesThisTime);
+    boolean onBytesDownload(long downloadId, int blockIndex, long current, long total, long bytesThisStep);
 
-    void onComplete(long downloadId, int blockId);
+    void onDownloadStop(long downloadId, int blockIndex, long currentBytes);
+
+    void onDownloadFail(long downloadId, int blockIndex);
 }

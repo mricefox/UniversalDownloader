@@ -7,12 +7,16 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.mricefox.mfdownloader.lib.Configuration;
 import com.mricefox.mfdownloader.lib.DefaultDownloadOperator;
 import com.mricefox.mfdownloader.lib.Download;
 import com.mricefox.mfdownloader.lib.DownloaderManager;
+import com.mricefox.mfdownloader.lib.DownloadingListener;
+import com.mricefox.mfdownloader.lib.L;
 
 import java.io.File;
 import java.util.concurrent.Executor;
@@ -36,32 +40,51 @@ public class MainActivity extends AppCompatActivity {
     private final static String TargetDir
             = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "tmp";
 
+    DownloaderManager downloaderManager;
+
+    Download download1 = new Download(SampleUri3, TargetDir + File.separator + "novel1.zip");
+    Download download2 = new Download(SampleUri4, TargetDir + File.separator + "novel2.zip");
+    Download download3 = new Download(SampleUri5, TargetDir + File.separator + "novel3.zip");
+    Download download4 = new Download(SampleUri6, TargetDir + File.separator + "novel4.zip", new DownloadingListener() {
+        @Override
+        public void onStart(long id) {
+            L.d("download id:" + id + "#onStart");
+        }
+
+        @Override
+        public void onComplete(long id) {
+            L.d("download id:" + id + "#onComplete");
+        }
+
+        @Override
+        public void onFailed(long id) {
+            L.d("download id:" + id + "#onFailed");
+        }
+
+        @Override
+        public void onCancelled(long id) {
+            L.d("download id:" + id + "#onCancelled");
+        }
+
+        @Override
+        public void onPaused(long id) {
+            L.d("download id:" + id + "#onPaused");
+        }
+
+        @Override
+        public void onProgressUpdate(long id, long current, long total, long bytesPerSecond) {
+            L.d("download id:" + id + "#onProgressUpdate" + "#current" + current + "#total" + total);
+        }
+    });
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         final TextView textView = (TextView) findViewById(R.id.text);
-
-//        new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                final BaseDownloadOperator imp = new BaseDownloadOperator();
-
-//                final long len = imp.getRemoteFileLength("http://dldir1.qq.com/qqfile/qq/QQ7.8/16379/QQ7.8.exe");
-
-//                new Handler(getMainLooper()).postDelayed(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        textView.setText("len = " + len);
-//                        List<Block> blocks = imp.split2Block(45678);
-//                        for (int i = 0; i < blocks.size(); ++i) {
-//                            Log.d("zzf", "blocks" + i + "s=" + blocks.get(i).startPos + "e=" + blocks.get(i).endPos);
-//                        }
-//                    }
-//                }, 200);
-//            }
-//        }).start();
+        final Button pauseBtn = (Button) findViewById(R.id.pause_btn);
+        final Button retryBtn = (Button) findViewById(R.id.retry_btn);
 
 //        final AtomicInteger n = new AtomicInteger(1);
 
@@ -83,19 +106,34 @@ public class MainActivity extends AppCompatActivity {
                 downloadOperator(new DefaultDownloadOperator()).
                 maxDownloadNum(5)
                 .build();
-        DownloaderManager downloaderManager = new DownloaderManager(configuration);
+        downloaderManager = new DownloaderManager(configuration);
+        pauseBtn.setOnClickListener(callback);
+        retryBtn.setOnClickListener(callback);
 
-        Download download1 = new Download(SampleUri3, TargetDir + File.separator + "novel1.zip");
-        Download download2 = new Download(SampleUri4, TargetDir + File.separator + "novel2.zip");
-        Download download3 = new Download(SampleUri5, TargetDir + File.separator + "novel3.zip");
-        Download download4 = new Download(SampleUri6, TargetDir + File.separator + "novel4.zip");
 //        Download download = new Download(SampleUri2, TargetDir + File.separator + "qq.apk");
 //        Download download = new Download(SampleUri1, TargetDir + File.separator + "qq.exe");
 
-        downloaderManager.enqueue(download1);
-        downloaderManager.enqueue(download2);
-        downloaderManager.enqueue(download3);
-        downloaderManager.enqueue(download4);
+//        downloaderManager.enqueue(download1);
+//        downloaderManager.enqueue(download2);
+//        downloaderManager.enqueue(download3);
+
+    }
+
+    private long d_id = -1;
+    private OnClickEventCallback callback = new OnClickEventCallback();
+
+    class OnClickEventCallback implements View.OnClickListener {
+        @Override
+        public void onClick(View v) {
+            switch (v.getId()) {
+                case R.id.pause_btn:
+                    downloaderManager.pause(d_id);
+                    break;
+                case R.id.retry_btn:
+                    d_id = downloaderManager.enqueue(download4);
+                    break;
+            }
+        }
     }
 
     private class Task implements Runnable {
@@ -115,27 +153,5 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 }

@@ -1,8 +1,6 @@
 package com.mricefox.mfdownloader.lib;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Author:zengzifeng email:zeng163mail@163.com
@@ -13,7 +11,16 @@ public class DownloadWrapper {
     Download download;
     long id;
     List<Block> blocks;
-    AtomicLong totalBytes = new AtomicLong();//muti thread call from blocks download
-    AtomicLong currentBytes = new AtomicLong();//muti thread call from blocks download
-    AtomicInteger status = new AtomicInteger(-1);
+    //    AtomicLong totalBytes = new AtomicLong();//muti thread call from blocks download
+//    AtomicLong currentBytes = new AtomicLong();//muti thread call from blocks download
+//    AtomicInteger status = new AtomicInteger(-1);
+    long totalBytes;
+    long currentBytes;
+    int status;
+
+    boolean allBlockStopped() {
+        for (int i = 0, size = blocks.size(); i < size; ++i)
+            if (!blocks.get(i).stop) return false;
+        return true;
+    }
 }

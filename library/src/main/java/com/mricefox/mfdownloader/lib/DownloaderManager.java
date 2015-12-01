@@ -22,7 +22,7 @@ public class DownloaderManager {
     }
 
     public void pause(long id) {
-
+        downloadConsumerExecutor.setDownloadPaused(id);
     }
 
     public void resume(long id) {
