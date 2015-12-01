@@ -17,8 +17,10 @@ import com.mricefox.mfdownloader.lib.Download;
 import com.mricefox.mfdownloader.lib.DownloaderManager;
 import com.mricefox.mfdownloader.lib.DownloadingListener;
 import com.mricefox.mfdownloader.lib.L;
+import com.mricefox.mfdownloader.lib.XmlPersistence;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -38,9 +40,9 @@ public class MainActivity extends AppCompatActivity {
     private final static String SampleUri5 = "http://file.txtbook.com.cn/20110730/web/down20090411/2015-11/201511271434586180.zip";
     private final static String SampleUri6 = "http://file.txtbook.com.cn/20110730/web/down20090411/2015-11/201511271423353240.zip";
     private final static String TargetDir
-            = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "tmp";
+            = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "temp";
 
-    DownloaderManager downloaderManager;
+//    DownloaderManager downloaderManager;
 
     Download download1 = new Download(SampleUri3, TargetDir + File.separator + "novel1.zip");
     Download download2 = new Download(SampleUri4, TargetDir + File.separator + "novel2.zip");
@@ -106,7 +108,9 @@ public class MainActivity extends AppCompatActivity {
                 downloadOperator(new DefaultDownloadOperator()).
                 maxDownloadNum(5)
                 .build();
-        downloaderManager = new DownloaderManager(configuration);
+//        downloaderManager =  DownloaderManager.getInstance();
+        DownloaderManager.getInstance().init(configuration);
+
         pauseBtn.setOnClickListener(callback);
         retryBtn.setOnClickListener(callback);
 
@@ -127,10 +131,17 @@ public class MainActivity extends AppCompatActivity {
         public void onClick(View v) {
             switch (v.getId()) {
                 case R.id.pause_btn:
-                    downloaderManager.pause(d_id);
+//                    DownloaderManager.getInstance().pause(d_id);
+                    XmlPersistence.getInstance().insert(null);
                     break;
                 case R.id.retry_btn:
-                    d_id = downloaderManager.enqueue(download4);
+//                    d_id = DownloaderManager.getInstance().enqueue(download4);
+                    try {
+                        XmlPersistence.getInstance().init(TargetDir);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
                     break;
             }
         }

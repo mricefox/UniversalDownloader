@@ -15,7 +15,7 @@ public class Download {
     private final String targetFilePath;
     private DownloadingListener downloadingListener;
 
-    private int status = -1;
+//    private int status = -1;
 //    private long id;
 
     public Download(String uri, String targetFilePath) {
