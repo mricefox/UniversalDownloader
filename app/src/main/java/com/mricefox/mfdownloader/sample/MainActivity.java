@@ -2,18 +2,16 @@ package com.mricefox.mfdownloader.sample;
 
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.mricefox.mfdownloader.lib.Block;
 import com.mricefox.mfdownloader.lib.Configuration;
 import com.mricefox.mfdownloader.lib.DefaultDownloadOperator;
 import com.mricefox.mfdownloader.lib.Download;
+import com.mricefox.mfdownloader.lib.DownloadWrapper;
 import com.mricefox.mfdownloader.lib.DownloaderManager;
 import com.mricefox.mfdownloader.lib.DownloadingListener;
 import com.mricefox.mfdownloader.lib.L;
@@ -21,11 +19,8 @@ import com.mricefox.mfdownloader.lib.XmlPersistence;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Author:zengzifeng email:zeng163mail@163.com
@@ -132,7 +127,12 @@ public class MainActivity extends AppCompatActivity {
             switch (v.getId()) {
                 case R.id.pause_btn:
 //                    DownloaderManager.getInstance().pause(d_id);
-                    XmlPersistence.getInstance().insert(null);
+//                    XmlPersistence.getInstance().insert(null);
+                    List<DownloadWrapper> list = dummyDownloads();
+
+                    for(DownloadWrapper wrapper:list){
+                        XmlPersistence.getInstance().insert(wrapper);
+                    }
                     break;
                 case R.id.retry_btn:
 //                    d_id = DownloaderManager.getInstance().enqueue(download4);
@@ -145,6 +145,29 @@ public class MainActivity extends AppCompatActivity {
                     break;
             }
         }
+    }
+
+    private List<DownloadWrapper> dummyDownloads() {
+        List<DownloadWrapper> list = new ArrayList<>();
+
+        for (int i = 0; i < 5; ++i) {
+            DownloadWrapper wrapper = new DownloadWrapper();
+            Download download = new Download("a" + i, "b" + i);
+            wrapper.download = download;
+            wrapper.id = i;
+            List<Block> blocks = new ArrayList<>();
+            for (int j = 0; j < 3; ++j) {
+                Block b = new Block();
+                b.index = j;
+                b.downloadedBytes = j * 3;
+                b.startPos = j * 2;
+                b.endPos = j * 10;
+                blocks.add(b);
+            }
+            wrapper.blocks=blocks;
+            list.add(wrapper);
+        }
+        return list;
     }
 
     private class Task implements Runnable {

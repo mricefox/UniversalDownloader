@@ -5,15 +5,12 @@ import android.util.Xml;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.StringWriter;
 import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -33,8 +30,9 @@ import javax.xml.transform.stream.StreamResult;
  */
 public class XmlPersistence implements Persistence<DownloadWrapper> {
     private final static String XML_FILE_NAME = "mf_download.xml";
-    private final static String ROOT_TAG = "group";
-    private final static String ELEMENT_TAG = "download";
+    private final static String ROOT_TAG = "download_group";
+    private final static String ELEMENT_DOWNLOAD_TAG = "download";
+    private final static String ELEMENT_BLOCK_TAG = "block";
     private static XmlPersistence instance;
     private static File file;
 
@@ -79,10 +77,19 @@ public class XmlPersistence implements Persistence<DownloadWrapper> {
     }
 
     private Element convertEntityToElement(DownloadWrapper wrapper, Document document) {
-        Element element = document.createElement(ELEMENT_TAG);
-        element.setAttribute("id",String.valueOf(wrapper.id));
-
-
+        Element element = document.createElement(ELEMENT_DOWNLOAD_TAG);
+        element.setAttribute("id", String.valueOf(wrapper.id));
+        element.setAttribute("uri", wrapper.download.getUri());
+        element.setAttribute("path", wrapper.download.getTargetFilePath());
+        for (int i = 0, size = wrapper.blocks.size(); i < size; ++i) {
+            Block block = wrapper.blocks.get(i);
+            Element blockElement = document.createElement(ELEMENT_BLOCK_TAG);
+            blockElement.setAttribute("index", String.valueOf(block.index));
+            blockElement.setAttribute("startPos", String.valueOf(block.startPos));
+            blockElement.setAttribute("endPos", String.valueOf(block.endPos));
+            blockElement.setAttribute("downloadedBytes", String.valueOf(block.downloadedBytes));
+            element.appendChild(blockElement);
+        }
         return element;
     }
 
@@ -100,13 +107,10 @@ public class XmlPersistence implements Persistence<DownloadWrapper> {
             DocumentBuilder builder = docFactory.newDocumentBuilder();
             Document document = builder.parse(file);
             Node rootNode = document.getElementsByTagName(ROOT_TAG).item(0);
-
-            Element downloadElement = document.createElement(ELEMENT_TAG);
-            downloadElement.setAttribute("id", "1");
-
+            Element downloadElement = convertEntityToElement(entity, document);
             rootNode.appendChild(downloadElement);
-
             writeBack(document, file);
+            return true;
         } catch (ParserConfigurationException e) {
             e.printStackTrace();
         } catch (SAXException e) {

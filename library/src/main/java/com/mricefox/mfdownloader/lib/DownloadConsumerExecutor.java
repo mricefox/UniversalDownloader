@@ -42,24 +42,22 @@ class DownloadConsumerExecutor {
         @Override
         public boolean onBytesDownload(long downloadId, int blockIndex, long current, long total, long bytesThisStep) {
             final DownloadWrapper wrapper = runningDownloads.get(downloadId);
-//            long currentBytes = wrapper.currentBytes.addAndGet(bytesThisStep);
             wrapper.currentBytes += bytesThisStep;
 //            L.d("downloadId:" + downloadId + " current:" + currentBytes + " total:" + wrapper.totalBytes);
             fireProgressEvent(wrapper);
-//            return wrapper.status.get() != Download.STATUS_PAUSED;
             return wrapper.status != Download.STATUS_PAUSED;
         }
 
         @Override
         public void onDownloadStop(long downloadId, int blockIndex, long currentBytes) {
             final DownloadWrapper wrapper = runningDownloads.get(downloadId);
-//            if (wrapper.currentBytes.get() == wrapper.totalBytes.get())
-            if (wrapper.currentBytes == wrapper.totalBytes)
-                fireCompleteEvent(wrapper);
-//            else if (wrapper.status.get() == Download.STATUS_PAUSED) {
+            Block block = wrapper.blocks.get(blockIndex);
+
+            block.downloadedBytes = currentBytes;
+//            if (block.downloadedBytes == block.endPos - block.startPos + 1) wrapper.blocks.remove(blockIndex);
+            if (wrapper.currentBytes == wrapper.totalBytes) fireCompleteEvent(wrapper);
             else if (wrapper.status == Download.STATUS_PAUSED) {
                 //stream I/O loop interrupt by paused
-                wrapper.blocks.get(blockIndex).downloadedBytes = currentBytes;
                 wrapper.blocks.get(blockIndex).stop = true;
                 if (wrapper.allBlockStopped()) firePauseEvent(wrapper);
             }
