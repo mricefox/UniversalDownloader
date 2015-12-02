@@ -8,19 +8,78 @@ import java.util.List;
  * Date:2015/11/30
  */
 public class DownloadWrapper {
-    public Download download;
-   public long id;
-    public List<Block> blocks;
-    //    AtomicLong totalBytes = new AtomicLong();//muti thread call from blocks download
-//    AtomicLong currentBytes = new AtomicLong();//muti thread call from blocks download
-//    AtomicInteger status = new AtomicInteger(-1);
-    long totalBytes;
-    long currentBytes;
-    int status;
+    private Download download;
+    private long id;
+    private List<Block> blocks;
+    private long totalBytes;
+    private long currentBytes;
+    private int status;
+
+    public DownloadWrapper(Download download, long id, List<Block> blocks, long totalBytes, long currentBytes, int status) {
+        this.download = download;
+        this.id = id;
+        this.blocks = blocks;
+        this.totalBytes = totalBytes;
+        this.currentBytes = currentBytes;
+        this.status = status;
+    }
+
+    public DownloadWrapper(Download download, long id) {
+        this.download = download;
+        this.id = id;
+    }
+
+    public Download getDownload() {
+        return download;
+    }
+
+    public void setDownload(Download download) {
+        this.download = download;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public List<Block> getBlocks() {
+        return blocks;
+    }
+
+    public void setBlocks(List<Block> blocks) {
+        this.blocks = blocks;
+    }
+
+    public long getTotalBytes() {
+        return totalBytes;
+    }
+
+    public void setTotalBytes(long totalBytes) {
+        this.totalBytes = totalBytes;
+    }
+
+    public long getCurrentBytes() {
+        return currentBytes;
+    }
+
+    public void setCurrentBytes(long currentBytes) {
+        this.currentBytes = currentBytes;
+    }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
 
     boolean allBlockStopped() {
         for (int i = 0, size = blocks.size(); i < size; ++i)
-            if (!blocks.get(i).stop) return false;
+            if (!blocks.get(i).isStop()) return false;
         return true;
     }
 }

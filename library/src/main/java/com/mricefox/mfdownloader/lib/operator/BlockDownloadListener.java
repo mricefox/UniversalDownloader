@@ -1,11 +1,11 @@
-package com.mricefox.mfdownloader.lib;
+package com.mricefox.mfdownloader.lib.operator;
 
 /**
  * Author:zengzifeng email:zeng163mail@163.com
  * Description:
  * Date:2015/11/27
  */
-interface BlockDownloadListener {
+public interface BlockDownloadListener {
     /**
      * @param downloadId    download id
      * @param blockIndex    block index

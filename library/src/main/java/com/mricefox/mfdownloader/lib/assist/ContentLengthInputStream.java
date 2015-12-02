@@ -1,4 +1,4 @@
-package com.mricefox.mfdownloader.lib;
+package com.mricefox.mfdownloader.lib.assist;
 
 import java.io.IOException;
 import java.io.InputStream;

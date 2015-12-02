@@ -1,9 +1,9 @@
-package com.mricefox.mfdownloader.lib;
+package com.mricefox.mfdownloader.lib.operator;
+
+import com.mricefox.mfdownloader.lib.Block;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.List;
 
 /**

@@ -1,5 +1,7 @@
 package com.mricefox.mfdownloader.lib;
 
+import com.mricefox.mfdownloader.lib.operator.DownloadOperator;
+
 /**
  * Author:zengzifeng email:zeng163mail@163.com
  * Description:

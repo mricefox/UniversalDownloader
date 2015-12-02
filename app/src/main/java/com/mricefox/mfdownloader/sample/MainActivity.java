@@ -9,13 +9,13 @@ import android.widget.TextView;
 
 import com.mricefox.mfdownloader.lib.Block;
 import com.mricefox.mfdownloader.lib.Configuration;
-import com.mricefox.mfdownloader.lib.DefaultDownloadOperator;
 import com.mricefox.mfdownloader.lib.Download;
 import com.mricefox.mfdownloader.lib.DownloadWrapper;
 import com.mricefox.mfdownloader.lib.DownloaderManager;
 import com.mricefox.mfdownloader.lib.DownloadingListener;
-import com.mricefox.mfdownloader.lib.L;
-import com.mricefox.mfdownloader.lib.XmlPersistence;
+import com.mricefox.mfdownloader.lib.assist.L;
+import com.mricefox.mfdownloader.lib.operator.DefaultDownloadOperator;
+import com.mricefox.mfdownloader.lib.persistence.XmlPersistence;
 
 import java.io.File;
 import java.io.IOException;
@@ -128,11 +128,17 @@ public class MainActivity extends AppCompatActivity {
                 case R.id.pause_btn:
 //                    DownloaderManager.getInstance().pause(d_id);
 //                    XmlPersistence.getInstance().insert(null);
-                    List<DownloadWrapper> list = dummyDownloads();
-
-                    for(DownloadWrapper wrapper:list){
-                        XmlPersistence.getInstance().insert(wrapper);
-                    }
+//                    List<DownloadWrapper> list = dummyDownloads();
+//
+//                    for (DownloadWrapper wrapper : list) {
+//                        XmlPersistence.getInstance().insert(wrapper);
+//                    }
+//                    XmlPersistence.getInstance().update(dummyD());
+//                    DownloadWrapper wrapper = new DownloadWrapper(null, 3);
+//                    long id = XmlPersistence.getInstance().delete(wrapper);
+//                    L.d("delete id:" + id);
+                    List<DownloadWrapper> list = XmlPersistence.getInstance().readAll();
+                    L.d("list:" + list);
                     break;
                 case R.id.retry_btn:
 //                    d_id = DownloaderManager.getInstance().enqueue(download4);
@@ -147,24 +153,30 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private DownloadWrapper dummyD() {
+        Download download = new Download("xxx", "xxx");
+        DownloadWrapper wrapper = new DownloadWrapper(download, 2);
+        List<Block> blocks = new ArrayList<>();
+        for (int j = 0; j < 3; ++j) {
+            Block b = new Block(j + 99, j * 200, j * 10000, j * 50);
+            blocks.add(b);
+        }
+        wrapper.setBlocks(blocks);
+        return wrapper;
+    }
+
     private List<DownloadWrapper> dummyDownloads() {
         List<DownloadWrapper> list = new ArrayList<>();
 
         for (int i = 0; i < 5; ++i) {
-            DownloadWrapper wrapper = new DownloadWrapper();
             Download download = new Download("a" + i, "b" + i);
-            wrapper.download = download;
-            wrapper.id = i;
+            DownloadWrapper wrapper = new DownloadWrapper(download, i);
             List<Block> blocks = new ArrayList<>();
             for (int j = 0; j < 3; ++j) {
-                Block b = new Block();
-                b.index = j;
-                b.downloadedBytes = j * 3;
-                b.startPos = j * 2;
-                b.endPos = j * 10;
+                Block b = new Block(j, j * 2, j * 10, j * 3);
                 blocks.add(b);
             }
-            wrapper.blocks=blocks;
+            wrapper.setBlocks(blocks);
             list.add(wrapper);
         }
         return list;

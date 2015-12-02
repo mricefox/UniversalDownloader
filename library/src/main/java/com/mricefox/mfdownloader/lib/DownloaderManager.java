@@ -27,8 +27,7 @@ public class DownloaderManager {
     }
 
     public long enqueue(Download download) {
-        DownloadWrapper wrapper = new DownloadWrapper();
-        wrapper.download = download;
+        DownloadWrapper wrapper = new DownloadWrapper(download, -1);
         return downloadConsumerExecutor.addDownload(wrapper);
     }
 

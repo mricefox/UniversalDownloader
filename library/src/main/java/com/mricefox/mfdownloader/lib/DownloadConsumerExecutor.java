@@ -1,5 +1,10 @@
 package com.mricefox.mfdownloader.lib;
 
+import com.mricefox.mfdownloader.lib.assist.L;
+import com.mricefox.mfdownloader.lib.operator.BlockDownloadListener;
+import com.mricefox.mfdownloader.lib.operator.DefaultDownloadOperator;
+import com.mricefox.mfdownloader.lib.operator.DownloadOperator;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -42,23 +47,23 @@ class DownloadConsumerExecutor {
         @Override
         public boolean onBytesDownload(long downloadId, int blockIndex, long current, long total, long bytesThisStep) {
             final DownloadWrapper wrapper = runningDownloads.get(downloadId);
-            wrapper.currentBytes += bytesThisStep;
+            wrapper.setCurrentBytes(wrapper.getCurrentBytes() + bytesThisStep);
 //            L.d("downloadId:" + downloadId + " current:" + currentBytes + " total:" + wrapper.totalBytes);
             fireProgressEvent(wrapper);
-            return wrapper.status != Download.STATUS_PAUSED;
+            return wrapper.getStatus() != Download.STATUS_PAUSED;
         }
 
         @Override
         public void onDownloadStop(long downloadId, int blockIndex, long currentBytes) {
             final DownloadWrapper wrapper = runningDownloads.get(downloadId);
-            Block block = wrapper.blocks.get(blockIndex);
+            Block block = wrapper.getBlocks().get(blockIndex);
 
-            block.downloadedBytes = currentBytes;
+            block.setDownloadedBytes(currentBytes);
 //            if (block.downloadedBytes == block.endPos - block.startPos + 1) wrapper.blocks.remove(blockIndex);
-            if (wrapper.currentBytes == wrapper.totalBytes) fireCompleteEvent(wrapper);
-            else if (wrapper.status == Download.STATUS_PAUSED) {
+            if (wrapper.getCurrentBytes() == wrapper.getTotalBytes()) fireCompleteEvent(wrapper);
+            else if (wrapper.getStatus() == Download.STATUS_PAUSED) {
                 //stream I/O loop interrupt by paused
-                wrapper.blocks.get(blockIndex).stop = true;
+                wrapper.getBlocks().get(blockIndex).setStop(true);
                 if (wrapper.allBlockStopped()) firePauseEvent(wrapper);
             }
         }
@@ -73,7 +78,7 @@ class DownloadConsumerExecutor {
         if (!checkCanAdd()) return -1;
         InitDownloadTask initDownloadTask = new InitDownloadTask(wrapper);
         long id = generateDownloadId();
-        wrapper.id = id;
+        wrapper.setId(id);
         downloadExecutor.execute(initDownloadTask);
         runningDownloads.put(id, wrapper);
         return id;
@@ -89,7 +94,7 @@ class DownloadConsumerExecutor {
             throw new IllegalArgumentException("can not pause a not running download");
         final DownloadWrapper wrapper = runningDownloads.get(id);
 //        wrapper.status.set(Download.STATUS_PAUSED);
-        wrapper.status = Download.STATUS_PAUSED;
+        wrapper.setStatus(Download.STATUS_PAUSED);
     }
 
     void resumeDownload(long id) {
@@ -101,29 +106,29 @@ class DownloadConsumerExecutor {
     }
 
     private void fireStartEvent(DownloadWrapper wrapper) {
-        DownloadingListener listener = wrapper.download.getDownloadingListener();
-        if (listener != null) listener.onStart(wrapper.id);
+        DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
+        if (listener != null) listener.onStart(wrapper.getId());
     }
 
     private void fireFailEvent(DownloadWrapper wrapper) {
-        DownloadingListener listener = wrapper.download.getDownloadingListener();
-        if (listener != null) listener.onFailed(wrapper.id);
+        DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
+        if (listener != null) listener.onFailed(wrapper.getId());
     }
 
     private void fireProgressEvent(DownloadWrapper wrapper) {
-        DownloadingListener listener = wrapper.download.getDownloadingListener();
+        DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
         if (listener != null)
-            listener.onProgressUpdate(wrapper.id, wrapper.currentBytes, wrapper.totalBytes, 0);
+            listener.onProgressUpdate(wrapper.getId(), wrapper.getCurrentBytes(), wrapper.getTotalBytes(), 0);
     }
 
     private void fireCompleteEvent(final DownloadWrapper wrapper) {
-        DownloadingListener listener = wrapper.download.getDownloadingListener();
-        if (listener != null) listener.onComplete(wrapper.id);
+        DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
+        if (listener != null) listener.onComplete(wrapper.getId());
     }
 
     private void firePauseEvent(final DownloadWrapper wrapper) {
-        DownloadingListener listener = wrapper.download.getDownloadingListener();
-        if (listener != null) listener.onPaused(wrapper.id);
+        DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
+        if (listener != null) listener.onPaused(wrapper.getId());
     }
 
     private class InitDownloadTask implements Runnable {
@@ -148,38 +153,38 @@ class DownloadConsumerExecutor {
                 fireFailEvent(wrapper);
                 return;
             }
-            if (wrapper.status == Download.STATUS_PAUSED) {
+            if (wrapper.getStatus() == Download.STATUS_PAUSED) {
                 firePauseEvent(wrapper);
                 return;
             }
-            List<Block> blocks = wrapper.blocks;
+            List<Block> blocks = wrapper.getBlocks();
             for (int i = 0, size = blocks.size(); i < size; ++i) {
                 final Block block = blocks.get(i);
-                DownloadConsumer consumer = new DownloadConsumer(wrapper.download.getUri(),
-                        wrapper.download.getTargetFilePath(), block, wrapper.id);
-                L.d("init block pos s:" + block.startPos + "#e:" + block.endPos);
+                DownloadConsumer consumer = new DownloadConsumer(wrapper.getDownload().getUri(),
+                        wrapper.getDownload().getTargetFilePath(), block, wrapper.getId());
+                L.d("init block pos s:" + block.getStartPos() + "#e:" + block.getEndPos());
                 downloadExecutor.execute(consumer);
             }
         }
 
         void initDownload(DownloadWrapper wrapper) throws IOException {
-            final long fileLength = downloadOperator.getRemoteFileLength(wrapper.download.getUri());
+            final long fileLength = downloadOperator.getRemoteFileLength(wrapper.getDownload().getUri());
             if (fileLength != -1) {
 //            File targetFile = new File(download.getTargetFilePath());
                 List<Block> blocks = downloadOperator.split2Block(fileLength);
                 L.d("file size:" + fileLength);
-                if (downloadOperator.createFile(fileLength, wrapper.download.getTargetFilePath()))
+                if (downloadOperator.createFile(fileLength, wrapper.getDownload().getTargetFilePath()))
 //                return new Pair<>(targetFile, blocks);
                 {
 //                DownloadWrapper wrapper = new DownloadWrapper();
 //                wrapper.download = download;
-                    wrapper.blocks = blocks;
+                    wrapper.setBlocks(blocks);
                     /**
                      * wrapper blocks access by every thread of download block
                      */
 //                    wrapper.blocks = Collections.synchronizedList(blocks);
 //                    wrapper.totalBytes.set(fileLength);
-                    wrapper.totalBytes = fileLength;
+                    wrapper.setTotalBytes(fileLength);
 //                return wrapper;
                 } else
                     throw new IOException("Create file fail");

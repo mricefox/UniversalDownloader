@@ -1,4 +1,4 @@
-package com.mricefox.mfdownloader.lib;
+package com.mricefox.mfdownloader.lib.persistence;
 
 import java.util.List;
 
@@ -10,7 +10,9 @@ import java.util.List;
 public interface Persistence<T> {
     List<T> readAll();
 
-    boolean insert(T entity);
+    long insert(T entity);
 
     long update(T entity);
+
+    long delete(T entity);
 }

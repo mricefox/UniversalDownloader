@@ -1,4 +1,8 @@
-package com.mricefox.mfdownloader.lib;
+package com.mricefox.mfdownloader.lib.operator;
+
+import com.mricefox.mfdownloader.lib.Block;
+import com.mricefox.mfdownloader.lib.assist.ContentLengthInputStream;
+import com.mricefox.mfdownloader.lib.assist.L;
 
 import java.io.BufferedInputStream;
 import java.io.Closeable;
@@ -79,11 +83,10 @@ public class DefaultDownloadOperator implements DownloadOperator {
         long offset = -1;
 
         for (int i = 0; i < block_num; ++i) {
-            Block b = new Block();
-            b.index = i;
-            b.startPos = offset + 1;
+            Block b = new Block(1, offset + 1, 0, 0);
             long b_size = size + (extra-- <= 0 ? 0 : 1);
-            offset = b.endPos = b.startPos + b_size - 1;
+            offset = b.getStartPos() + b_size - 1;
+            b.setEndPos(offset);
             blocks.add(b);
         }
         return blocks;
@@ -99,14 +102,14 @@ public class DefaultDownloadOperator implements DownloadOperator {
             connection = (HttpURLConnection) new URL(urlStr).openConnection();
             connection.setConnectTimeout(DEFAULT_HTTP_CONNECT_TIMEOUT);
             connection.setReadTimeout(DEFAULT_HTTP_READ_TIMEOUT);
-            connection.setRequestProperty("RANGE", "bytes=" + block.startPos + "-" + block.endPos);
+            connection.setRequestProperty("RANGE", "bytes=" + block.getStartPos() + "-" + block.getEndPos());
 
 //            if (connection.getResponseCode() == 200) {
             final byte[] bytes = new byte[bufferSize];
             int count = 0;
             int current = 0;
             raf = new RandomAccessFile(targetFile, "rw");
-            raf.seek(block.startPos);
+            raf.seek(block.getStartPos());
             is = new ContentLengthInputStream(new BufferedInputStream(connection.getInputStream()),
                     connection.getContentLength());
 
@@ -114,16 +117,16 @@ public class DefaultDownloadOperator implements DownloadOperator {
                 raf.write(bytes, 0, count);
                 current += count;
 //                L.d("block s:" + block.startPos + " e:" + block.endPos + " buf size:" + bufferSize + " current:" + current + " count:" + count);
-                if (listener != null && !listener.onBytesDownload(downloadId, block.index, current, is.available(), count))
+                if (listener != null && !listener.onBytesDownload(downloadId, block.getIndex(), current, is.available(), count))
                     break;
             }
-            if (listener != null) listener.onDownloadStop(downloadId, block.index, current);
+            if (listener != null) listener.onDownloadStop(downloadId, block.getIndex(), current);
 //            } else {
 //                throw new IOException("open stream fail with response code " + connection.getResponseCode());
 //            }
         } catch (IOException e) {
             e.printStackTrace();
-            if (listener != null) listener.onDownloadFail(downloadId, block.index);
+            if (listener != null) listener.onDownloadFail(downloadId, block.getIndex());
         } finally {
             close(raf);
             close(is);
