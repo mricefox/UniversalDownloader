@@ -82,32 +82,23 @@ public class MainActivity extends AppCompatActivity {
         final TextView textView = (TextView) findViewById(R.id.text);
         final Button pauseBtn = (Button) findViewById(R.id.pause_btn);
         final Button retryBtn = (Button) findViewById(R.id.retry_btn);
+        final Button resumeBtn = (Button) findViewById(R.id.resume_btn);
 
-//        final AtomicInteger n = new AtomicInteger(1);
-
-//        final Executor executor = Executors.newCachedThreadPool();
-//        final Executor executor = new ThreadPoolExecutor(1,5,5000,TimeUnit.MILLISECONDS,);
-//        final Executor executor = Executors.newFixedThreadPool(2);
-
-//        for (int i = 0; i < 5; ++i)
-//            executor.execute(new Task(n.getAndIncrement()));
-
-//        Executors.newSingleThreadScheduledExecutor().schedule(new Runnable() {
-//            @Override
-//            public void run() {
-//                executor.execute(new Task(n.getAndIncrement()));
-//            }
-//        }, 5000, TimeUnit.MILLISECONDS);
-
+        try {
+            XmlPersistence.getInstance().init(TargetDir);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         Configuration configuration = new Configuration.Builder().
                 downloadOperator(new DefaultDownloadOperator()).
-                maxDownloadNum(5)
+                maxDownloadNum(5).persistence(XmlPersistence.getInstance())
                 .build();
 //        downloaderManager =  DownloaderManager.getInstance();
         DownloaderManager.getInstance().init(configuration);
 
         pauseBtn.setOnClickListener(callback);
         retryBtn.setOnClickListener(callback);
+        resumeBtn.setOnClickListener(callback);
 
 //        Download download = new Download(SampleUri2, TargetDir + File.separator + "qq.apk");
 //        Download download = new Download(SampleUri1, TargetDir + File.separator + "qq.exe");
@@ -115,6 +106,7 @@ public class MainActivity extends AppCompatActivity {
 //        downloaderManager.enqueue(download1);
 //        downloaderManager.enqueue(download2);
 //        downloaderManager.enqueue(download3);
+
 
     }
 
@@ -126,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
         public void onClick(View v) {
             switch (v.getId()) {
                 case R.id.pause_btn:
-//                    DownloaderManager.getInstance().pause(d_id);
+                    DownloaderManager.getInstance().pause(d_id);
 //                    XmlPersistence.getInstance().insert(null);
 //                    List<DownloadWrapper> list = dummyDownloads();
 //
@@ -137,17 +129,19 @@ public class MainActivity extends AppCompatActivity {
 //                    DownloadWrapper wrapper = new DownloadWrapper(null, 3);
 //                    long id = XmlPersistence.getInstance().delete(wrapper);
 //                    L.d("delete id:" + id);
-                    List<DownloadWrapper> list = XmlPersistence.getInstance().readAll();
-                    L.d("list:" + list);
+//                    List<DownloadWrapper> list = XmlPersistence.getInstance().readAll();
+//                    L.d("list:" + list);
                     break;
                 case R.id.retry_btn:
-//                    d_id = DownloaderManager.getInstance().enqueue(download4);
-                    try {
-                        XmlPersistence.getInstance().init(TargetDir);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
+                    d_id = DownloaderManager.getInstance().enqueue(download4);
+//                    try {
+//                        XmlPersistence.getInstance().init(TargetDir);
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+                    break;
+                case R.id.resume_btn:
+                    DownloaderManager.getInstance().resume(d_id);
                     break;
             }
         }
@@ -180,24 +174,5 @@ public class MainActivity extends AppCompatActivity {
             list.add(wrapper);
         }
         return list;
-    }
-
-    private class Task implements Runnable {
-        int n;
-
-        Task(int n) {
-            this.n = n;
-        }
-
-        @Override
-        public void run() {
-            try {
-//                Log.d("zzf", "task id:" + n + " prepare" + " thread name:" + Thread.currentThread());
-                Thread.sleep(100 * n);
-//                Log.d("zzf", "task id:" + n + " finish" + " thread name:" + Thread.currentThread());
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
     }
 }

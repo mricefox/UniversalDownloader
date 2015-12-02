@@ -63,4 +63,12 @@ public class Block {
     public void setStop(boolean stop) {
         this.stop = stop;
     }
+
+    public long getSize() {
+        return endPos - startPos + 1;
+    }
+
+    public boolean isComplete() {
+        return downloadedBytes == getSize();
+    }
 }

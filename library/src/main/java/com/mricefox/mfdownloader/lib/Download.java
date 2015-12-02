@@ -9,10 +9,11 @@ public class Download {
     public static final int STATUS_PENDING = 1 << 1;
     public static final int STATUS_RUNNING = 1 << 2;
     public static final int STATUS_PAUSED = 1 << 3;
+    public static final int STATUS_SUCCESSFUL = 1 << 4;
+    public static final int STATUS_FAILED = 1 << 5;
     private String uri;
     private String targetFilePath;
     private DownloadingListener downloadingListener;
-
 
     public Download(String uri, String targetFilePath) {
         this.uri = uri;
@@ -47,5 +48,14 @@ public class Download {
 
     public void setDownloadingListener(DownloadingListener downloadingListener) {
         this.downloadingListener = downloadingListener;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+//        return super.equals(o);
+        if (o instanceof Download) {
+            return ((Download) o).uri.equals(uri) && ((Download) o).targetFilePath.equals(targetFilePath);
+        }
+        return false;
     }
 }

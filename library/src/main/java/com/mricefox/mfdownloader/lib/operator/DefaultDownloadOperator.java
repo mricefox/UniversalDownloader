@@ -83,7 +83,7 @@ public class DefaultDownloadOperator implements DownloadOperator {
         long offset = -1;
 
         for (int i = 0; i < block_num; ++i) {
-            Block b = new Block(1, offset + 1, 0, 0);
+            Block b = new Block(i, offset + 1, 0, 0);
             long b_size = size + (extra-- <= 0 ? 0 : 1);
             offset = b.getStartPos() + b_size - 1;
             b.setEndPos(offset);

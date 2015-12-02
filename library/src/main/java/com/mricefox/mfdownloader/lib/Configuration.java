@@ -1,6 +1,7 @@
 package com.mricefox.mfdownloader.lib;
 
 import com.mricefox.mfdownloader.lib.operator.DownloadOperator;
+import com.mricefox.mfdownloader.lib.persistence.Persistence;
 
 /**
  * Author:zengzifeng email:zeng163mail@163.com
@@ -12,6 +13,7 @@ public class Configuration {
     private int maxDownloadNum = DEFAULT_MAX_DOWNLOAD_NUM;
     private DownloadOperator operator;
     private boolean debuggable;
+    private Persistence persistence;
 
     public int getMaxDownloadNum() {
         return maxDownloadNum;
@@ -23,6 +25,10 @@ public class Configuration {
 
     public boolean isDebuggable() {
         return debuggable;
+    }
+
+    public Persistence getPersistence() {
+        return persistence;
     }
 
     public final static class Builder {
@@ -44,6 +50,11 @@ public class Configuration {
 
         public Builder debuggable(boolean debuggable) {
             configuration.debuggable = debuggable;
+            return this;
+        }
+
+        public Builder persistence(Persistence persistence) {
+            configuration.persistence = persistence;
             return this;
         }
 

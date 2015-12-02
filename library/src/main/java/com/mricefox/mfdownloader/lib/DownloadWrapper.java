@@ -1,5 +1,6 @@
 package com.mricefox.mfdownloader.lib;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -10,7 +11,7 @@ import java.util.List;
 public class DownloadWrapper {
     private Download download;
     private long id;
-    private List<Block> blocks;
+    private List<Block> blocks = new ArrayList<>();
     private long totalBytes;
     private long currentBytes;
     private int status;
@@ -27,6 +28,12 @@ public class DownloadWrapper {
     public DownloadWrapper(Download download, long id) {
         this.download = download;
         this.id = id;
+    }
+
+    public DownloadWrapper(Download download, long id, int status) {
+        this.download = download;
+        this.id = id;
+        this.status = status;
     }
 
     public Download getDownload() {
