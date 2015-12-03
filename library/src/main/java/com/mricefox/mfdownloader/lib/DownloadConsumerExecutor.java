@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -28,6 +29,7 @@ class DownloadConsumerExecutor {
     private DownloadOperator downloadOperator;
     private ConcurrentHashMap<Long, DownloadWrapper> runningDownloads;
     private Contract contract;
+    private ConcurrentHashMap<Long, CountDownLatch> downloadOnStopLocks;
 
     DownloadConsumerExecutor(int maxDownloadCount, DownloadOperator downloadOperator, Contract contract) {
         this.maxDownloadCount = maxDownloadCount;
@@ -39,6 +41,7 @@ class DownloadConsumerExecutor {
 //                Executors.newFixedThreadPool(maxDownloadCount, new DefaultThreadFactory(Thread.NORM_PRIORITY - 2, "init-d-t-"));
 //        downloadQueue = new PriorityBlockingQueue();
         runningDownloads = new ConcurrentHashMap<>();
+        downloadOnStopLocks = new ConcurrentHashMap<>();
     }
 
     private BlockDownloadListener blockDownloadListener = new BlockDownloadListener() {
@@ -48,38 +51,51 @@ class DownloadConsumerExecutor {
             final DownloadWrapper wrapper = runningDownloads.get(downloadId);
             wrapper.setCurrentBytes(wrapper.getCurrentBytes() + bytesThisStep);
 //            L.d("downloadId:" + downloadId + " current:" + currentBytes + " total:" + wrapper.totalBytes);
-            contract.updateDownload(wrapper);
-            fireProgressEvent(wrapper);
+//            contract.updateDownload(wrapper);
+            contract.fireProgressEvent(wrapper);
             return wrapper.getStatus() != Download.STATUS_PAUSED;
         }
 
         @Override
         public void onDownloadStop(long downloadId, int blockIndex, long currentBytes) {
             final DownloadWrapper wrapper = runningDownloads.get(downloadId);
-            Block block = wrapper.getBlocks().get(blockIndex);
-
-            block.setDownloadedBytes(currentBytes);
-            if (wrapper.getCurrentBytes() == wrapper.getTotalBytes()) {
-                runningDownloads.remove(downloadId);
-                wrapper.setStatus(Download.STATUS_SUCCESSFUL);
-                contract.updateDownload(wrapper);
-                fireCompleteEvent(wrapper);
-            } else if (wrapper.getStatus() == Download.STATUS_PAUSED) {
-                //stream I/O loop interrupt by paused
-                block.setStop(true);
-                block.setStartPos(currentBytes + block.getStartPos());// FIXME: 2015/12/2
-                block.setDownloadedBytes(0);
-                if (wrapper.allBlockStopped()) {
-                    runningDownloads.remove(downloadId);
-                    contract.updateDownload(wrapper);
-                    firePauseEvent(wrapper);
-                }
+            synchronized (wrapper) {//wrapper access by each block download thread
+                Block block = wrapper.getBlocks().get(blockIndex);
+                block.setDownloadedBytes(currentBytes);
             }
+            CountDownLatch latch = downloadOnStopLocks.get(downloadId);
+            if (latch != null) latch.countDown();
+
+//            Block block = wrapper.getBlocks().get(blockIndex);
+//            block.setDownloadedBytes(currentBytes);
+//            if (wrapper.getCurrentBytes() == wrapper.getTotalBytes()) {
+//                runningDownloads.remove(downloadId);
+//                wrapper.setStatus(Download.STATUS_SUCCESSFUL);
+//                contract.updateDownload(wrapper);
+//                fireCompleteEvent(wrapper);
+//            } else if (wrapper.getStatus() == Download.STATUS_PAUSED) {
+//                //stream I/O loop interrupt by paused
+//                block.setStop(true);
+//                if (wrapper.allBlockStopped()) {
+//                    L.d("allBlockStopped");
+//                    runningDownloads.remove(downloadId);
+//                    contract.updateDownload(wrapper);
+//                    firePauseEvent(wrapper);
+//                } else {
+//                    L.d("not allBlockStopped");
+//                }
+//            }
         }
 
         @Override
-        public void onDownloadFail(long downloadId, int blockIndex) {
-
+        public void onDownloadFail(long downloadId, int blockIndex, long currentBytes) {
+            final DownloadWrapper wrapper = runningDownloads.get(downloadId);
+            synchronized (wrapper) {//wrapper access by each block download thread
+                Block block = wrapper.getBlocks().get(blockIndex);
+                block.setDownloadedBytes(currentBytes);
+            }
+            CountDownLatch latch = downloadOnStopLocks.get(downloadId);
+            if (latch != null) latch.countDown();
         }
     };
 
@@ -89,8 +105,8 @@ class DownloadConsumerExecutor {
         if (runningDownloads.size() < maxDownloadCount) {
             id = contract.insertDownload(wrapper);
             if (id == -1) return id;
-            InitDownloadTask initDownloadTask = new InitDownloadTask(wrapper, false);
-            downloadExecutor.execute(initDownloadTask);
+            DownloadConsumer downloadConsumer = new DownloadConsumer(wrapper, false);
+            downloadExecutor.execute(downloadConsumer);
             runningDownloads.put(id, wrapper);
             wrapper.setStatus(Download.STATUS_RUNNING);
             contract.updateDownload(wrapper);
@@ -115,8 +131,8 @@ class DownloadConsumerExecutor {
 
     void resumeDownload(DownloadWrapper wrapper) {
         if (runningDownloads.size() < maxDownloadCount) {
-            InitDownloadTask initDownloadTask = new InitDownloadTask(wrapper, true);
-            downloadExecutor.execute(initDownloadTask);
+            DownloadConsumer downloadConsumer = new DownloadConsumer(wrapper, true);
+            downloadExecutor.execute(downloadConsumer);
             runningDownloads.put(wrapper.getId(), wrapper);
             wrapper.setStatus(Download.STATUS_RUNNING);
         } else {
@@ -130,37 +146,49 @@ class DownloadConsumerExecutor {
 //        return downloadId++;
 //    }
 
-    private void fireStartEvent(DownloadWrapper wrapper) {
-        DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
-        if (listener != null) listener.onStart(wrapper.getId());
+    private void waitForDownloadStopLock(long id) {
+        CountDownLatch latch = downloadOnStopLocks.get(id);
+        if (latch == null) {
+            return;
+        }
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
-    private void fireFailEvent(DownloadWrapper wrapper) {
-        DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
-        if (listener != null) listener.onFailed(wrapper.getId());
-    }
+//    private void fireStartEvent(DownloadWrapper wrapper) {
+//        DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
+//        if (listener != null) listener.onStart(wrapper.getId());
+//    }
+//
+//    private void fireFailEvent(DownloadWrapper wrapper) {
+//        DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
+//        if (listener != null) listener.onFailed(wrapper.getId());
+//    }
+//
+//    private void fireProgressEvent(DownloadWrapper wrapper) {
+//        DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
+//        if (listener != null)
+//            listener.onProgressUpdate(wrapper.getId(), wrapper.getCurrentBytes(), wrapper.getTotalBytes(), 0);
+//    }
+//
+//    private void fireCompleteEvent(final DownloadWrapper wrapper) {
+//        DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
+//        if (listener != null) listener.onComplete(wrapper.getId());
+//    }
+//
+//    private void firePauseEvent(final DownloadWrapper wrapper) {
+//        DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
+//        if (listener != null) listener.onPaused(wrapper.getId());
+//    }
 
-    private void fireProgressEvent(DownloadWrapper wrapper) {
-        DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
-        if (listener != null)
-            listener.onProgressUpdate(wrapper.getId(), wrapper.getCurrentBytes(), wrapper.getTotalBytes(), 0);
-    }
-
-    private void fireCompleteEvent(final DownloadWrapper wrapper) {
-        DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
-        if (listener != null) listener.onComplete(wrapper.getId());
-    }
-
-    private void firePauseEvent(final DownloadWrapper wrapper) {
-        DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
-        if (listener != null) listener.onPaused(wrapper.getId());
-    }
-
-    private class InitDownloadTask implements Runnable {
+    private class DownloadConsumer implements Runnable {
         private DownloadWrapper wrapper;
         private boolean resume;
 
-        InitDownloadTask(DownloadWrapper wrapper, boolean resume) {
+        DownloadConsumer(DownloadWrapper wrapper, boolean resume) {
             this.wrapper = wrapper;
             this.resume = resume;
         }
@@ -168,31 +196,57 @@ class DownloadConsumerExecutor {
         @Override
         public void run() {
             //call back on start
-            fireStartEvent(wrapper);
+            contract.fireStartEvent(wrapper);
             try {
                 if (!resume) setupDownload(wrapper);
-                contract.updateDownload(wrapper);
             } catch (IOException e) {
                 e.printStackTrace();
-                fireFailEvent(wrapper);
-                return;
+                wrapper.setStatus(Download.STATUS_FAILED);
             } catch (Exception e) {
                 e.printStackTrace();
-                fireFailEvent(wrapper);
+                wrapper.setStatus(Download.STATUS_FAILED);
+            } finally {
+                contract.updateDownload(wrapper);
+            }
+            if (wrapper.getStatus() == Download.STATUS_FAILED) {
+                contract.fireFailEvent(wrapper);
                 return;
             }
             if (wrapper.getStatus() == Download.STATUS_PAUSED) {
-                firePauseEvent(wrapper);
+                contract.firePauseEvent(wrapper);
                 return;
             }
             List<Block> blocks = wrapper.getBlocks();
+            int runningConsumerCount = 0;
             for (int i = 0, size = blocks.size(); i < size; ++i) {
                 final Block block = blocks.get(i);
-                if (block.isComplete()) continue;
-                DownloadConsumer consumer = new DownloadConsumer(wrapper.getDownload().getUri(),
-                        wrapper.getDownload().getTargetFilePath(), block, wrapper.getId());
-                L.d("init block pos s:" + block.getStartPos() + "#e:" + block.getEndPos());
+                if (block.isComplete()) {
+//                    block.setStop(true);
+                    continue;
+                }
+                long startPos = block.getStartPos() + block.getDownloadedBytes();
+                BlockConsumer consumer = new BlockConsumer(block.getIndex(), startPos, block.getEndPos(),
+                        wrapper.getDownload().getUri(), wrapper.getDownload().getTargetFilePath(), wrapper.getId());
+                L.d("init block pos s:" + startPos + "#e:" + block.getEndPos());
                 downloadExecutor.execute(consumer);
+                ++runningConsumerCount;
+            }
+            downloadOnStopLocks.put(wrapper.getId(), new CountDownLatch(runningConsumerCount));
+            waitForDownloadStopLock(wrapper.getId());
+            runningDownloads.remove(wrapper.getId());
+            downloadOnStopLocks.remove(wrapper.getId());
+            if (wrapper.getCurrentBytes() == wrapper.getTotalBytes()) {
+                wrapper.setStatus(Download.STATUS_SUCCESSFUL);
+                contract.updateDownload(wrapper);
+                contract.fireCompleteEvent(wrapper);
+            } else if (wrapper.getStatus() == Download.STATUS_PAUSED) {
+                //stream I/O loop interrupt by paused
+                contract.updateDownload(wrapper);
+                contract.firePauseEvent(wrapper);
+            } else {//stopped by error
+                wrapper.setStatus(Download.STATUS_FAILED);
+                contract.updateDownload(wrapper);
+                contract.fireFailEvent(wrapper);
             }
         }
 
@@ -216,14 +270,18 @@ class DownloadConsumerExecutor {
         }
     }
 
-    private class DownloadConsumer implements Runnable {
-        private Block block;
+    private class BlockConsumer implements Runnable {
+        private int blockIndex;
+        private long startPos, endPos;
         private String uri;
         private String targetFilePath;
         private long downloadId;
 
-        DownloadConsumer(String uri, String targetFilePath, Block block, long downloadId) {
-            this.block = block;
+        BlockConsumer(int blockIndex, long startPos, long endPos, String uri,
+                      String targetFilePath, long downloadId) {
+            this.blockIndex = blockIndex;
+            this.startPos = startPos;
+            this.endPos = endPos;
             this.uri = uri;
             this.targetFilePath = targetFilePath;
             this.downloadId = downloadId;
@@ -231,7 +289,7 @@ class DownloadConsumerExecutor {
 
         @Override
         public void run() {
-            downloadOperator.downloadBlock(downloadId, block, uri, new File(targetFilePath),
+            downloadOperator.downloadBlock(downloadId, startPos, endPos, blockIndex, uri, new File(targetFilePath),
                     blockDownloadListener, DefaultDownloadOperator.BUFFER_SIZE);
         }
     }

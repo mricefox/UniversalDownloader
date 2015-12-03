@@ -18,5 +18,5 @@ public interface BlockDownloadListener {
 
     void onDownloadStop(long downloadId, int blockIndex, long currentBytes);
 
-    void onDownloadFail(long downloadId, int blockIndex);
+    void onDownloadFail(long downloadId, int blockIndex, long currentBytes);
 }

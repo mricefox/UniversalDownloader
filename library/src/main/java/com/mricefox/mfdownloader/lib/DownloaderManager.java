@@ -1,5 +1,6 @@
 package com.mricefox.mfdownloader.lib;
 
+import com.mricefox.mfdownloader.lib.assist.L;
 import com.mricefox.mfdownloader.lib.persistence.Persistence;
 
 /**
@@ -37,12 +38,16 @@ public class DownloaderManager {
 
     public void pause(long id) {
         downloadConsumerExecutor.setDownloadPaused(id);
+        L.d("pause id:" + id);
     }
 
-    public void resume(long id) {
+    public void resume(long id, DownloadingListener listener) {
         DownloadWrapper wrapper = persistence.query(id);
         if (wrapper == null || wrapper.getStatus() != Download.STATUS_PAUSED)
             throw new IllegalArgumentException("can not resume a not paused download");
+        wrapper.getDownload().setDownloadingListener(listener);
+//        L.d("resume total:"+wrapper.getTotalBytes());
+        L.d("resume id:" + id);
         downloadConsumerExecutor.resumeDownload(wrapper);
     }
 
@@ -60,6 +65,37 @@ public class DownloaderManager {
         @Override
         public long updateDownload(DownloadWrapper wrapper) {
             return persistence.update(wrapper);
+        }
+
+        @Override
+        public void fireStartEvent(DownloadWrapper wrapper) {
+            DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
+            if (listener != null) listener.onStart(wrapper.getId());
+        }
+
+        @Override
+        public void fireFailEvent(DownloadWrapper wrapper) {
+            DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
+            if (listener != null) listener.onFailed(wrapper.getId());
+        }
+
+        @Override
+        public void fireProgressEvent(DownloadWrapper wrapper) {
+            DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
+            if (listener != null)
+                listener.onProgressUpdate(wrapper.getId(), wrapper.getCurrentBytes(), wrapper.getTotalBytes(), 0);
+        }
+
+        @Override
+        public void fireCompleteEvent(DownloadWrapper wrapper) {
+            DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
+            if (listener != null) listener.onComplete(wrapper.getId());
+        }
+
+        @Override
+        public void firePauseEvent(DownloadWrapper wrapper) {
+            DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
+            if (listener != null) listener.onPaused(wrapper.getId());
         }
     };
 }

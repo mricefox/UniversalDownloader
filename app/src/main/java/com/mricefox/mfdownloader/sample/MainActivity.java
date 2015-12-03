@@ -39,10 +39,7 @@ public class MainActivity extends AppCompatActivity {
 
 //    DownloaderManager downloaderManager;
 
-    Download download1 = new Download(SampleUri3, TargetDir + File.separator + "novel1.zip");
-    Download download2 = new Download(SampleUri4, TargetDir + File.separator + "novel2.zip");
-    Download download3 = new Download(SampleUri5, TargetDir + File.separator + "novel3.zip");
-    Download download4 = new Download(SampleUri6, TargetDir + File.separator + "novel4.zip", new DownloadingListener() {
+    private DownloadingListener listener = new DownloadingListener() {
         @Override
         public void onStart(long id) {
             L.d("download id:" + id + "#onStart");
@@ -70,9 +67,15 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onProgressUpdate(long id, long current, long total, long bytesPerSecond) {
-            L.d("download id:" + id + "#onProgressUpdate" + "#current" + current + "#total" + total);
+            L.d("id:" + id + "#onProgressUpdate" + "#current" + current + "#total" +
+                    total + "#%" + String.format("%.2f", (current + 0.0f) * 100 / total));
         }
-    });
+    };
+    Download download1 = new Download(SampleUri3, TargetDir + File.separator + "novel1.zip");
+    Download download2 = new Download(SampleUri4, TargetDir + File.separator + "novel2.zip");
+    Download download3 = new Download(SampleUri5, TargetDir + File.separator + "novel3.zip");
+    Download download4 = new Download(SampleUri6, TargetDir + File.separator + "novel4.zip", listener);
+    Download download5 = new Download(SampleUri2, TargetDir + File.separator + "qq.apk", listener);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -133,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
 //                    L.d("list:" + list);
                     break;
                 case R.id.retry_btn:
-                    d_id = DownloaderManager.getInstance().enqueue(download4);
+                    d_id = DownloaderManager.getInstance().enqueue(download5);
 //                    try {
 //                        XmlPersistence.getInstance().init(TargetDir);
 //                    } catch (IOException e) {
@@ -141,7 +144,7 @@ public class MainActivity extends AppCompatActivity {
 //                    }
                     break;
                 case R.id.resume_btn:
-                    DownloaderManager.getInstance().resume(d_id);
+                    DownloaderManager.getInstance().resume(d_id, listener);
                     break;
             }
         }

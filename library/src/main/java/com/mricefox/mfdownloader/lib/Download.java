@@ -13,7 +13,7 @@ public class Download {
     public static final int STATUS_FAILED = 1 << 5;
     private String uri;
     private String targetFilePath;
-    private DownloadingListener downloadingListener;
+    transient private DownloadingListener downloadingListener;
 
     public Download(String uri, String targetFilePath) {
         this.uri = uri;

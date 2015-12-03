@@ -93,23 +93,24 @@ public class DefaultDownloadOperator implements DownloadOperator {
     }
 
     @Override
-    public void downloadBlock(long downloadId, Block block, String urlStr, File targetFile, BlockDownloadListener listener, int bufferSize) {
+    public void downloadBlock(long downloadId, long startPos, long endPos, int blockIndex,
+                              String urlStr, File targetFile, BlockDownloadListener listener, int bufferSize) {
         HttpURLConnection connection = null;
         RandomAccessFile raf = null;
         InputStream is = null;
-
+        int current = 0;
+//        L.d("downloadBlock:s#" + startPos + " e#" + endPos);
         try {
             connection = (HttpURLConnection) new URL(urlStr).openConnection();
             connection.setConnectTimeout(DEFAULT_HTTP_CONNECT_TIMEOUT);
             connection.setReadTimeout(DEFAULT_HTTP_READ_TIMEOUT);
-            connection.setRequestProperty("RANGE", "bytes=" + block.getStartPos() + "-" + block.getEndPos());
+            connection.setRequestProperty("RANGE", "bytes=" + startPos + "-" + endPos);
 
 //            if (connection.getResponseCode() == 200) {
             final byte[] bytes = new byte[bufferSize];
             int count = 0;
-            int current = 0;
             raf = new RandomAccessFile(targetFile, "rw");
-            raf.seek(block.getStartPos());
+            raf.seek(startPos);
             is = new ContentLengthInputStream(new BufferedInputStream(connection.getInputStream()),
                     connection.getContentLength());
 
@@ -117,16 +118,16 @@ public class DefaultDownloadOperator implements DownloadOperator {
                 raf.write(bytes, 0, count);
                 current += count;
 //                L.d("block s:" + block.startPos + " e:" + block.endPos + " buf size:" + bufferSize + " current:" + current + " count:" + count);
-                if (listener != null && !listener.onBytesDownload(downloadId, block.getIndex(), current, is.available(), count))
+                if (listener != null && !listener.onBytesDownload(downloadId, blockIndex, current, is.available(), count))
                     break;
             }
-            if (listener != null) listener.onDownloadStop(downloadId, block.getIndex(), current);
+            if (listener != null) listener.onDownloadStop(downloadId, blockIndex, current);
 //            } else {
 //                throw new IOException("open stream fail with response code " + connection.getResponseCode());
 //            }
         } catch (IOException e) {
             e.printStackTrace();
-            if (listener != null) listener.onDownloadFail(downloadId, block.getIndex());
+            if (listener != null) listener.onDownloadFail(downloadId, blockIndex, current);
         } finally {
             close(raf);
             close(is);

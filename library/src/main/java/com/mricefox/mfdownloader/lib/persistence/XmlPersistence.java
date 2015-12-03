@@ -92,6 +92,8 @@ public class XmlPersistence implements Persistence<DownloadWrapper> {
         element.setAttribute("uri", wrapper.getDownload().getUri());
         element.setAttribute("path", wrapper.getDownload().getTargetFilePath());
         element.setAttribute("status", String.valueOf(wrapper.getStatus()));
+        element.setAttribute("totalBytes", String.valueOf(wrapper.getTotalBytes()));
+        element.setAttribute("currentBytes", String.valueOf(wrapper.getCurrentBytes()));
         for (int i = 0, size = wrapper.getBlocks().size(); i < size; ++i) {
             Block block = wrapper.getBlocks().get(i);
             Element blockElement = document.createElement(ELEMENT_BLOCK_TAG);
@@ -109,11 +111,13 @@ public class XmlPersistence implements Persistence<DownloadWrapper> {
         element.setAttribute("uri", wrapper.getDownload().getUri());
         element.setAttribute("path", wrapper.getDownload().getTargetFilePath());
         element.setAttribute("status", String.valueOf(wrapper.getStatus()));
+        element.setAttribute("totalBytes", String.valueOf(wrapper.getTotalBytes()));
+        element.setAttribute("currentBytes", String.valueOf(wrapper.getCurrentBytes()));
 
         NodeList blockElements = element.getChildNodes();
         for (int i = 0, size = blockElements.getLength(); i < size; ++i) {
             Node node = blockElements.item(i);
-            element.removeChild(node);
+            element.removeChild(node);//remove for blocks number change
         }
 
         for (int i = 0, size = wrapper.getBlocks().size(); i < size; ++i) {
@@ -151,7 +155,10 @@ public class XmlPersistence implements Persistence<DownloadWrapper> {
                             String uri = parser.getAttributeValue(null, "uri");
                             String path = parser.getAttributeValue(null, "path");
                             String status = parser.getAttributeValue(null, "status");
-                            wrapper = new DownloadWrapper(new Download(uri, path), Long.valueOf(id), Integer.valueOf(status));
+                            String currentBytes = parser.getAttributeValue(null, "currentBytes");
+                            String totalBytes = parser.getAttributeValue(null, "totalBytes");
+                            wrapper = new DownloadWrapper(new Download(uri, path), Long.valueOf(id),
+                                    Integer.valueOf(status), Long.valueOf(totalBytes), Long.valueOf(currentBytes));
                             blockList = new ArrayList<>();
                         } else if (parser.getName().equals(ELEMENT_BLOCK_TAG)) {
                             String index = parser.getAttributeValue(null, "index");

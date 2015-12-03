@@ -30,10 +30,12 @@ public class DownloadWrapper {
         this.id = id;
     }
 
-    public DownloadWrapper(Download download, long id, int status) {
+    public DownloadWrapper(Download download, long id, int status, long totalBytes, long currentBytes) {
         this.download = download;
         this.id = id;
         this.status = status;
+        this.totalBytes = totalBytes;
+        this.currentBytes = currentBytes;
     }
 
     public Download getDownload() {
@@ -84,9 +86,10 @@ public class DownloadWrapper {
         this.status = status;
     }
 
-    boolean allBlockStopped() {
-        for (int i = 0, size = blocks.size(); i < size; ++i)
-            if (!blocks.get(i).isStop()) return false;
-        return true;
-    }
+//    boolean allBlockStopped() {
+//        for (int i = 0, size = blocks.size(); i < size; ++i) {
+//            if (!blocks.get(i).isStop()) return false;
+//        }
+//        return true;
+//    }
 }

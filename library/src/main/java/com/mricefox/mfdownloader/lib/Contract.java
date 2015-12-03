@@ -9,4 +9,14 @@ public interface Contract {
     long insertDownload(DownloadWrapper wrapper);
 
     long updateDownload(DownloadWrapper wrapper);
+
+    void fireStartEvent(DownloadWrapper wrapper);
+
+    void fireFailEvent(DownloadWrapper wrapper);
+
+    void fireProgressEvent(DownloadWrapper wrapper);
+
+    void fireCompleteEvent(DownloadWrapper wrapper);
+
+    void firePauseEvent(DownloadWrapper wrapper);
 }
