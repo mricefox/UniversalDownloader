@@ -16,6 +16,10 @@ public class L {
     private static String methodName;
     private static int lineNumber;
 
+    public static void setDebugState(boolean enable) {
+        DEBUG = enable;
+    }
+
     private static String createLog(String log) {
         StringBuffer buffer = new StringBuffer();
         buffer.append(className);
@@ -23,7 +27,7 @@ public class L {
         buffer.append(methodName);
         buffer.append(":");
         buffer.append(lineNumber);
-        buffer.append("]");
+        buffer.append("]\n");
         buffer.append(log);
         return buffer.toString();
     }

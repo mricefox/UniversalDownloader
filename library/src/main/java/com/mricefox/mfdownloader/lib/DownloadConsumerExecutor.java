@@ -8,10 +8,12 @@ import com.mricefox.mfdownloader.lib.operator.DownloadOperator;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -21,25 +23,23 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Date:2015/11/23
  */
 class DownloadConsumerExecutor {
-    private int maxDownloadCount;
-    //    private final Executor initializeExecutor;
     private final ExecutorService downloadExecutor;
-    //    private ThreadGroup initDownloadThreadGroup;
-    //    private BlockingQueue downloadQueue;
+    private BlockingQueue downloadQueue;
     private DownloadOperator downloadOperator;
     private ConcurrentHashMap<Long, DownloadWrapper> runningDownloads;
     private Contract contract;
     private ConcurrentHashMap<Long, CountDownLatch> downloadOnStopLocks;
+    private int maxDownloadCount;
+    private boolean autoStartPending;
 
-    DownloadConsumerExecutor(int maxDownloadCount, DownloadOperator downloadOperator, Contract contract) {
+    DownloadConsumerExecutor(DownloadOperator downloadOperator, Contract contract, int maxDownloadCount, boolean autoStartPending) {
         this.maxDownloadCount = maxDownloadCount;
         this.downloadOperator = downloadOperator;
+        this.autoStartPending = autoStartPending;
         this.contract = contract;
         downloadExecutor =
                 Executors.newCachedThreadPool(new DefaultThreadFactory(Thread.NORM_PRIORITY - 2, "download-t-"));
-//        initializeExecutor =
-//                Executors.newFixedThreadPool(maxDownloadCount, new DefaultThreadFactory(Thread.NORM_PRIORITY - 2, "init-d-t-"));
-//        downloadQueue = new PriorityBlockingQueue();
+        downloadQueue = new PriorityBlockingQueue();
         runningDownloads = new ConcurrentHashMap<>();
         downloadOnStopLocks = new ConcurrentHashMap<>();
     }

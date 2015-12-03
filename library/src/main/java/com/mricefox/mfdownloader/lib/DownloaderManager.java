@@ -27,8 +27,10 @@ public class DownloaderManager {
 
     public synchronized void init(Configuration configuration) {
         downloadConsumerExecutor =
-                new DownloadConsumerExecutor(configuration.getMaxDownloadNum(), configuration.getDownloadOperator(), ConsumerContract);
+                new DownloadConsumerExecutor(configuration.getDownloadOperator(), ConsumerContract,
+                        configuration.getMaxDownloadNum(), configuration.isAutoStartPending());
         persistence = configuration.getPersistence();
+        L.setDebugState(configuration.isDebuggable());
     }
 
     public long enqueue(Download download) {//todo enqueue same target file path download

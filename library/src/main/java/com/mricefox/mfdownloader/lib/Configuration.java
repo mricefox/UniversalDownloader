@@ -14,6 +14,7 @@ public class Configuration {
     private DownloadOperator operator;
     private boolean debuggable;
     private Persistence persistence;
+    private boolean autoStartPending;
 
     public int getMaxDownloadNum() {
         return maxDownloadNum;
@@ -29,6 +30,10 @@ public class Configuration {
 
     public Persistence getPersistence() {
         return persistence;
+    }
+
+    public boolean isAutoStartPending() {
+        return autoStartPending;
     }
 
     public final static class Builder {
@@ -55,6 +60,11 @@ public class Configuration {
 
         public Builder persistence(Persistence persistence) {
             configuration.persistence = persistence;
+            return this;
+        }
+
+        public Builder autoStartPending(boolean autoStartPending) {
+            configuration.autoStartPending = autoStartPending;
             return this;
         }
 
