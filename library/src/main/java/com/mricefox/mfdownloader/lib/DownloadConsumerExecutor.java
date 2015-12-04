@@ -1,5 +1,7 @@
 package com.mricefox.mfdownloader.lib;
 
+import android.os.AsyncTask;
+
 import com.mricefox.mfdownloader.lib.assist.L;
 import com.mricefox.mfdownloader.lib.operator.BlockDownloadListener;
 import com.mricefox.mfdownloader.lib.operator.DefaultDownloadOperator;
@@ -14,7 +16,10 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -23,10 +28,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Date:2015/11/23
  */
 class DownloadConsumerExecutor {
-    private final ExecutorService downloadExecutor;
+    private static ExecutorService downloadExecutor;
     private BlockingQueue downloadQueue;
     private DownloadOperator downloadOperator;
-    private ConcurrentHashMap<Long, DownloadWrapper> runningDownloads;
+    private final ConcurrentHashMap<Long, DownloadWrapper> runningDownloads;
     private Contract contract;
     private ConcurrentHashMap<Long, CountDownLatch> downloadOnStopLocks;
     private int maxDownloadCount;
@@ -316,4 +321,23 @@ class DownloadConsumerExecutor {
             return t;
         }
     }
+
+//    private class e extends ThreadPoolExecutor{
+//        public e(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue) {
+//            super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue);
+//        }
+//
+//        public e(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory) {
+//            super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory);
+//        }
+//
+//        public e(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue, RejectedExecutionHandler handler) {
+//            super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, handler);
+//        }
+//
+//        public e(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory, RejectedExecutionHandler handler) {
+//            super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory, handler);
+//        }
+//
+//    }
 }

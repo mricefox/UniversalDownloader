@@ -60,8 +60,8 @@ public class Entrance {
 
         long a = 67887, b = 4567;
 
-        float c = 456,d = 45;
-        System.out.println(String.format("==%.2f",(b+0.0f)/a));
+        float c = 456, d = 45;
+        System.out.println(String.format("==%.2f", (b + 0.0f) / a));
 
 
 //        try {
@@ -74,19 +74,27 @@ public class Entrance {
 //        }
 //        System.out.println("11111");
 
-        System.out.println("ex="+ex());
+        System.out.println("ex=" + ex());
+
+        long current = 46;
+        long total = 67;
+        int r = (int) ((current + 0.0f) / total * 100);
+
+
+        System.out.println("r="+r);
+
 
     }
 
-    public static int ex(){
+    public static int ex() {
         try {
             System.out.println("222");
 //            throw new Exception("nn");
 
 //            return -1;
-        }catch (Exception e){
+        } catch (Exception e) {
             System.out.println("eee");
-        }finally {
+        } finally {
             System.out.println("ff");
         }
         System.out.println("11111");

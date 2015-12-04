@@ -77,10 +77,19 @@ public class MainActivity extends AppCompatActivity {
     Download download4 = new Download(SampleUri6, TargetDir + File.separator + "novel4.zip", listener);
     Download download5 = new Download(SampleUri2, TargetDir + File.separator + "qq.apk", listener);
 
+    DownloadListFragment fragment;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        if (findViewById(R.id.fragment_container) != null) {
+            if (savedInstanceState == null) {
+                fragment = DownloadListFragment.newInstance("", "");
+                getSupportFragmentManager().beginTransaction().add(R.id.fragment_container,
+                        fragment, DownloadListFragment.class.getSimpleName()).commit();
+            }
+        }
 
         final TextView textView = (TextView) findViewById(R.id.text);
         final Button pauseBtn = (Button) findViewById(R.id.pause_btn);
@@ -94,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
         }
         Configuration configuration = new Configuration.Builder().
                 downloadOperator(new DefaultDownloadOperator()).
-                maxDownloadNum(5).persistence(XmlPersistence.getInstance())
+                maxDownloadNum(Integer.MAX_VALUE).persistence(XmlPersistence.getInstance()).debuggable(true)
                 .build();
 //        downloaderManager =  DownloaderManager.getInstance();
         DownloaderManager.getInstance().init(configuration);
@@ -109,8 +118,6 @@ public class MainActivity extends AppCompatActivity {
 //        downloaderManager.enqueue(download1);
 //        downloaderManager.enqueue(download2);
 //        downloaderManager.enqueue(download3);
-
-
     }
 
     private long d_id = -1;
@@ -136,6 +143,7 @@ public class MainActivity extends AppCompatActivity {
 //                    L.d("list:" + list);
                     break;
                 case R.id.retry_btn:
+                    L.d("");
                     d_id = DownloaderManager.getInstance().enqueue(download5);
 //                    try {
 //                        XmlPersistence.getInstance().init(TargetDir);

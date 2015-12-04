@@ -27,7 +27,7 @@ public class L {
         buffer.append(methodName);
         buffer.append(":");
         buffer.append(lineNumber);
-        buffer.append("]\n");
+        buffer.append("]");
         buffer.append(log);
         return buffer.toString();
     }

@@ -128,6 +128,9 @@ public class DefaultDownloadOperator implements DownloadOperator {
         } catch (IOException e) {
             e.printStackTrace();
             if (listener != null) listener.onDownloadFail(downloadId, blockIndex, current);
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (listener != null) listener.onDownloadFail(downloadId, blockIndex, current);
         } finally {
             close(raf);
             close(is);
