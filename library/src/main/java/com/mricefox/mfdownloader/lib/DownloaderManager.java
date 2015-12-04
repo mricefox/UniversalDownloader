@@ -34,7 +34,7 @@ public class DownloaderManager {
     }
 
     public long enqueue(Download download) {//todo enqueue same target file path download
-        DownloadWrapper wrapper = new DownloadWrapper(download, -1);
+        DownloadWrapper wrapper = new DownloadWrapper(download);
         return downloadConsumerExecutor.addDownload(wrapper);
     }
 
@@ -72,32 +72,32 @@ public class DownloaderManager {
         @Override
         public void fireStartEvent(DownloadWrapper wrapper) {
             DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
-            if (listener != null) listener.onStart(wrapper.getId());
+            if (listener != null) listener.onStart(wrapper.getDownload().getId());
         }
 
         @Override
         public void fireFailEvent(DownloadWrapper wrapper) {
             DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
-            if (listener != null) listener.onFailed(wrapper.getId());
+            if (listener != null) listener.onFailed(wrapper.getDownload().getId());
         }
 
         @Override
         public void fireProgressEvent(DownloadWrapper wrapper) {
             DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
             if (listener != null)
-                listener.onProgressUpdate(wrapper.getId(), wrapper.getCurrentBytes(), wrapper.getTotalBytes(), 0);
+                listener.onProgressUpdate(wrapper.getDownload().getId(), wrapper.getCurrentBytes(), wrapper.getTotalBytes(), 0);
         }
 
         @Override
         public void fireCompleteEvent(DownloadWrapper wrapper) {
             DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
-            if (listener != null) listener.onComplete(wrapper.getId());
+            if (listener != null) listener.onComplete(wrapper.getDownload().getId());
         }
 
         @Override
         public void firePauseEvent(DownloadWrapper wrapper) {
             DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
-            if (listener != null) listener.onPaused(wrapper.getId());
+            if (listener != null) listener.onPaused(wrapper.getDownload().getId());
         }
     };
 }

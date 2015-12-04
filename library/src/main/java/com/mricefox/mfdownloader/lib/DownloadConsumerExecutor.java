@@ -138,7 +138,7 @@ class DownloadConsumerExecutor {
         if (runningDownloads.size() < maxDownloadCount) {
             DownloadConsumer downloadConsumer = new DownloadConsumer(wrapper, true);
             downloadExecutor.execute(downloadConsumer);
-            runningDownloads.put(wrapper.getId(), wrapper);
+            runningDownloads.put(wrapper.getDownload().getId(), wrapper);
             wrapper.setStatus(Download.STATUS_RUNNING);
         } else {
             wrapper.setStatus(Download.STATUS_PENDING);
@@ -231,15 +231,16 @@ class DownloadConsumerExecutor {
                 }
                 long startPos = block.getStartPos() + block.getDownloadedBytes();
                 BlockConsumer consumer = new BlockConsumer(block.getIndex(), startPos, block.getEndPos(),
-                        wrapper.getDownload().getUri(), wrapper.getDownload().getTargetFilePath(), wrapper.getId());
+                        wrapper.getDownload().getUri(), wrapper.getDownload().getTargetFilePath(),
+                        wrapper.getDownload().getId());
                 L.d("init block pos s:" + startPos + "#e:" + block.getEndPos());
                 downloadExecutor.execute(consumer);
                 ++runningConsumerCount;
             }
-            downloadOnStopLocks.put(wrapper.getId(), new CountDownLatch(runningConsumerCount));
-            waitForDownloadStopLock(wrapper.getId());
-            runningDownloads.remove(wrapper.getId());
-            downloadOnStopLocks.remove(wrapper.getId());
+            downloadOnStopLocks.put(wrapper.getDownload().getId(), new CountDownLatch(runningConsumerCount));
+            waitForDownloadStopLock(wrapper.getDownload().getId());
+            runningDownloads.remove(wrapper.getDownload().getId());
+            downloadOnStopLocks.remove(wrapper.getDownload().getId());
             if (wrapper.getCurrentBytes() == wrapper.getTotalBytes()) {
                 wrapper.setStatus(Download.STATUS_SUCCESSFUL);
                 contract.updateDownload(wrapper);

@@ -5,7 +5,6 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -50,15 +49,19 @@ public class DownloadListAdapter extends RecyclerView.Adapter {
         return holder;
     }
 
-    @Override
-    public long getItemId(int position) {
-        return super.getItemId(position);
-    }
+//    @Override
+//    public long getItemId(int position) {
+////        return super.getItemId(position);
+//        return downloadList.get(position).getId();
+//    }
+
+
 
     @Override
     public void onBindViewHolder(final RecyclerView.ViewHolder holder, int position) {
-        L.d("onBindViewHolder pos:" + position);
+        L.d("onBindViewHolder pos:" + position + " holder:" + holder);
         Download download = downloadList.get(position);
+        ((ItemViewHolder) holder).nameTxt.setText(download.getId()+"#");
         download.setDownloadingListener(new DownloadingListener() {
             @Override
             public void onStart(long id) {
@@ -98,6 +101,18 @@ public class DownloadListAdapter extends RecyclerView.Adapter {
     public int getItemCount() {
         return downloadList.size();
     }
+
+//    @Override
+//    public void onViewRecycled(RecyclerView.ViewHolder holder) {
+//        L.d("onViewRecycled holder.pos:" + holder.getAdapterPosition());
+//        super.onViewRecycled(holder);
+//        if (holder.getItemId() != RecyclerView.NO_ID
+//                && holder.getAdapterPosition() != RecyclerView.NO_POSITION) {
+//            //holder has set downloading listener but not recycled
+//            Download download = downloadList.get(holder.getAdapterPosition());
+//            download.setDownloadingListener(null);
+//        }
+//    }
 
     private class ItemViewHolder extends RecyclerView.ViewHolder {
         TextView nameTxt, sizeTxt;

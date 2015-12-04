@@ -110,6 +110,7 @@ public class DownloadListFragment extends Fragment {
 //            downloadList.add(download5);
 //        }
 
+        adapter.setHasStableIds(true);
         downloadRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         downloadRecyclerView.setAdapter(adapter);
         adapter.setOnItemClickListener(new DownloadListAdapter.OnItemClickListener() {

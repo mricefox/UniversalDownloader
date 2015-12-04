@@ -10,29 +10,29 @@ import java.util.List;
  */
 public class DownloadWrapper {
     private Download download;
-    private long id;
+//    private long id;
     private List<Block> blocks = new ArrayList<>();
     private long totalBytes;
     private long currentBytes;
     private int status;
 
-    public DownloadWrapper(Download download, long id, List<Block> blocks, long totalBytes, long currentBytes, int status) {
+    public DownloadWrapper(Download download, List<Block> blocks, long totalBytes, long currentBytes, int status) {
         this.download = download;
-        this.id = id;
+//        this.id = id;
         this.blocks = blocks;
         this.totalBytes = totalBytes;
         this.currentBytes = currentBytes;
         this.status = status;
     }
 
-    public DownloadWrapper(Download download, long id) {
+    public DownloadWrapper(Download download) {
         this.download = download;
-        this.id = id;
+//        this.id = id;
     }
 
-    public DownloadWrapper(Download download, long id, int status, long totalBytes, long currentBytes) {
+    public DownloadWrapper(Download download,  int status, long totalBytes, long currentBytes) {
         this.download = download;
-        this.id = id;
+//        this.id = id;
         this.status = status;
         this.totalBytes = totalBytes;
         this.currentBytes = currentBytes;
@@ -46,13 +46,13 @@ public class DownloadWrapper {
         this.download = download;
     }
 
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
+//    public long getId() {
+//        return id;
+//    }
+//
+//    public void setId(long id) {
+//        this.id = id;
+//    }
 
     public List<Block> getBlocks() {
         return blocks;

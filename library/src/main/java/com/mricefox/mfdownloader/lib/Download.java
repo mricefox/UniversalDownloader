@@ -11,6 +11,7 @@ public class Download {
     public static final int STATUS_PAUSED = 1 << 3;
     public static final int STATUS_SUCCESSFUL = 1 << 4;
     public static final int STATUS_FAILED = 1 << 5;
+    private long id;
     private String uri;
     private String targetFilePath;
     transient private DownloadingListener downloadingListener;
@@ -18,6 +19,12 @@ public class Download {
     public Download(String uri, String targetFilePath) {
         this.uri = uri;
         this.targetFilePath = targetFilePath;
+    }
+
+    public Download(String uri, String targetFilePath,long id) {
+        this.uri = uri;
+        this.targetFilePath = targetFilePath;
+        this.id=id;
     }
 
     public Download(String uri, String targetFilePath, DownloadingListener listener) {
@@ -48,6 +55,14 @@ public class Download {
 
     public void setDownloadingListener(DownloadingListener downloadingListener) {
         this.downloadingListener = downloadingListener;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
     }
 
     @Override

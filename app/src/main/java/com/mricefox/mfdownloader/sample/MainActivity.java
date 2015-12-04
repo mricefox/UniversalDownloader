@@ -160,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
 
     private DownloadWrapper dummyD() {
         Download download = new Download("xxx", "xxx");
-        DownloadWrapper wrapper = new DownloadWrapper(download, 2);
+        DownloadWrapper wrapper = new DownloadWrapper(download);
         List<Block> blocks = new ArrayList<>();
         for (int j = 0; j < 3; ++j) {
             Block b = new Block(j + 99, j * 200, j * 10000, j * 50);
@@ -175,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
 
         for (int i = 0; i < 5; ++i) {
             Download download = new Download("a" + i, "b" + i);
-            DownloadWrapper wrapper = new DownloadWrapper(download, i);
+            DownloadWrapper wrapper = new DownloadWrapper(download);
             List<Block> blocks = new ArrayList<>();
             for (int j = 0; j < 3; ++j) {
                 Block b = new Block(j, j * 2, j * 10, j * 3);

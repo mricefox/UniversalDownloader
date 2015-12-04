@@ -88,7 +88,7 @@ public class XmlPersistence implements Persistence<DownloadWrapper> {
 
     private Element convertEntityToElement(DownloadWrapper wrapper, Document document) {
         Element element = document.createElement(ELEMENT_DOWNLOAD_TAG);
-        element.setAttribute("id", String.valueOf(wrapper.getId()));
+        element.setAttribute("id", String.valueOf(wrapper.getDownload().getId()));
         element.setAttribute("uri", wrapper.getDownload().getUri());
         element.setAttribute("path", wrapper.getDownload().getTargetFilePath());
         element.setAttribute("status", String.valueOf(wrapper.getStatus()));
@@ -107,7 +107,7 @@ public class XmlPersistence implements Persistence<DownloadWrapper> {
     }
 
     private void updateElement(DownloadWrapper wrapper, Element element, Document document) {
-        element.setAttribute("id", String.valueOf(wrapper.getId()));
+        element.setAttribute("id", String.valueOf(wrapper.getDownload().getId()));
         element.setAttribute("uri", wrapper.getDownload().getUri());
         element.setAttribute("path", wrapper.getDownload().getTargetFilePath());
         element.setAttribute("status", String.valueOf(wrapper.getStatus()));
@@ -157,7 +157,7 @@ public class XmlPersistence implements Persistence<DownloadWrapper> {
                             String status = parser.getAttributeValue(null, "status");
                             String currentBytes = parser.getAttributeValue(null, "currentBytes");
                             String totalBytes = parser.getAttributeValue(null, "totalBytes");
-                            wrapper = new DownloadWrapper(new Download(uri, path), Long.valueOf(id),
+                            wrapper = new DownloadWrapper(new Download(uri, path,Long.valueOf(id)),
                                     Integer.valueOf(status), Long.valueOf(totalBytes), Long.valueOf(currentBytes));
                             blockList = new ArrayList<>();
                         } else if (parser.getName().equals(ELEMENT_BLOCK_TAG)) {
@@ -203,7 +203,7 @@ public class XmlPersistence implements Persistence<DownloadWrapper> {
             Document document = builder.parse(xmlFile);
             Element rootElement = (Element) document.getElementsByTagName(ROOT_TAG).item(0);
             long maxId = Long.valueOf(rootElement.getAttribute(MAX_ID_TAG));
-            entity.setId(++maxId);
+            entity.getDownload().setId(++maxId);
 //            L.d("root tag list size:" + document.getElementsByTagName(ROOT_TAG).getLength());
             Element downloadElement = convertEntityToElement(entity, document);
             rootElement.appendChild(downloadElement);
@@ -239,7 +239,7 @@ public class XmlPersistence implements Persistence<DownloadWrapper> {
             for (int i = 0, size = downloads.getLength(); i < size; ++i) {
                 Element downloadElement = (Element) downloads.item(i);
                 long id = Long.valueOf(downloadElement.getAttribute("id"));
-                if (id == entity.getId()) {
+                if (id == entity.getDownload().getId()) {
 //                    L.d("id == entity.id:" + id);
                     res = id;
                     updateElement(entity, downloadElement, document);
@@ -274,7 +274,7 @@ public class XmlPersistence implements Persistence<DownloadWrapper> {
             for (int i = 0, size = downloads.getLength(); i < size; ++i) {
                 Element downloadElement = (Element) downloads.item(i);
                 long id = Long.valueOf(downloadElement.getAttribute("id"));
-                if (id == entity.getId()) {
+                if (id == entity.getDownload().getId()) {
 //                    L.d("id == entity.id:" + id);
                     res = id;
                     rootElement.removeChild(downloadElement);
@@ -300,7 +300,7 @@ public class XmlPersistence implements Persistence<DownloadWrapper> {
         List<DownloadWrapper> all = readAll();
         for (int i = 0, size = all.size(); i < size; ++i) {
             DownloadWrapper wrapper = all.get(i);
-            if (wrapper.getId() == id) return wrapper;
+            if (wrapper.getDownload().getId() == id) return wrapper;
         }
         return null;
     }
