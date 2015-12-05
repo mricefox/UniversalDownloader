@@ -132,4 +132,12 @@ public class DownloadListFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
     }
+
+    private class CustomLayoutManager extends RecyclerView.LayoutManager{
+
+        @Override
+        public RecyclerView.LayoutParams generateDefaultLayoutParams() {
+            return null;
+        }
+    }
 }
