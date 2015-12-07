@@ -1,5 +1,6 @@
 package com.mricefox.mfdownloader.sample;
 
+import android.app.DownloadManager;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Environment;
@@ -12,11 +13,14 @@ import android.view.ViewGroup;
 
 import com.mricefox.mfdownloader.lib.Download;
 import com.mricefox.mfdownloader.lib.DownloaderManager;
+import com.mricefox.mfdownloader.lib.DownloadingListener;
 import com.mricefox.mfdownloader.lib.assist.L;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -36,20 +40,79 @@ public class DownloadListFragment extends Fragment {
     private final static String SampleUri8 = "http://download.sj.qq.com/upload/connAssitantDownload/upload/MobileAssistant_1.apk";
     private final static String TargetDir
             = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "temp";
-    Download download1 = new Download(SampleUri3, TargetDir + File.separator + "novel1.zip");
-    Download download2 = new Download(SampleUri4, TargetDir + File.separator + "novel2.zip");
-    Download download3 = new Download(SampleUri5, TargetDir + File.separator + "novel3.zip");
-    Download download4 = new Download(SampleUri6, TargetDir + File.separator + "novel4.zip");
-    Download download5 = new Download(SampleUri2, TargetDir + File.separator + "qq.apk");
-    Download download6 = new Download(SampleUri1, TargetDir + File.separator + "qq.exe");
-    Download download7 = new Download(SampleUri7, TargetDir + File.separator + "Dianping_dianping-m_794.apk");
-    Download download8 = new Download(SampleUri8, TargetDir + File.separator + "MobileAssistant_1.apk");
+    private DownloadingListener downloadingListener = new DownloadingListener() {
+
+        @Override
+        public void onAdded(long id) {
+            L.d("id:" + id + "#onAdded");
+        }
+
+        @Override
+        public void onStart(long id) {
+            L.d("id:" + id + "#onStart");
+        }
+
+        @Override
+        public void onComplete(long id) {
+            L.d("id:" + id + "#onComplete");
+        }
+
+        @Override
+        public void onFailed(long id) {
+            L.d("id:" + id + "#onFailed");
+        }
+
+        @Override
+        public void onCancelled(long id) {
+            L.d("id:" + id + "#onCancelled");
+        }
+
+        @Override
+        public void onPaused(long id) {
+            L.d("id:" + id + "#onPaused");
+        }
+
+        @Override
+        public void onProgressUpdate(long id, long current, long total, long bytesPerSecond) {
+            L.d("id:" + id + "#onProgressUpdate" + "#current" + current + "#total" +
+                    total + "#%" + String.format("%.2f", (current + 0.0f) * 100 / total));
+            int position = downloadIdMap.get(id);
+            DownloadListAdapter.ItemViewHolder holder =
+                    (DownloadListAdapter.ItemViewHolder) downloadRecyclerView.findViewHolderForAdapterPosition(position);
+
+            holder.progressBar.setProgress((int) ((current + 0.0f) / total * 100));
+
+//            Iterator<Integer> iterator = holder.bindPositionSet.iterator();
+//
+//            while (iterator.hasNext()) {
+//                int pos = iterator.next();
+//                L.d(holder + "bind pos:" + pos);
+//                if (isItemVisible(pos)) {
+//
+//                }
+//
+//            }
+
+
+//            }
+        }
+
+    };
+
+    Download download1 = new Download(SampleUri3, TargetDir + File.separator + "novel1.zip", downloadingListener);
+    Download download2 = new Download(SampleUri4, TargetDir + File.separator + "novel2.zip", downloadingListener);
+    Download download3 = new Download(SampleUri5, TargetDir + File.separator + "novel3.zip", downloadingListener);
+    Download download4 = new Download(SampleUri6, TargetDir + File.separator + "novel4.zip", downloadingListener);
+    Download download5 = new Download(SampleUri2, TargetDir + File.separator + "qq.apk", downloadingListener);
+    Download download6 = new Download(SampleUri1, TargetDir + File.separator + "qq.exe", downloadingListener);
+    Download download7 = new Download(SampleUri7, TargetDir + File.separator + "Dianping_dianping-m_794.apk", downloadingListener);
+    Download download8 = new Download(SampleUri8, TargetDir + File.separator + "MobileAssistant_1.apk", downloadingListener);
 
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
     private RecyclerView downloadRecyclerView;
-    private DownloadListAdapter adapter;
+    private DownloadListAdapter downloadListAdapter;
     private List<Download> downloadList = new ArrayList<>();
 
     public DownloadListFragment() {
@@ -88,7 +151,7 @@ public class DownloadListFragment extends Fragment {
                              Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_download_list, container, false);
         downloadRecyclerView = (RecyclerView) v.findViewById(R.id.download_list);
-        adapter = new DownloadListAdapter(downloadList, getActivity());
+        downloadListAdapter = new DownloadListAdapter(downloadList, getActivity());
 //        DownloaderManager.getInstance().enqueue(download1);
 //        DownloaderManager.getInstance().enqueue(download2);
 //        DownloaderManager.getInstance().enqueue(download3);
@@ -106,23 +169,30 @@ public class DownloadListFragment extends Fragment {
         downloadList.add(download7);
         downloadList.add(download8);
 
-//        for (int i = 0; i < 20; ++i) {
-//            downloadList.add(download5);
-//        }
-
         downloadRecyclerView.setHasFixedSize(true);
 //        adapter.setHasStableIds(true);
-        downloadRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        downloadRecyclerView.setAdapter(adapter);
-        adapter.setOnItemClickListener(new DownloadListAdapter.OnItemClickListener() {
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
+        downloadRecyclerView.setLayoutManager(layoutManager);
+        downloadRecyclerView.setAdapter(downloadListAdapter);
+
+        downloadListAdapter.setOnItemClickListener(new DownloadListAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(View view, int position, long id) {
                 L.d("onItemClick#pos:" + position);
-                DownloaderManager.getInstance().enqueue(downloadList.get(position));
+                long d_id = DownloaderManager.getInstance().enqueue(downloadList.get(position));
+//                L.d("onItemClick#d_id:" + d_id);
+                downloadIdMap.put(d_id, position);
+
+                L.d("onItemClick#getId:" + downloadList.get(position).getId());
+                RecyclerView.ViewHolder holder = downloadRecyclerView.findViewHolderForAdapterPosition(position);
+
+                L.d("onItemClick#holder:" + holder);
             }
         });
         return v;
     }
+
+    private Map<Long, Integer> downloadIdMap = new HashMap<>();
 
     @Override
     public void onAttach(Context context) {
@@ -134,11 +204,12 @@ public class DownloadListFragment extends Fragment {
         super.onDetach();
     }
 
-    private class CustomLayoutManager extends RecyclerView.LayoutManager{
 
-        @Override
-        public RecyclerView.LayoutParams generateDefaultLayoutParams() {
-            return null;
-        }
+    private boolean isItemVisible(int position) {
+        LinearLayoutManager layoutManager = (LinearLayoutManager) downloadRecyclerView.getLayoutManager();
+        if (position >= layoutManager.findFirstVisibleItemPosition() &&
+                position <= layoutManager.findLastVisibleItemPosition()) return true;
+        return false;
     }
+
 }

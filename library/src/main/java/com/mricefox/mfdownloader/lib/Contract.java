@@ -10,6 +10,8 @@ public interface Contract {
 
     long updateDownload(DownloadWrapper wrapper);
 
+    void fireAddEvent(DownloadWrapper wrapper);
+
     void fireStartEvent(DownloadWrapper wrapper);
 
     void fireFailEvent(DownloadWrapper wrapper);

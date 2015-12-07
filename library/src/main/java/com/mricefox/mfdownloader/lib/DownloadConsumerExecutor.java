@@ -1,7 +1,5 @@
 package com.mricefox.mfdownloader.lib;
 
-import android.os.AsyncTask;
-
 import com.mricefox.mfdownloader.lib.assist.L;
 import com.mricefox.mfdownloader.lib.operator.BlockDownloadListener;
 import com.mricefox.mfdownloader.lib.operator.DefaultDownloadOperator;
@@ -14,9 +12,9 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -42,8 +40,10 @@ class DownloadConsumerExecutor {
         this.downloadOperator = downloadOperator;
         this.autoStartPending = autoStartPending;
         this.contract = contract;
-        downloadExecutor =
-                Executors.newCachedThreadPool(new DefaultThreadFactory(Thread.NORM_PRIORITY - 2, "download-t-"));
+        downloadExecutor = new DefaultPool(0, Integer.MAX_VALUE,
+                60L, TimeUnit.SECONDS,
+                new SynchronousQueue<Runnable>(),
+                new DefaultThreadFactory(Thread.NORM_PRIORITY - 2, "download-t-"));
         downloadQueue = new PriorityBlockingQueue();
         runningDownloads = new ConcurrentHashMap<>();
         downloadOnStopLocks = new ConcurrentHashMap<>();
@@ -105,7 +105,6 @@ class DownloadConsumerExecutor {
     };
 
     long addDownload(DownloadWrapper wrapper) {
-//        if (!checkCanAdd()) return -1;
         long id = -1;
         if (runningDownloads.size() < maxDownloadCount) {
             id = contract.insertDownload(wrapper);
@@ -113,6 +112,7 @@ class DownloadConsumerExecutor {
             DownloadConsumer downloadConsumer = new DownloadConsumer(wrapper, false);
             downloadExecutor.execute(downloadConsumer);
             runningDownloads.put(id, wrapper);
+            //store wrapper
             wrapper.setStatus(Download.STATUS_RUNNING);
             contract.updateDownload(wrapper);
         } else {
@@ -121,11 +121,6 @@ class DownloadConsumerExecutor {
         }
         return id;
     }
-
-//    private boolean checkCanAdd() {
-//        // TODO: 2015/11/30
-//        return true;
-//    }
 
     void setDownloadPaused(long id) {
         if (!runningDownloads.containsKey(id))
@@ -147,10 +142,15 @@ class DownloadConsumerExecutor {
         if (id == -1) throw new RuntimeException("update download fail");
     }
 
-//    private long generateDownloadId() {// TODO: 2015/12/1
-//        return downloadId++;
-//    }
+    void cancelDownload(DownloadWrapper wrapper) {
+// TODO: 2015/12/7
+    }
 
+    /**
+     * wait for all block downloaded
+     *
+     * @param id
+     */
     private void waitForDownloadStopLock(long id) {
         CountDownLatch latch = downloadOnStopLocks.get(id);
         if (latch == null) {
@@ -162,32 +162,6 @@ class DownloadConsumerExecutor {
             e.printStackTrace();
         }
     }
-
-//    private void fireStartEvent(DownloadWrapper wrapper) {
-//        DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
-//        if (listener != null) listener.onStart(wrapper.getId());
-//    }
-//
-//    private void fireFailEvent(DownloadWrapper wrapper) {
-//        DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
-//        if (listener != null) listener.onFailed(wrapper.getId());
-//    }
-//
-//    private void fireProgressEvent(DownloadWrapper wrapper) {
-//        DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
-//        if (listener != null)
-//            listener.onProgressUpdate(wrapper.getId(), wrapper.getCurrentBytes(), wrapper.getTotalBytes(), 0);
-//    }
-//
-//    private void fireCompleteEvent(final DownloadWrapper wrapper) {
-//        DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
-//        if (listener != null) listener.onComplete(wrapper.getId());
-//    }
-//
-//    private void firePauseEvent(final DownloadWrapper wrapper) {
-//        DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
-//        if (listener != null) listener.onPaused(wrapper.getId());
-//    }
 
     private class DownloadConsumer implements Runnable {
         private DownloadWrapper wrapper;
@@ -233,31 +207,36 @@ class DownloadConsumerExecutor {
                 BlockConsumer consumer = new BlockConsumer(block.getIndex(), startPos, block.getEndPos(),
                         wrapper.getDownload().getUri(), wrapper.getDownload().getTargetFilePath(),
                         wrapper.getDownload().getId());
-                L.d("init block pos s:" + startPos + "#e:" + block.getEndPos());
+                L.d("init block pos#s:" + startPos + "#e:" + block.getEndPos());
                 downloadExecutor.execute(consumer);
                 ++runningConsumerCount;
             }
             downloadOnStopLocks.put(wrapper.getDownload().getId(), new CountDownLatch(runningConsumerCount));
             waitForDownloadStopLock(wrapper.getDownload().getId());
+
             runningDownloads.remove(wrapper.getDownload().getId());
             downloadOnStopLocks.remove(wrapper.getDownload().getId());
+
             if (wrapper.getCurrentBytes() == wrapper.getTotalBytes()) {
                 wrapper.setStatus(Download.STATUS_SUCCESSFUL);
-                contract.updateDownload(wrapper);
                 contract.fireCompleteEvent(wrapper);
             } else if (wrapper.getStatus() == Download.STATUS_PAUSED) {
                 //stream I/O loop interrupt by paused
-                contract.updateDownload(wrapper);
                 contract.firePauseEvent(wrapper);
             } else {//stopped by error
                 wrapper.setStatus(Download.STATUS_FAILED);
-                contract.updateDownload(wrapper);
                 contract.fireFailEvent(wrapper);
             }
+            contract.updateDownload(wrapper);
         }
 
+        /**
+         * init new download, fill in blocks and total bytes
+         *
+         * @param wrapper
+         * @throws IOException
+         */
         void setupDownload(DownloadWrapper wrapper) throws IOException {
-            if (resume) return;
             final long fileLength = downloadOperator.getRemoteFileLength(wrapper.getDownload().getUri());
             if (fileLength != -1) {
                 List<Block> blocks = downloadOperator.split2Block(fileLength);
@@ -323,22 +302,31 @@ class DownloadConsumerExecutor {
         }
     }
 
-//    private class e extends ThreadPoolExecutor{
-//        public e(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue) {
-//            super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue);
-//        }
-//
-//        public e(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory) {
-//            super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory);
-//        }
-//
-//        public e(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue, RejectedExecutionHandler handler) {
-//            super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, handler);
-//        }
-//
-//        public e(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory, RejectedExecutionHandler handler) {
-//            super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory, handler);
-//        }
-//
-//    }
+    private class DefaultPool extends ThreadPoolExecutor {
+        public DefaultPool(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue) {
+            super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue);
+        }
+
+        public DefaultPool(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory) {
+            super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory);
+        }
+
+        public DefaultPool(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue, RejectedExecutionHandler handler) {
+            super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, handler);
+        }
+
+        public DefaultPool(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory, RejectedExecutionHandler handler) {
+            super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory, handler);
+        }
+
+        @Override
+        protected void beforeExecute(Thread t, Runnable r) {
+            super.beforeExecute(t, r);
+        }
+
+        @Override
+        protected void afterExecute(Runnable r, Throwable t) {
+            super.afterExecute(r, t);
+        }
+    }
 }

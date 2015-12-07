@@ -6,6 +6,8 @@ package com.mricefox.mfdownloader.lib;
  * Date:2015/11/30
  */
 public interface DownloadingListener {
+    void onAdded(long id);
+
     void onStart(long id);
 
     void onComplete(long id);

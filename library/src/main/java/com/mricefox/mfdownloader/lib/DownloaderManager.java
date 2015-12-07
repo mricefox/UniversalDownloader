@@ -45,7 +45,9 @@ public class DownloaderManager {
 
     public void resume(long id, DownloadingListener listener) {
         DownloadWrapper wrapper = persistence.query(id);
-        if (wrapper == null || wrapper.getStatus() != Download.STATUS_PAUSED)
+        if (wrapper == null)
+            throw new IllegalArgumentException("can not find download");
+        if (wrapper.getStatus() != Download.STATUS_PAUSED)
             throw new IllegalArgumentException("can not resume a not paused download");
         wrapper.getDownload().setDownloadingListener(listener);
 //        L.d("resume total:"+wrapper.getTotalBytes());
@@ -53,8 +55,15 @@ public class DownloaderManager {
         downloadConsumerExecutor.resumeDownload(wrapper);
     }
 
-    public void cancel(long id) {
-
+    public void cancel(long id, boolean deleteFile, DownloadingListener listener) {
+        DownloadWrapper wrapper = persistence.query(id);
+        if (wrapper == null)
+            throw new IllegalArgumentException("can not find download");
+        if (wrapper.getStatus() == Download.STATUS_SUCCESSFUL) {
+            throw new IllegalArgumentException("can not cancel a not successful download");
+        }
+        wrapper.getDownload().setDownloadingListener(listener);
+        L.d("cancel id:" + id);
     }
 
     private Contract ConsumerContract = new Contract() {
@@ -67,6 +76,12 @@ public class DownloaderManager {
         @Override
         public long updateDownload(DownloadWrapper wrapper) {
             return persistence.update(wrapper);
+        }
+
+        @Override
+        public void fireAddEvent(DownloadWrapper wrapper) {
+            DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
+            if (listener != null) listener.onAdded(wrapper.getDownload().getId());
         }
 
         @Override

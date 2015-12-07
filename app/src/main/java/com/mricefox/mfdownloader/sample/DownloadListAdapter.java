@@ -9,10 +9,12 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.mricefox.mfdownloader.lib.Download;
-import com.mricefox.mfdownloader.lib.DownloadingListener;
 import com.mricefox.mfdownloader.lib.assist.L;
 
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Author:zengzifeng email:zeng163mail@163.com
@@ -23,11 +25,21 @@ public class DownloadListAdapter extends RecyclerView.Adapter {
     private List<Download> downloadList;
     private Context context;
     private OnItemClickListener onItemClickListener;
+//    private Map<Long, Integer> downloadIdMap;
 
     public DownloadListAdapter(List<Download> downloadList, Context context) {
         this.downloadList = downloadList;
         this.context = context;
+//        downloadIdMap = new HashMap<>();
     }
+
+//    public Map<Long, Integer> getDownloadIdMap() {
+//        return downloadIdMap;
+//    }
+//
+//    public void setDownloadIdMap(Map<Long, Integer> downloadIdMap) {
+//        this.downloadIdMap = downloadIdMap;
+//    }
 
     public interface OnItemClickListener {
         void onItemClick(View view, int position, long id);
@@ -52,49 +64,24 @@ public class DownloadListAdapter extends RecyclerView.Adapter {
 //    @Override
 //    public long getItemId(int position) {
 ////        return super.getItemId(position);
+//        L.d("onItemClick getItemId#pos:" + position + "#id:" + downloadList.get(position).getId());
 //        return downloadList.get(position).getId();
 //    }
-
-
 
     @Override
     public void onBindViewHolder(final RecyclerView.ViewHolder holder, int position) {
         L.d("onBindViewHolder pos:" + position + " holder:" + holder);
         Download download = downloadList.get(position);
-        ((ItemViewHolder) holder).nameTxt.setText(download.getId()+"#");
-        download.setDownloadingListener(new DownloadingListener() {
-            @Override
-            public void onStart(long id) {
-                L.d("id:" + id + "#onStart");
-            }
+        ((ItemViewHolder) holder).nameTxt.setText(download.getId() + "#");
+//        download.setDownloadingListener(listener);
+        ((ItemViewHolder) holder).bindPositionSet.add(position);
+//        Iterator<Integer> iterator = ((ItemViewHolder) holder).bindPositionSet.iterator();
+//
+//        while (iterator.hasNext()) {
+//            int pos = iterator.next();
+//            L.d(holder + "bind pos:" + pos);
+//        }
 
-            @Override
-            public void onComplete(long id) {
-                L.d("id:" + id + "#onComplete");
-            }
-
-            @Override
-            public void onFailed(long id) {
-                L.d("id:" + id + "#onFailed");
-            }
-
-            @Override
-            public void onCancelled(long id) {
-                L.d("id:" + id + "#onCancelled");
-            }
-
-            @Override
-            public void onPaused(long id) {
-                L.d("id:" + id + "#onPaused");
-            }
-
-            @Override
-            public void onProgressUpdate(long id, long current, long total, long bytesPerSecond) {
-                L.d("id:" + id + "#onProgressUpdate" + "#current" + current + "#total" +
-                        total + "#%" + String.format("%.2f", (current + 0.0f) * 100 / total));
-                ((ItemViewHolder) holder).progressBar.setProgress((int) ((current + 0.0f) / total * 100));
-            }
-        });
     }
 
     @Override
@@ -114,15 +101,17 @@ public class DownloadListAdapter extends RecyclerView.Adapter {
 //        }
 //    }
 
-    private class ItemViewHolder extends RecyclerView.ViewHolder {
+    public class ItemViewHolder extends RecyclerView.ViewHolder {
         TextView nameTxt, sizeTxt;
         ProgressBar progressBar;
+        Set<Integer> bindPositionSet;
 
         public ItemViewHolder(View itemView) {
             super(itemView);
             nameTxt = (TextView) itemView.findViewById(R.id.name_txt);
             sizeTxt = (TextView) itemView.findViewById(R.id.size_txt);
             progressBar = (ProgressBar) itemView.findViewById(R.id.progress);
+            bindPositionSet = new HashSet<>();
 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -134,4 +123,5 @@ public class DownloadListAdapter extends RecyclerView.Adapter {
             });
         }
     }
+
 }

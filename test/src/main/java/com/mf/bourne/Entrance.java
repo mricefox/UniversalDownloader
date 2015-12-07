@@ -82,8 +82,15 @@ public class Entrance {
 
 
         System.out.println("r="+r);
+        En e1 = new En();
+        e1.a = 3;
 
+        En e2 = new En();
+        System.out.println("e2.a="+e2.a);
+    }
 
+    public static class En{
+        static int a = 0;
     }
 
     public static int ex() {
