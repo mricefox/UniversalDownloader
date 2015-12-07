@@ -3,6 +3,10 @@ package com.mricefox.mfdownloader.lib;
 import com.mricefox.mfdownloader.lib.assist.L;
 import com.mricefox.mfdownloader.lib.persistence.Persistence;
 
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
 /**
  * Author:zengzifeng email:zeng163mail@163.com
  * Description:
@@ -35,7 +39,7 @@ public class DownloaderManager {
 
     public long enqueue(Download download) {//todo enqueue same target file path download
         DownloadWrapper wrapper = new DownloadWrapper(download);
-        return downloadConsumerExecutor.addDownload(wrapper);
+        return downloadConsumerExecutor.startDownload(wrapper);
     }
 
     public void pause(long id) {
@@ -66,6 +70,7 @@ public class DownloaderManager {
         L.d("cancel id:" + id);
     }
 
+
     private Contract ConsumerContract = new Contract() {
 
         @Override
@@ -76,6 +81,11 @@ public class DownloaderManager {
         @Override
         public long updateDownload(DownloadWrapper wrapper) {
             return persistence.update(wrapper);
+        }
+
+        @Override
+        public List<DownloadWrapper> queryAll() {
+            return persistence.queryAll();
         }
 
         @Override
@@ -113,6 +123,32 @@ public class DownloaderManager {
         public void firePauseEvent(DownloadWrapper wrapper) {
             DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
             if (listener != null) listener.onPaused(wrapper.getDownload().getId());
+        }
+
+        @Override
+        public DownloadWrapper queryFirstPendingDownload() {
+            List<DownloadWrapper> all = persistence.queryAll();
+            if (all == null || all.size() == 0) {
+                L.d("query all fail");
+                return null;
+            }
+            Collections.sort(all, new Comparator<DownloadWrapper>() {//sort by priority desc
+                @Override
+                public int compare(DownloadWrapper lhs, DownloadWrapper rhs) {
+                    int lp = lhs.getDownload().getPriority();
+                    int rp = rhs.getDownload().getPriority();
+                    if (lp > rp) return -1;
+                    else if (lp < rp) return 1;
+                    else return 0;
+                }
+            });
+            for (int i = 0, size = all.size(); i < size; ++i) {
+                DownloadWrapper wrapper = all.get(i);
+                L.d("wrapper.getStatus():" + wrapper.getStatus() + "#id:" + wrapper.getDownload().getId());
+                if (wrapper.getStatus() == Download.STATUS_PENDING)
+                    return wrapper;
+            }
+            return null;
         }
     };
 }

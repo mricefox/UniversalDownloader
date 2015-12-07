@@ -94,6 +94,7 @@ public class XmlPersistence implements Persistence<DownloadWrapper> {
         element.setAttribute("status", String.valueOf(wrapper.getStatus()));
         element.setAttribute("totalBytes", String.valueOf(wrapper.getTotalBytes()));
         element.setAttribute("currentBytes", String.valueOf(wrapper.getCurrentBytes()));
+        element.setAttribute("priority", String.valueOf(wrapper.getDownload().getPriority()));
         for (int i = 0, size = wrapper.getBlocks().size(); i < size; ++i) {
             Block block = wrapper.getBlocks().get(i);
             Element blockElement = document.createElement(ELEMENT_BLOCK_TAG);
@@ -113,6 +114,7 @@ public class XmlPersistence implements Persistence<DownloadWrapper> {
         element.setAttribute("status", String.valueOf(wrapper.getStatus()));
         element.setAttribute("totalBytes", String.valueOf(wrapper.getTotalBytes()));
         element.setAttribute("currentBytes", String.valueOf(wrapper.getCurrentBytes()));
+        element.setAttribute("priority", String.valueOf(wrapper.getDownload().getPriority()));
 
         NodeList blockElements = element.getChildNodes();
         for (int i = 0, size = blockElements.getLength(); i < size; ++i) {
@@ -132,7 +134,7 @@ public class XmlPersistence implements Persistence<DownloadWrapper> {
     }
 
     @Override
-    public List<DownloadWrapper> readAll() {
+    public synchronized List<DownloadWrapper> queryAll() {
         long time = System.currentTimeMillis();
 
         XmlPullParser parser = Xml.newPullParser();
@@ -157,7 +159,8 @@ public class XmlPersistence implements Persistence<DownloadWrapper> {
                             String status = parser.getAttributeValue(null, "status");
                             String currentBytes = parser.getAttributeValue(null, "currentBytes");
                             String totalBytes = parser.getAttributeValue(null, "totalBytes");
-                            wrapper = new DownloadWrapper(new Download(uri, path,Long.valueOf(id)),
+                            String priority = parser.getAttributeValue(null, "priority");
+                            wrapper = new DownloadWrapper(new Download(uri, path, Long.valueOf(id), Integer.valueOf(priority)),
                                     Integer.valueOf(status), Long.valueOf(totalBytes), Long.valueOf(currentBytes));
                             blockList = new ArrayList<>();
                         } else if (parser.getName().equals(ELEMENT_BLOCK_TAG)) {
@@ -194,7 +197,7 @@ public class XmlPersistence implements Persistence<DownloadWrapper> {
     }
 
     @Override
-    public long insert(DownloadWrapper entity) {
+    public synchronized long insert(DownloadWrapper entity) {
         long time = System.currentTimeMillis();
 
         DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
@@ -261,7 +264,7 @@ public class XmlPersistence implements Persistence<DownloadWrapper> {
     }
 
     @Override
-    public long delete(DownloadWrapper entity) {
+    public synchronized long delete(DownloadWrapper entity) {
         long time = System.currentTimeMillis();
 
         DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
@@ -296,8 +299,8 @@ public class XmlPersistence implements Persistence<DownloadWrapper> {
     }
 
     @Override
-    public DownloadWrapper query(long id) {
-        List<DownloadWrapper> all = readAll();
+    public synchronized DownloadWrapper query(long id) {
+        List<DownloadWrapper> all = queryAll();
         for (int i = 0, size = all.size(); i < size; ++i) {
             DownloadWrapper wrapper = all.get(i);
             if (wrapper.getDownload().getId() == id) return wrapper;

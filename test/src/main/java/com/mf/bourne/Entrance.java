@@ -1,6 +1,10 @@
 package com.mf.bourne;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 public class Entrance {
     public static void main(String[] args) throws Exception {
@@ -74,22 +78,58 @@ public class Entrance {
 //        }
 //        System.out.println("11111");
 
-        System.out.println("ex=" + ex());
+//        System.out.println("ex=" + ex());
+//
+//        long current = 46;
+//        long total = 67;
+//        int r = (int) ((current + 0.0f) / total * 100);
+//
+//
+//        System.out.println("r="+r);
+//        En e1 = new En();
+//        e1.a = 3;
+//
+//        En e2 = new En();
+//        System.out.println("e2.a="+e2.a);
 
-        long current = 46;
-        long total = 67;
-        int r = (int) ((current + 0.0f) / total * 100);
+        KK k1 = new KK();
+        k1.a = 4;
+        KK k2 = new KK();
+        k2.a = 7;
+        KK k3 = new KK();
+        k3.a = 3;
+        KK k4 = new KK();
+        k4.a = 8;
 
+        List<KK> list = new ArrayList<>();
+        list.add(k1);
+        list.add(k2);
+        list.add(k3);
+        list.add(k4);
 
-        System.out.println("r="+r);
-        En e1 = new En();
-        e1.a = 3;
+        for (KK k : list) {
+            System.out.println("==" + k.a);
+        }
 
-        En e2 = new En();
-        System.out.println("e2.a="+e2.a);
+        Collections.sort(list, new Comparator<KK>() {
+            @Override
+            public int compare(KK o1, KK o2) {
+                if (o1.a > o2.a) return 1;
+                else if (o1.a < o2.a) return -1;
+                else return 0;
+            }
+        });
+        System.out.println("===");
+        for (KK k : list) {
+            System.out.println("==" + k.a);
+        }
     }
 
-    public static class En{
+    public static class KK {
+        int a;
+    }
+
+    public static class En {
         static int a = 0;
     }
 

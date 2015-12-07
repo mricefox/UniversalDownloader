@@ -13,7 +13,7 @@ public interface Persistence<T> {
      *
      * @return
      */
-    List<T> readAll();
+    List<T> queryAll();
 
     /**
      * Insert download record, the id of entity will auto increse, return -1 if fail

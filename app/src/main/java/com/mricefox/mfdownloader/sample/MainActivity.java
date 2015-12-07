@@ -41,6 +41,11 @@ public class MainActivity extends AppCompatActivity {
 
     private DownloadingListener listener = new DownloadingListener() {
         @Override
+        public void onAdded(long id) {
+            L.d("download id:" + id + "#onAdded");
+        }
+
+        @Override
         public void onStart(long id) {
             L.d("download id:" + id + "#onStart");
         }
@@ -71,11 +76,11 @@ public class MainActivity extends AppCompatActivity {
                     total + "#%" + String.format("%.2f", (current + 0.0f) * 100 / total));
         }
     };
-    Download download1 = new Download(SampleUri3, TargetDir + File.separator + "novel1.zip");
-    Download download2 = new Download(SampleUri4, TargetDir + File.separator + "novel2.zip");
-    Download download3 = new Download(SampleUri5, TargetDir + File.separator + "novel3.zip");
-    Download download4 = new Download(SampleUri6, TargetDir + File.separator + "novel4.zip", listener);
-    Download download5 = new Download(SampleUri2, TargetDir + File.separator + "qq.apk", listener);
+    Download download1 = new Download(SampleUri3, TargetDir + File.separator + "novel1.zip", 0);
+    Download download2 = new Download(SampleUri4, TargetDir + File.separator + "novel2.zip", 0);
+    Download download3 = new Download(SampleUri5, TargetDir + File.separator + "novel3.zip", 0);
+    Download download4 = new Download(SampleUri6, TargetDir + File.separator + "novel4.zip", listener, 0);
+    Download download5 = new Download(SampleUri2, TargetDir + File.separator + "qq.apk", listener, 0);
 
     DownloadListFragment fragment;
 
@@ -101,9 +106,11 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         Configuration configuration = new Configuration.Builder().
                 downloadOperator(new DefaultDownloadOperator()).
-                maxDownloadNum(Integer.MAX_VALUE).persistence(XmlPersistence.getInstance()).debuggable(true)
+                maxDownloadNum(2).persistence(XmlPersistence.getInstance()).debuggable(true)
+                .autoStartPending(true)
                 .build();
 //        downloaderManager =  DownloaderManager.getInstance();
         DownloaderManager.getInstance().init(configuration);
@@ -159,7 +166,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private DownloadWrapper dummyD() {
-        Download download = new Download("xxx", "xxx");
+        Download download = new Download("xxx", "xxx", 0);
         DownloadWrapper wrapper = new DownloadWrapper(download);
         List<Block> blocks = new ArrayList<>();
         for (int j = 0; j < 3; ++j) {
@@ -174,7 +181,7 @@ public class MainActivity extends AppCompatActivity {
         List<DownloadWrapper> list = new ArrayList<>();
 
         for (int i = 0; i < 5; ++i) {
-            Download download = new Download("a" + i, "b" + i);
+            Download download = new Download("a" + i, "b" + i, 0);
             DownloadWrapper wrapper = new DownloadWrapper(download);
             List<Block> blocks = new ArrayList<>();
             for (int j = 0; j < 3; ++j) {

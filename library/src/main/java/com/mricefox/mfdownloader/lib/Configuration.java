@@ -1,5 +1,7 @@
 package com.mricefox.mfdownloader.lib;
 
+import android.app.AlertDialog;
+
 import com.mricefox.mfdownloader.lib.operator.DownloadOperator;
 import com.mricefox.mfdownloader.lib.persistence.Persistence;
 
@@ -15,6 +17,10 @@ public class Configuration {
     private boolean debuggable;
     private Persistence persistence;
     private boolean autoStartPending;
+
+
+    private Configuration(){
+    }
 
     public int getMaxDownloadNum() {
         return maxDownloadNum;

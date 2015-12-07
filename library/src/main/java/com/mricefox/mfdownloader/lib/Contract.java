@@ -1,5 +1,7 @@
 package com.mricefox.mfdownloader.lib;
 
+import java.util.List;
+
 /**
  * Author:zengzifeng email:zeng163mail@163.com
  * Description:
@@ -9,6 +11,10 @@ public interface Contract {
     long insertDownload(DownloadWrapper wrapper);
 
     long updateDownload(DownloadWrapper wrapper);
+
+    List<DownloadWrapper> queryAll();
+
+    DownloadWrapper queryFirstPendingDownload();
 
     void fireAddEvent(DownloadWrapper wrapper);
 

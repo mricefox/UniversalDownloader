@@ -26,17 +26,17 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Date:2015/11/23
  */
 class DownloadConsumerExecutor {
-    private static ExecutorService downloadExecutor;
+    private ExecutorService downloadExecutor;
     private BlockingQueue downloadQueue;
     private DownloadOperator downloadOperator;
     private final ConcurrentHashMap<Long, DownloadWrapper> runningDownloads;
     private Contract contract;
     private ConcurrentHashMap<Long, CountDownLatch> downloadOnStopLocks;
-    private int maxDownloadCount;
+    private AtomicInteger maxDownloadCount;
     private boolean autoStartPending;
 
     DownloadConsumerExecutor(DownloadOperator downloadOperator, Contract contract, int maxDownloadCount, boolean autoStartPending) {
-        this.maxDownloadCount = maxDownloadCount;
+        this.maxDownloadCount = new AtomicInteger(maxDownloadCount);
         this.downloadOperator = downloadOperator;
         this.autoStartPending = autoStartPending;
         this.contract = contract;
@@ -68,8 +68,7 @@ class DownloadConsumerExecutor {
                 Block block = wrapper.getBlocks().get(blockIndex);
                 block.setDownloadedBytes(currentBytes);
             }
-            CountDownLatch latch = downloadOnStopLocks.get(downloadId);
-            if (latch != null) latch.countDown();
+            countDownLock(downloadId);
 
 //            Block block = wrapper.getBlocks().get(blockIndex);
 //            block.setDownloadedBytes(currentBytes);
@@ -77,7 +76,7 @@ class DownloadConsumerExecutor {
 //                runningDownloads.remove(downloadId);
 //                wrapper.setStatus(Download.STATUS_SUCCESSFUL);
 //                contract.updateDownload(wrapper);
-//                fireCompleteEvent(wrapper);
+//                contract.fireCompleteEvent(wrapper);
 //            } else if (wrapper.getStatus() == Download.STATUS_PAUSED) {
 //                //stream I/O loop interrupt by paused
 //                block.setStop(true);
@@ -85,7 +84,7 @@ class DownloadConsumerExecutor {
 //                    L.d("allBlockStopped");
 //                    runningDownloads.remove(downloadId);
 //                    contract.updateDownload(wrapper);
-//                    firePauseEvent(wrapper);
+//                    contract.firePauseEvent(wrapper);
 //                } else {
 //                    L.d("not allBlockStopped");
 //                }
@@ -99,27 +98,45 @@ class DownloadConsumerExecutor {
                 Block block = wrapper.getBlocks().get(blockIndex);
                 block.setDownloadedBytes(currentBytes);
             }
-            CountDownLatch latch = downloadOnStopLocks.get(downloadId);
-            if (latch != null) latch.countDown();
+            countDownLock(downloadId);
         }
     };
 
-    long addDownload(DownloadWrapper wrapper) {
-        long id = -1;
-        if (runningDownloads.size() < maxDownloadCount) {
+    long startDownload(DownloadWrapper wrapper) {
+        long time = System.currentTimeMillis();
+        L.d("runningDownloads.size()=" + runningDownloads.size());
+        L.d("runningDownloads size time:" + (System.currentTimeMillis() - time));
+        long id = -1L;
+        if (runningDownloads.size() < maxDownloadCount.get()) {
             id = contract.insertDownload(wrapper);
-            if (id == -1) return id;
+            if (id == -1) throw new RuntimeException("insert record fail");
             DownloadConsumer downloadConsumer = new DownloadConsumer(wrapper, false);
             downloadExecutor.execute(downloadConsumer);
             runningDownloads.put(id, wrapper);
             //store wrapper
             wrapper.setStatus(Download.STATUS_RUNNING);
             contract.updateDownload(wrapper);
+            contract.fireAddEvent(wrapper);
         } else {
             wrapper.setStatus(Download.STATUS_PENDING);
             id = contract.insertDownload(wrapper);
+            if (id == -1) throw new RuntimeException("insert record fail");
+            contract.fireAddEvent(wrapper);
+            L.d("insert pending id:" + id);
         }
         return id;
+    }
+
+    void startPendingDownload(DownloadWrapper wrapper) {
+        if (runningDownloads.size() < maxDownloadCount.get()) {
+            DownloadConsumer downloadConsumer = new DownloadConsumer(wrapper, false);
+            downloadExecutor.execute(downloadConsumer);
+            runningDownloads.put(wrapper.getDownload().getId(), wrapper);
+            //store wrapper
+            wrapper.setStatus(Download.STATUS_RUNNING);
+            contract.updateDownload(wrapper);
+        } else
+            L.d("download num max");
     }
 
     void setDownloadPaused(long id) {
@@ -130,7 +147,7 @@ class DownloadConsumerExecutor {
     }
 
     void resumeDownload(DownloadWrapper wrapper) {
-        if (runningDownloads.size() < maxDownloadCount) {
+        if (runningDownloads.size() < maxDownloadCount.get()) {
             DownloadConsumer downloadConsumer = new DownloadConsumer(wrapper, true);
             downloadExecutor.execute(downloadConsumer);
             runningDownloads.put(wrapper.getDownload().getId(), wrapper);
@@ -160,6 +177,15 @@ class DownloadConsumerExecutor {
             latch.await();
         } catch (InterruptedException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void countDownLock(long id) {
+        CountDownLatch latch = null;
+        try {
+            latch = downloadOnStopLocks.get(id);
+        } finally {
+            if (latch != null) latch.countDown();
         }
     }
 
@@ -207,7 +233,7 @@ class DownloadConsumerExecutor {
                 BlockConsumer consumer = new BlockConsumer(block.getIndex(), startPos, block.getEndPos(),
                         wrapper.getDownload().getUri(), wrapper.getDownload().getTargetFilePath(),
                         wrapper.getDownload().getId());
-                L.d("init block pos#s:" + startPos + "#e:" + block.getEndPos());
+//                L.d("init block pos#s:" + startPos + "#e:" + block.getEndPos());
                 downloadExecutor.execute(consumer);
                 ++runningConsumerCount;
             }
@@ -219,6 +245,7 @@ class DownloadConsumerExecutor {
 
             if (wrapper.getCurrentBytes() == wrapper.getTotalBytes()) {
                 wrapper.setStatus(Download.STATUS_SUCCESSFUL);
+                L.d("wrapper.setStatus(Download.STATUS_SUCCESSFUL);id:" + wrapper.getDownload().getId());
                 contract.fireCompleteEvent(wrapper);
             } else if (wrapper.getStatus() == Download.STATUS_PAUSED) {
                 //stream I/O loop interrupt by paused
@@ -228,6 +255,15 @@ class DownloadConsumerExecutor {
                 contract.fireFailEvent(wrapper);
             }
             contract.updateDownload(wrapper);
+
+            L.d("autoStartPending=" + autoStartPending);
+            if (autoStartPending) {
+                DownloadWrapper pendingDownload = contract.queryFirstPendingDownload();
+                if (pendingDownload != null) {
+                    L.d("pendingDownload id=" + pendingDownload.getDownload().getId());
+                    startPendingDownload(pendingDownload);
+                } else L.d("pendingDownload=null");
+            }
         }
 
         /**

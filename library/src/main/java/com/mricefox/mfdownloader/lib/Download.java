@@ -14,23 +14,27 @@ public class Download {
     private long id;
     private String uri;
     private String targetFilePath;
+    private int priority;
     transient private DownloadingListener downloadingListener;
 
-    public Download(String uri, String targetFilePath) {
+    public Download(String uri, String targetFilePath, int priority) {
         this.uri = uri;
         this.targetFilePath = targetFilePath;
+        this.priority = priority;
     }
 
-    public Download(String uri, String targetFilePath,long id) {
+    public Download(String uri, String targetFilePath, long id, int priority) {
         this.uri = uri;
         this.targetFilePath = targetFilePath;
-        this.id=id;
+        this.id = id;
+        this.priority = priority;
     }
 
-    public Download(String uri, String targetFilePath, DownloadingListener listener) {
+    public Download(String uri, String targetFilePath, DownloadingListener listener, int priority) {
         this.uri = uri;
         this.targetFilePath = targetFilePath;
         downloadingListener = listener;
+        this.priority = priority;
     }
 
     public String getUri() {
@@ -63,6 +67,14 @@ public class Download {
 
     public void setId(long id) {
         this.id = id;
+    }
+
+    public int getPriority() {
+        return priority;
+    }
+
+    public void setPriority(int priority) {
+        this.priority = priority;
     }
 
     @Override

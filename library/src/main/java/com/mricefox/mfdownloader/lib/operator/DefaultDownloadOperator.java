@@ -117,7 +117,7 @@ public class DefaultDownloadOperator implements DownloadOperator {
             while ((count = is.read(bytes, 0, bufferSize)) != -1) {
                 raf.write(bytes, 0, count);
                 current += count;
-                L.d("block s:" + startPos + " e:" + endPos + " buf size:" + bufferSize + " current:" + current + " count:" + count);
+//                L.d("block s:" + startPos + " e:" + endPos + " buf size:" + bufferSize + " current:" + current + " count:" + count);
                 if (listener != null && !listener.onBytesDownload(downloadId, blockIndex, current, is.available(), count))
                     break;
             }

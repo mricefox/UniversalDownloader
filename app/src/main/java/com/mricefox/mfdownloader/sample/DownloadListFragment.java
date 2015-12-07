@@ -1,6 +1,5 @@
 package com.mricefox.mfdownloader.sample;
 
-import android.app.DownloadManager;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Environment;
@@ -74,8 +73,8 @@ public class DownloadListFragment extends Fragment {
 
         @Override
         public void onProgressUpdate(long id, long current, long total, long bytesPerSecond) {
-            L.d("id:" + id + "#onProgressUpdate" + "#current" + current + "#total" +
-                    total + "#%" + String.format("%.2f", (current + 0.0f) * 100 / total));
+//            L.d("id:" + id + "#onProgressUpdate" + "#current" + current + "#total" +
+//                    total + "#%" + String.format("%.2f", (current + 0.0f) * 100 / total));
             int position = downloadIdMap.get(id);
             DownloadListAdapter.ItemViewHolder holder =
                     (DownloadListAdapter.ItemViewHolder) downloadRecyclerView.findViewHolderForAdapterPosition(position);
@@ -99,14 +98,14 @@ public class DownloadListFragment extends Fragment {
 
     };
 
-    Download download1 = new Download(SampleUri3, TargetDir + File.separator + "novel1.zip", downloadingListener);
-    Download download2 = new Download(SampleUri4, TargetDir + File.separator + "novel2.zip", downloadingListener);
-    Download download3 = new Download(SampleUri5, TargetDir + File.separator + "novel3.zip", downloadingListener);
-    Download download4 = new Download(SampleUri6, TargetDir + File.separator + "novel4.zip", downloadingListener);
-    Download download5 = new Download(SampleUri2, TargetDir + File.separator + "qq.apk", downloadingListener);
-    Download download6 = new Download(SampleUri1, TargetDir + File.separator + "qq.exe", downloadingListener);
-    Download download7 = new Download(SampleUri7, TargetDir + File.separator + "Dianping_dianping-m_794.apk", downloadingListener);
-    Download download8 = new Download(SampleUri8, TargetDir + File.separator + "MobileAssistant_1.apk", downloadingListener);
+    Download download1 = new Download(SampleUri3, TargetDir + File.separator + "novel1.zip", downloadingListener, 0);
+    Download download2 = new Download(SampleUri4, TargetDir + File.separator + "novel2.zip", downloadingListener, 0);
+    Download download3 = new Download(SampleUri5, TargetDir + File.separator + "novel3.zip", downloadingListener, 1);
+    Download download4 = new Download(SampleUri6, TargetDir + File.separator + "novel4.zip", downloadingListener, 6);
+    Download download5 = new Download(SampleUri2, TargetDir + File.separator + "qq.apk", downloadingListener, 3);
+    Download download6 = new Download(SampleUri1, TargetDir + File.separator + "qq.exe", downloadingListener, 2);
+    Download download7 = new Download(SampleUri7, TargetDir + File.separator + "Dianping_dianping-m_794.apk", downloadingListener, 4);
+    Download download8 = new Download(SampleUri8, TargetDir + File.separator + "MobileAssistant_1.apk", downloadingListener, 5);
 
     // TODO: Rename and change types of parameters
     private String mParam1;
