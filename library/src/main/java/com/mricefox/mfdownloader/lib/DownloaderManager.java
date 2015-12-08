@@ -1,6 +1,8 @@
 package com.mricefox.mfdownloader.lib;
 
-import com.mricefox.mfdownloader.lib.assist.L;
+import android.os.Handler;
+
+import com.mricefox.mfdownloader.lib.assist.MFLog;
 import com.mricefox.mfdownloader.lib.persistence.Persistence;
 
 import java.util.Collections;
@@ -34,7 +36,7 @@ public class DownloaderManager {
                 new DownloadConsumerExecutor(configuration.getDownloadOperator(), ConsumerContract,
                         configuration.getMaxDownloadNum(), configuration.isAutoStartPending());
         persistence = configuration.getPersistence();
-        L.setDebugState(configuration.isDebuggable());
+        MFLog.setDebugState(configuration.isDebuggable());
     }
 
     public long enqueue(Download download) {//todo enqueue same target file path download
@@ -44,7 +46,7 @@ public class DownloaderManager {
 
     public void pause(long id) {
         downloadConsumerExecutor.setDownloadPaused(id);
-        L.d("pause id:" + id);
+        MFLog.d("pause id:" + id);
     }
 
     public void resume(long id, DownloadingListener listener) {
@@ -54,8 +56,8 @@ public class DownloaderManager {
         if (wrapper.getStatus() != Download.STATUS_PAUSED)
             throw new IllegalArgumentException("can not resume a not paused download");
         wrapper.getDownload().setDownloadingListener(listener);
-//        L.d("resume total:"+wrapper.getTotalBytes());
-        L.d("resume id:" + id);
+//        MFLog.d("resume total:"+wrapper.getTotalBytes());
+        MFLog.d("resume id:" + id);
         downloadConsumerExecutor.resumeDownload(wrapper);
     }
 
@@ -67,9 +69,16 @@ public class DownloaderManager {
             throw new IllegalArgumentException("can not cancel a not successful download");
         }
         wrapper.getDownload().setDownloadingListener(listener);
-        L.d("cancel id:" + id);
+        MFLog.d("cancel id:" + id);
     }
 
+    private void runTask(Handler handler, Runnable r) {
+        if (handler == null) {
+            r.run();
+        } else {
+            handler.post(r);
+        }
+    }
 
     private Contract ConsumerContract = new Contract() {
 
@@ -89,38 +98,46 @@ public class DownloaderManager {
         }
 
         @Override
-        public void fireAddEvent(DownloadWrapper wrapper) {
-            DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
-            if (listener != null) listener.onAdded(wrapper.getDownload().getId());
+        public void triggerAddEvent(final DownloadWrapper wrapper) {
+            final DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
+            if (listener != null) {
+//                Runnable r = new Runnable() {
+//                    @Override
+//                    public void run() {
+                        listener.onAdded(wrapper.getDownload().getId());
+//                    }
+//                };
+//                runTask(wrapper.getDownload().getOptions().getHandler(), r);
+            }
         }
 
         @Override
-        public void fireStartEvent(DownloadWrapper wrapper) {
+        public void triggerStartEvent(DownloadWrapper wrapper) {
             DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
             if (listener != null) listener.onStart(wrapper.getDownload().getId());
         }
 
         @Override
-        public void fireFailEvent(DownloadWrapper wrapper) {
+        public void triggerFailEvent(DownloadWrapper wrapper) {
             DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
             if (listener != null) listener.onFailed(wrapper.getDownload().getId());
         }
 
         @Override
-        public void fireProgressEvent(DownloadWrapper wrapper) {
+        public void triggerProgressEvent(DownloadWrapper wrapper) {
             DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
             if (listener != null)
                 listener.onProgressUpdate(wrapper.getDownload().getId(), wrapper.getCurrentBytes(), wrapper.getTotalBytes(), 0);
         }
 
         @Override
-        public void fireCompleteEvent(DownloadWrapper wrapper) {
+        public void triggerCompleteEvent(DownloadWrapper wrapper) {
             DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
             if (listener != null) listener.onComplete(wrapper.getDownload().getId());
         }
 
         @Override
-        public void firePauseEvent(DownloadWrapper wrapper) {
+        public void triggerPauseEvent(DownloadWrapper wrapper) {
             DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
             if (listener != null) listener.onPaused(wrapper.getDownload().getId());
         }
@@ -129,14 +146,17 @@ public class DownloaderManager {
         public DownloadWrapper queryFirstPendingDownload() {
             List<DownloadWrapper> all = persistence.queryAll();
             if (all == null || all.size() == 0) {
-                L.d("query all fail");
+                MFLog.d("query all fail");
                 return null;
             }
             Collections.sort(all, new Comparator<DownloadWrapper>() {//sort by priority desc
                 @Override
                 public int compare(DownloadWrapper lhs, DownloadWrapper rhs) {
-                    int lp = lhs.getDownload().getPriority();
-                    int rp = rhs.getDownload().getPriority();
+//                    int lp = lhs.getDownload().getPriority();
+//                    int rp = rhs.getDownload().getOptions().getPriority();
+                    // TODO: 2015/12/8
+                    int lp = 0;
+                    int rp = 0;
                     if (lp > rp) return -1;
                     else if (lp < rp) return 1;
                     else return 0;
@@ -144,7 +164,7 @@ public class DownloaderManager {
             });
             for (int i = 0, size = all.size(); i < size; ++i) {
                 DownloadWrapper wrapper = all.get(i);
-                L.d("wrapper.getStatus():" + wrapper.getStatus() + "#id:" + wrapper.getDownload().getId());
+                MFLog.d("wrapper.getStatus():" + wrapper.getStatus() + "#id:" + wrapper.getDownload().getId());
                 if (wrapper.getStatus() == Download.STATUS_PENDING)
                     return wrapper;
             }

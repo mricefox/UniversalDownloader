@@ -1,7 +1,5 @@
 package com.mricefox.mfdownloader.lib;
 
-import android.app.AlertDialog;
-
 import com.mricefox.mfdownloader.lib.operator.DownloadOperator;
 import com.mricefox.mfdownloader.lib.persistence.Persistence;
 
@@ -12,14 +10,19 @@ import com.mricefox.mfdownloader.lib.persistence.Persistence;
  */
 public class Configuration {
     public static final int DEFAULT_MAX_DOWNLOAD_NUM = 5;
-    private int maxDownloadNum = DEFAULT_MAX_DOWNLOAD_NUM;
+
+    private int maxDownloadNum;
     private DownloadOperator operator;
     private boolean debuggable;
     private Persistence persistence;
     private boolean autoStartPending;
 
-
-    private Configuration(){
+    private Configuration(Builder builder) {
+        maxDownloadNum = builder.maxDownloadNum;
+        operator = builder.operator;
+        debuggable = builder.debuggable;
+        persistence = builder.persistence;
+        autoStartPending = builder.autoStartPending;
     }
 
     public int getMaxDownloadNum() {
@@ -42,40 +45,43 @@ public class Configuration {
         return autoStartPending;
     }
 
-    public final static class Builder {
-        private Configuration configuration;
+    public static class Builder {
+        private int maxDownloadNum = DEFAULT_MAX_DOWNLOAD_NUM;
+        private DownloadOperator operator;
+        private boolean debuggable;
+        private Persistence persistence;
+        private boolean autoStartPending;
 
         public Builder() {
-            configuration = new Configuration();
         }
 
         public Builder maxDownloadNum(int num) {
-            configuration.maxDownloadNum = num;
+            maxDownloadNum = num;
             return this;
         }
 
         public Builder downloadOperator(DownloadOperator operator) {
-            configuration.operator = operator;
+            this.operator = operator;
             return this;
         }
 
         public Builder debuggable(boolean debuggable) {
-            configuration.debuggable = debuggable;
+            this.debuggable = debuggable;
             return this;
         }
 
         public Builder persistence(Persistence persistence) {
-            configuration.persistence = persistence;
+            this.persistence = persistence;
             return this;
         }
 
         public Builder autoStartPending(boolean autoStartPending) {
-            configuration.autoStartPending = autoStartPending;
+            this.autoStartPending = autoStartPending;
             return this;
         }
 
         public Configuration build() {
-            return configuration;
+            return new Configuration(this);
         }
     }
 }

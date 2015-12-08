@@ -1,9 +1,14 @@
 package com.mf.bourne;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 public class Entrance {
@@ -43,29 +48,29 @@ public class Entrance {
 //
 //        System.out.println("b_size:" + b_size);
 //
-//        //序列化对象
-//        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("D:\\objectFile.obj"));
-//        Ser customer = new Ser();
-//        customer.name = "mklop";
-//        customer.age = 121;
-//        out.writeObject("mnb");    //写入字面值常量
-//        out.writeObject(new Date());    //写入匿名Date对象
-//        out.writeObject(customer);    //写入customer对象
-//        out.close();
-//
-//        //反序列化对象
-//        ObjectInputStream in = new ObjectInputStream(new FileInputStream("D:\\objectFile.obj"));
-//        System.out.println("obj1 " + (String) in.readObject());    //读取字面值常量
-//        System.out.println("obj2 " + (Date) in.readObject());    //读取匿名Date对象
+        //序列化对象
+        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("D:\\objectFile.obj"));
+        Ser customer = new Ser();
+        customer.name = "mklop";
+        customer.age = 121;
+        out.writeObject("mnb");    //写入字面值常量
+        out.writeObject(new Date());    //写入匿名Date对象
+        out.writeObject(new A());    //写入customer对象
+        out.close();
+
+        //反序列化对象
+        ObjectInputStream in = new ObjectInputStream(new FileInputStream("D:\\objectFile.obj"));
+        System.out.println("obj1 " + (String) in.readObject());    //读取字面值常量
+        System.out.println("obj2 " + (Date) in.readObject());    //读取匿名Date对象
 //        Ser obj3 = (Ser) in.readObject();    //读取customer对象
 //        System.out.println("obj3 " + obj3);
-//        in.close();
+        in.close();
 
 
-        long a = 67887, b = 4567;
-
-        float c = 456, d = 45;
-        System.out.println(String.format("==%.2f", (b + 0.0f) / a));
+//        long a = 67887, b = 4567;
+//
+//        float c = 456, d = 45;
+//        System.out.println(String.format("==%.2f", (b + 0.0f) / a));
 
 
 //        try {
@@ -123,6 +128,15 @@ public class Entrance {
         for (KK k : list) {
             System.out.println("==" + k.a);
         }
+    }
+
+    public static interface Serialize extends Serializable{
+        void print();
+    }
+
+
+    private static class A implements Serializable{
+        String a;
     }
 
     public static class KK {

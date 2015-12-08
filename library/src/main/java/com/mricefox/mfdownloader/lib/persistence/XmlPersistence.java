@@ -5,7 +5,7 @@ import android.util.Xml;
 import com.mricefox.mfdownloader.lib.Block;
 import com.mricefox.mfdownloader.lib.Download;
 import com.mricefox.mfdownloader.lib.DownloadWrapper;
-import com.mricefox.mfdownloader.lib.assist.L;
+import com.mricefox.mfdownloader.lib.assist.MFLog;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -69,7 +69,7 @@ public class XmlPersistence implements Persistence<DownloadWrapper> {
                 initRoot();// create success
         } else {//exists
         }
-        L.d("XmlPersistence init time:" + (System.currentTimeMillis() - time));
+        MFLog.d("XmlPersistence init time:" + (System.currentTimeMillis() - time));
     }
 
     private void initRoot() {
@@ -160,8 +160,10 @@ public class XmlPersistence implements Persistence<DownloadWrapper> {
                             String currentBytes = parser.getAttributeValue(null, "currentBytes");
                             String totalBytes = parser.getAttributeValue(null, "totalBytes");
                             String priority = parser.getAttributeValue(null, "priority");
-                            wrapper = new DownloadWrapper(new Download(uri, path, Long.valueOf(id), Integer.valueOf(priority)),
+                            wrapper = new DownloadWrapper(new Download(uri, path),
                                     Integer.valueOf(status), Long.valueOf(totalBytes), Long.valueOf(currentBytes));
+                            wrapper.getDownload().setId(Long.valueOf(id));
+                            wrapper.getDownload().setPriority(Integer.valueOf(priority));
                             blockList = new ArrayList<>();
                         } else if (parser.getName().equals(ELEMENT_BLOCK_TAG)) {
                             String index = parser.getAttributeValue(null, "index");
@@ -192,7 +194,7 @@ public class XmlPersistence implements Persistence<DownloadWrapper> {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        L.d("XmlPersistence readall time:" + (System.currentTimeMillis() - time));
+        MFLog.d("XmlPersistence readall time:" + (System.currentTimeMillis() - time));
         return wrapperList;
     }
 
@@ -207,7 +209,7 @@ public class XmlPersistence implements Persistence<DownloadWrapper> {
             Element rootElement = (Element) document.getElementsByTagName(ROOT_TAG).item(0);
             long maxId = Long.valueOf(rootElement.getAttribute(MAX_ID_TAG));
             entity.getDownload().setId(++maxId);
-//            L.d("root tag list size:" + document.getElementsByTagName(ROOT_TAG).getLength());
+//            MFLog.d("root tag list size:" + document.getElementsByTagName(ROOT_TAG).getLength());
             Element downloadElement = convertEntityToElement(entity, document);
             rootElement.appendChild(downloadElement);
             rootElement.setAttribute(MAX_ID_TAG, String.valueOf(maxId));
@@ -224,7 +226,7 @@ public class XmlPersistence implements Persistence<DownloadWrapper> {
         } catch (TransformerException e) {
             e.printStackTrace();
         }
-        L.d("XmlPersistence insert time:" + (System.currentTimeMillis() - time));
+        MFLog.d("XmlPersistence insert time:" + (System.currentTimeMillis() - time));
         return -1;
     }
 
@@ -238,12 +240,12 @@ public class XmlPersistence implements Persistence<DownloadWrapper> {
             DocumentBuilder builder = docFactory.newDocumentBuilder();
             Document document = builder.parse(xmlFile);
             NodeList downloads = document.getElementsByTagName(ELEMENT_DOWNLOAD_TAG);
-//            L.d("downloads tag list size:" + downloads.getLength());
+//            MFLog.d("downloads tag list size:" + downloads.getLength());
             for (int i = 0, size = downloads.getLength(); i < size; ++i) {
                 Element downloadElement = (Element) downloads.item(i);
                 long id = Long.valueOf(downloadElement.getAttribute("id"));
                 if (id == entity.getDownload().getId()) {
-//                    L.d("id == entity.id:" + id);
+//                    MFLog.d("id == entity.id:" + id);
                     res = id;
                     updateElement(entity, downloadElement, document);
                     writeBack(document, xmlFile);
@@ -259,7 +261,7 @@ public class XmlPersistence implements Persistence<DownloadWrapper> {
         } catch (TransformerException e) {
             e.printStackTrace();
         }
-//        L.d("XmlPersistence update time:" + (System.currentTimeMillis() - time));
+//        MFLog.d("XmlPersistence update time:" + (System.currentTimeMillis() - time));
         return res;
     }
 
@@ -278,7 +280,7 @@ public class XmlPersistence implements Persistence<DownloadWrapper> {
                 Element downloadElement = (Element) downloads.item(i);
                 long id = Long.valueOf(downloadElement.getAttribute("id"));
                 if (id == entity.getDownload().getId()) {
-//                    L.d("id == entity.id:" + id);
+//                    MFLog.d("id == entity.id:" + id);
                     res = id;
                     rootElement.removeChild(downloadElement);
                     writeBack(document, xmlFile);
@@ -294,7 +296,7 @@ public class XmlPersistence implements Persistence<DownloadWrapper> {
         } catch (TransformerException e) {
             e.printStackTrace();
         }
-        L.d("XmlPersistence delete time:" + (System.currentTimeMillis() - time));
+        MFLog.d("XmlPersistence delete time:" + (System.currentTimeMillis() - time));
         return res;
     }
 

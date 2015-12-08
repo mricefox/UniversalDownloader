@@ -9,10 +9,9 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.mricefox.mfdownloader.lib.Download;
-import com.mricefox.mfdownloader.lib.assist.L;
+import com.mricefox.mfdownloader.lib.assist.MFLog;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -64,13 +63,13 @@ public class DownloadListAdapter extends RecyclerView.Adapter {
 //    @Override
 //    public long getItemId(int position) {
 ////        return super.getItemId(position);
-//        L.d("onItemClick getItemId#pos:" + position + "#id:" + downloadList.get(position).getId());
+//        MFLog.d("onItemClick getItemId#pos:" + position + "#id:" + downloadList.get(position).getId());
 //        return downloadList.get(position).getId();
 //    }
 
     @Override
     public void onBindViewHolder(final RecyclerView.ViewHolder holder, int position) {
-        L.d("onBindViewHolder pos:" + position + " holder:" + holder);
+        MFLog.d("onBindViewHolder pos:" + position + " holder:" + holder);
         Download download = downloadList.get(position);
         ((ItemViewHolder) holder).nameTxt.setText(download.getId() + "#");
 //        download.setDownloadingListener(listener);
@@ -79,7 +78,7 @@ public class DownloadListAdapter extends RecyclerView.Adapter {
 //
 //        while (iterator.hasNext()) {
 //            int pos = iterator.next();
-//            L.d(holder + "bind pos:" + pos);
+//            MFLog.d(holder + "bind pos:" + pos);
 //        }
 
     }
@@ -91,7 +90,7 @@ public class DownloadListAdapter extends RecyclerView.Adapter {
 
 //    @Override
 //    public void onViewRecycled(RecyclerView.ViewHolder holder) {
-//        L.d("onViewRecycled holder.pos:" + holder.getAdapterPosition());
+//        MFLog.d("onViewRecycled holder.pos:" + holder.getAdapterPosition());
 //        super.onViewRecycled(holder);
 //        if (holder.getItemId() != RecyclerView.NO_ID
 //                && holder.getAdapterPosition() != RecyclerView.NO_POSITION) {

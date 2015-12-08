@@ -2,6 +2,7 @@ package com.mricefox.mfdownloader.sample;
 
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
@@ -13,7 +14,7 @@ import com.mricefox.mfdownloader.lib.Download;
 import com.mricefox.mfdownloader.lib.DownloadWrapper;
 import com.mricefox.mfdownloader.lib.DownloaderManager;
 import com.mricefox.mfdownloader.lib.DownloadingListener;
-import com.mricefox.mfdownloader.lib.assist.L;
+import com.mricefox.mfdownloader.lib.assist.MFLog;
 import com.mricefox.mfdownloader.lib.operator.DefaultDownloadOperator;
 import com.mricefox.mfdownloader.lib.persistence.XmlPersistence;
 
@@ -42,45 +43,45 @@ public class MainActivity extends AppCompatActivity {
     private DownloadingListener listener = new DownloadingListener() {
         @Override
         public void onAdded(long id) {
-            L.d("download id:" + id + "#onAdded");
+            MFLog.d("download id:" + id + "#onAdded");
         }
 
         @Override
         public void onStart(long id) {
-            L.d("download id:" + id + "#onStart");
+            MFLog.d("download id:" + id + "#onStart");
         }
 
         @Override
         public void onComplete(long id) {
-            L.d("download id:" + id + "#onComplete");
+            MFLog.d("download id:" + id + "#onComplete");
         }
 
         @Override
         public void onFailed(long id) {
-            L.d("download id:" + id + "#onFailed");
+            MFLog.d("download id:" + id + "#onFailed");
         }
 
         @Override
         public void onCancelled(long id) {
-            L.d("download id:" + id + "#onCancelled");
+            MFLog.d("download id:" + id + "#onCancelled");
         }
 
         @Override
         public void onPaused(long id) {
-            L.d("download id:" + id + "#onPaused");
+            MFLog.d("download id:" + id + "#onPaused");
         }
 
         @Override
         public void onProgressUpdate(long id, long current, long total, long bytesPerSecond) {
-            L.d("id:" + id + "#onProgressUpdate" + "#current" + current + "#total" +
+            MFLog.d("id:" + id + "#onProgressUpdate" + "#current" + current + "#total" +
                     total + "#%" + String.format("%.2f", (current + 0.0f) * 100 / total));
         }
     };
-    Download download1 = new Download(SampleUri3, TargetDir + File.separator + "novel1.zip", 0);
-    Download download2 = new Download(SampleUri4, TargetDir + File.separator + "novel2.zip", 0);
-    Download download3 = new Download(SampleUri5, TargetDir + File.separator + "novel3.zip", 0);
-    Download download4 = new Download(SampleUri6, TargetDir + File.separator + "novel4.zip", listener, 0);
-    Download download5 = new Download(SampleUri2, TargetDir + File.separator + "qq.apk", listener, 0);
+    Download download1 = new Download(SampleUri3, TargetDir + File.separator + "novel1.zip");
+    Download download2 = new Download(SampleUri4, TargetDir + File.separator + "novel2.zip");
+    Download download3 = new Download(SampleUri5, TargetDir + File.separator + "novel3.zip");
+    Download download4 = new Download(SampleUri6, TargetDir + File.separator + "novel4.zip", listener);
+    Download download5 = new Download(SampleUri2, TargetDir + File.separator + "qq.apk", listener);
 
     DownloadListFragment fragment;
 
@@ -135,7 +136,8 @@ public class MainActivity extends AppCompatActivity {
         public void onClick(View v) {
             switch (v.getId()) {
                 case R.id.pause_btn:
-                    DownloaderManager.getInstance().pause(d_id);
+                    fragment.serializeV2();
+//                    DownloaderManager.getInstance().pause(d_id);
 //                    XmlPersistence.getInstance().insert(null);
 //                    List<DownloadWrapper> list = dummyDownloads();
 //
@@ -145,13 +147,13 @@ public class MainActivity extends AppCompatActivity {
 //                    XmlPersistence.getInstance().update(dummyD());
 //                    DownloadWrapper wrapper = new DownloadWrapper(null, 3);
 //                    long id = XmlPersistence.getInstance().delete(wrapper);
-//                    L.d("delete id:" + id);
+//                    MFLog.d("delete id:" + id);
 //                    List<DownloadWrapper> list = XmlPersistence.getInstance().readAll();
-//                    L.d("list:" + list);
+//                    MFLog.d("list:" + list);
                     break;
                 case R.id.retry_btn:
-                    L.d("");
-                    d_id = DownloaderManager.getInstance().enqueue(download5);
+                    fragment.deserializeV2();
+//                    d_id = DownloaderManager.getInstance().enqueue(download5);
 //                    try {
 //                        XmlPersistence.getInstance().init(TargetDir);
 //                    } catch (IOException e) {
@@ -159,14 +161,20 @@ public class MainActivity extends AppCompatActivity {
 //                    }
                     break;
                 case R.id.resume_btn:
-                    DownloaderManager.getInstance().resume(d_id, listener);
+//                    DownloaderManager.getInstance().resume(d_id, listener);
+
+//                    Trigger trigger = new Trigger();
+//                    trigger.num=3;
+//                    trigger.h = new Handler();
+//                    trigger.tag = "AKOP";
+//                    trigger.onClick();
                     break;
             }
         }
     }
 
     private DownloadWrapper dummyD() {
-        Download download = new Download("xxx", "xxx", 0);
+        Download download = new Download("xxx", "xxx");
         DownloadWrapper wrapper = new DownloadWrapper(download);
         List<Block> blocks = new ArrayList<>();
         for (int j = 0; j < 3; ++j) {
@@ -181,7 +189,7 @@ public class MainActivity extends AppCompatActivity {
         List<DownloadWrapper> list = new ArrayList<>();
 
         for (int i = 0; i < 5; ++i) {
-            Download download = new Download("a" + i, "b" + i, 0);
+            Download download = new Download("a" + i, "b" + i);
             DownloadWrapper wrapper = new DownloadWrapper(download);
             List<Block> blocks = new ArrayList<>();
             for (int j = 0; j < 3; ++j) {
@@ -193,4 +201,25 @@ public class MainActivity extends AppCompatActivity {
         }
         return list;
     }
+
+    private class Trigger implements View.OnClickListener {
+        Handler h;
+        int num;
+        String tag;
+
+        @Override
+        public void onClick(View v) {
+            h.post(new Runnable() {
+                @Override
+                public void run() {
+                    print();
+                }
+            });
+        }
+
+        void print() {
+            MFLog.d("Trigger tag:" + tag + "#num:" + num);
+        }
+    }
+
 }

@@ -1,6 +1,6 @@
 package com.mricefox.mfdownloader.lib;
 
-import com.mricefox.mfdownloader.lib.assist.L;
+import com.mricefox.mfdownloader.lib.assist.MFLog;
 import com.mricefox.mfdownloader.lib.operator.BlockDownloadListener;
 import com.mricefox.mfdownloader.lib.operator.DefaultDownloadOperator;
 import com.mricefox.mfdownloader.lib.operator.DownloadOperator;
@@ -55,9 +55,9 @@ class DownloadConsumerExecutor {
         public boolean onBytesDownload(long downloadId, int blockIndex, long current, long total, long bytesThisStep) {
             final DownloadWrapper wrapper = runningDownloads.get(downloadId);
             wrapper.setCurrentBytes(wrapper.getCurrentBytes() + bytesThisStep);
-//            L.d("downloadId:" + downloadId + " current:" + currentBytes + " total:" + wrapper.totalBytes);
+//            MFLog.d("downloadId:" + downloadId + " current:" + currentBytes + " total:" + wrapper.totalBytes);
 //            contract.updateDownload(wrapper);
-            contract.fireProgressEvent(wrapper);
+            contract.triggerProgressEvent(wrapper);
             return wrapper.getStatus() != Download.STATUS_PAUSED;
         }
 
@@ -76,17 +76,17 @@ class DownloadConsumerExecutor {
 //                runningDownloads.remove(downloadId);
 //                wrapper.setStatus(Download.STATUS_SUCCESSFUL);
 //                contract.updateDownload(wrapper);
-//                contract.fireCompleteEvent(wrapper);
+//                contract.triggerCompleteEvent(wrapper);
 //            } else if (wrapper.getStatus() == Download.STATUS_PAUSED) {
 //                //stream I/O loop interrupt by paused
 //                block.setStop(true);
 //                if (wrapper.allBlockStopped()) {
-//                    L.d("allBlockStopped");
+//                    MFLog.d("allBlockStopped");
 //                    runningDownloads.remove(downloadId);
 //                    contract.updateDownload(wrapper);
-//                    contract.firePauseEvent(wrapper);
+//                    contract.triggerPauseEvent(wrapper);
 //                } else {
-//                    L.d("not allBlockStopped");
+//                    MFLog.d("not allBlockStopped");
 //                }
 //            }
         }
@@ -104,8 +104,8 @@ class DownloadConsumerExecutor {
 
     long startDownload(DownloadWrapper wrapper) {
         long time = System.currentTimeMillis();
-        L.d("runningDownloads.size()=" + runningDownloads.size());
-        L.d("runningDownloads size time:" + (System.currentTimeMillis() - time));
+        MFLog.d("runningDownloads.size()=" + runningDownloads.size());
+        MFLog.d("runningDownloads size time:" + (System.currentTimeMillis() - time));
         long id = -1L;
         if (runningDownloads.size() < maxDownloadCount.get()) {
             id = contract.insertDownload(wrapper);
@@ -116,13 +116,13 @@ class DownloadConsumerExecutor {
             //store wrapper
             wrapper.setStatus(Download.STATUS_RUNNING);
             contract.updateDownload(wrapper);
-            contract.fireAddEvent(wrapper);
+            contract.triggerAddEvent(wrapper);
         } else {
             wrapper.setStatus(Download.STATUS_PENDING);
             id = contract.insertDownload(wrapper);
             if (id == -1) throw new RuntimeException("insert record fail");
-            contract.fireAddEvent(wrapper);
-            L.d("insert pending id:" + id);
+            contract.triggerAddEvent(wrapper);
+            MFLog.d("insert pending id:" + id);
         }
         return id;
     }
@@ -136,7 +136,7 @@ class DownloadConsumerExecutor {
             wrapper.setStatus(Download.STATUS_RUNNING);
             contract.updateDownload(wrapper);
         } else
-            L.d("download num max");
+            MFLog.d("download num max");
     }
 
     void setDownloadPaused(long id) {
@@ -201,7 +201,7 @@ class DownloadConsumerExecutor {
         @Override
         public void run() {
             //call back on start
-            contract.fireStartEvent(wrapper);
+            contract.triggerStartEvent(wrapper);
             try {
                 if (!resume) setupDownload(wrapper);
             } catch (IOException e) {
@@ -214,11 +214,11 @@ class DownloadConsumerExecutor {
                 contract.updateDownload(wrapper);
             }
             if (wrapper.getStatus() == Download.STATUS_FAILED) {
-                contract.fireFailEvent(wrapper);
+                contract.triggerFailEvent(wrapper);
                 return;
             }
             if (wrapper.getStatus() == Download.STATUS_PAUSED) {
-                contract.firePauseEvent(wrapper);
+                contract.triggerPauseEvent(wrapper);
                 return;
             }
             List<Block> blocks = wrapper.getBlocks();
@@ -233,7 +233,7 @@ class DownloadConsumerExecutor {
                 BlockConsumer consumer = new BlockConsumer(block.getIndex(), startPos, block.getEndPos(),
                         wrapper.getDownload().getUri(), wrapper.getDownload().getTargetFilePath(),
                         wrapper.getDownload().getId());
-//                L.d("init block pos#s:" + startPos + "#e:" + block.getEndPos());
+//                MFLog.d("init block pos#s:" + startPos + "#e:" + block.getEndPos());
                 downloadExecutor.execute(consumer);
                 ++runningConsumerCount;
             }
@@ -245,24 +245,24 @@ class DownloadConsumerExecutor {
 
             if (wrapper.getCurrentBytes() == wrapper.getTotalBytes()) {
                 wrapper.setStatus(Download.STATUS_SUCCESSFUL);
-                L.d("wrapper.setStatus(Download.STATUS_SUCCESSFUL);id:" + wrapper.getDownload().getId());
-                contract.fireCompleteEvent(wrapper);
+                MFLog.d("wrapper.setStatus(Download.STATUS_SUCCESSFUL);id:" + wrapper.getDownload().getId());
+                contract.triggerCompleteEvent(wrapper);
             } else if (wrapper.getStatus() == Download.STATUS_PAUSED) {
                 //stream I/O loop interrupt by paused
-                contract.firePauseEvent(wrapper);
+                contract.triggerPauseEvent(wrapper);
             } else {//stopped by error
                 wrapper.setStatus(Download.STATUS_FAILED);
-                contract.fireFailEvent(wrapper);
+                contract.triggerFailEvent(wrapper);
             }
             contract.updateDownload(wrapper);
 
-            L.d("autoStartPending=" + autoStartPending);
+            MFLog.d("autoStartPending=" + autoStartPending);
             if (autoStartPending) {
                 DownloadWrapper pendingDownload = contract.queryFirstPendingDownload();
                 if (pendingDownload != null) {
-                    L.d("pendingDownload id=" + pendingDownload.getDownload().getId());
+                    MFLog.d("pendingDownload id=" + pendingDownload.getDownload().getId());
                     startPendingDownload(pendingDownload);
-                } else L.d("pendingDownload=null");
+                } else MFLog.d("pendingDownload=null");
             }
         }
 
@@ -276,7 +276,7 @@ class DownloadConsumerExecutor {
             final long fileLength = downloadOperator.getRemoteFileLength(wrapper.getDownload().getUri());
             if (fileLength != -1) {
                 List<Block> blocks = downloadOperator.split2Block(fileLength);
-                L.d("file size:" + fileLength);
+                MFLog.d("file size:" + fileLength);
                 if (downloadOperator.createFile(fileLength, wrapper.getDownload().getTargetFilePath())) {
                     wrapper.setBlocks(blocks);
                     /**

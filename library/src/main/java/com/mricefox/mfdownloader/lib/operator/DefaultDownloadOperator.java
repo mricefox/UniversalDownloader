@@ -2,7 +2,7 @@ package com.mricefox.mfdownloader.lib.operator;
 
 import com.mricefox.mfdownloader.lib.Block;
 import com.mricefox.mfdownloader.lib.assist.ContentLengthInputStream;
-import com.mricefox.mfdownloader.lib.assist.L;
+import com.mricefox.mfdownloader.lib.assist.MFLog;
 
 import java.io.BufferedInputStream;
 import java.io.Closeable;
@@ -44,7 +44,7 @@ public class DefaultDownloadOperator implements DownloadOperator {
     @Override
     public long getRemoteFileLength(String urlStr) {
         long time = System.currentTimeMillis();
-        L.d("start getRemoteFileLength");
+        MFLog.d("start getRemoteFileLength");
         HttpURLConnection connection = null;
         try {
             connection = (HttpURLConnection) new URL(urlStr).openConnection();
@@ -61,7 +61,7 @@ public class DefaultDownloadOperator implements DownloadOperator {
         } finally {
             if (connection != null)
                 connection.disconnect();
-            L.d("end getRemoteFileLength time:" + (System.currentTimeMillis() - time));
+            MFLog.d("end getRemoteFileLength time:" + (System.currentTimeMillis() - time));
         }
         return -1;
     }
@@ -99,7 +99,7 @@ public class DefaultDownloadOperator implements DownloadOperator {
         RandomAccessFile raf = null;
         InputStream is = null;
         int current = 0;
-//        L.d("downloadBlock:s#" + startPos + " e#" + endPos);
+//        MFLog.d("downloadBlock:s#" + startPos + " e#" + endPos);
         try {
             connection = (HttpURLConnection) new URL(urlStr).openConnection();
             connection.setConnectTimeout(DEFAULT_HTTP_CONNECT_TIMEOUT);
@@ -117,7 +117,7 @@ public class DefaultDownloadOperator implements DownloadOperator {
             while ((count = is.read(bytes, 0, bufferSize)) != -1) {
                 raf.write(bytes, 0, count);
                 current += count;
-//                L.d("block s:" + startPos + " e:" + endPos + " buf size:" + bufferSize + " current:" + current + " count:" + count);
+//                MFLog.d("block s:" + startPos + " e:" + endPos + " buf size:" + bufferSize + " current:" + current + " count:" + count);
                 if (listener != null && !listener.onBytesDownload(downloadId, blockIndex, current, is.available(), count))
                     break;
             }
@@ -146,7 +146,7 @@ public class DefaultDownloadOperator implements DownloadOperator {
 //            if (remain == 0) break;
 //            count = is.read(bytes, 0, bufferSize);
 //            if (current + count > size) break;
-//            L.d("block s:" + block.startPos + " e:" + block.endPos + " buf size:" + bufferSize + " current:" + current + " count:" + count);
+//            MFLog.d("block s:" + block.startPos + " e:" + block.endPos + " buf size:" + bufferSize + " current:" + current + " count:" + count);
 //            raf.write(bytes, 0, count);
 //            current += count;
 //        }
@@ -156,7 +156,7 @@ public class DefaultDownloadOperator implements DownloadOperator {
 //                && current < block.endPos - block.startPos + 1) {
 //            raf.write(bytes, 0, count);
 //            current += count;
-//            L.d("block s:" + block.startPos + " e:" + block.endPos + " current:" + current + " count:" + count);
+//            MFLog.d("block s:" + block.startPos + " e:" + block.endPos + " current:" + current + " count:" + count);
 //        }
         //should not close InputStream until all downlaod thread finish
 //        raf.close();

@@ -8,7 +8,7 @@ import android.util.Log;
  * Description:
  * Date:2015/11/27
  */
-public class L {
+public class MFLog {
     private static boolean DEBUG = true;
     private static final String TAG = "mf-download-log";
 
@@ -49,6 +49,15 @@ public class L {
         }
     }
 
+    public static void e(String tag, String logContent, Throwable t) {
+        if (TextUtils.isEmpty(tag))
+            tag = TAG;
+        if (DEBUG) {
+            getMethodNames(new Throwable().getStackTrace());
+            Log.e(tag, createLog(logContent), t);
+        }
+    }
+
     public static void e(String tag, String logContent) {
         if (TextUtils.isEmpty(tag))
             tag = TAG;
@@ -62,6 +71,13 @@ public class L {
         if (DEBUG) {
             getMethodNames(new Throwable().getStackTrace());
             Log.e(TAG, createLog(logContent));
+        }
+    }
+
+    public static void e(String logContent, Throwable t) {
+        if (DEBUG) {
+            getMethodNames(new Throwable().getStackTrace());
+            Log.e(TAG, createLog(logContent), t);
         }
     }
 

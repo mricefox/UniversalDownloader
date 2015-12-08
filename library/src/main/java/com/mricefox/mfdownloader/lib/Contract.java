@@ -16,15 +16,15 @@ public interface Contract {
 
     DownloadWrapper queryFirstPendingDownload();
 
-    void fireAddEvent(DownloadWrapper wrapper);
+    void triggerAddEvent(DownloadWrapper wrapper);
 
-    void fireStartEvent(DownloadWrapper wrapper);
+    void triggerStartEvent(DownloadWrapper wrapper);
 
-    void fireFailEvent(DownloadWrapper wrapper);
+    void triggerFailEvent(DownloadWrapper wrapper);
 
-    void fireProgressEvent(DownloadWrapper wrapper);
+    void triggerProgressEvent(DownloadWrapper wrapper);
 
-    void fireCompleteEvent(DownloadWrapper wrapper);
+    void triggerCompleteEvent(DownloadWrapper wrapper);
 
-    void firePauseEvent(DownloadWrapper wrapper);
+    void triggerPauseEvent(DownloadWrapper wrapper);
 }

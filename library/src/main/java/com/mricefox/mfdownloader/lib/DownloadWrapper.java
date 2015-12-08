@@ -16,15 +16,6 @@ public class DownloadWrapper {
     private long currentBytes;
     private int status;
 
-    public DownloadWrapper(Download download, List<Block> blocks, long totalBytes, long currentBytes, int status) {
-        this.download = download;
-//        this.id = id;
-        this.blocks = blocks;
-        this.totalBytes = totalBytes;
-        this.currentBytes = currentBytes;
-        this.status = status;
-    }
-
     public DownloadWrapper(Download download) {
         this.download = download;
 //        this.id = id;
