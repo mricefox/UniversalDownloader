@@ -53,13 +53,15 @@ class DownloadConsumerExecutor {
         @Override
         public boolean onBytesDownload(long downloadId, int blockIndex, long current, long total, long bytesThisStep) {
             final Download download = runningDownloads.get(downloadId);
-            download.setCurrentBytes(download.getCurrentBytes() + bytesThisStep);
-            boolean shouldProcess = download.getStatus() == Download.STATUS_PAUSED ||
-                    download.getStatus() == Download.STATUS_CANCELLED;
+            synchronized (download) {
+                download.setCurrentBytes(download.getCurrentBytes() + bytesThisStep);
+                boolean shouldProcess = download.getStatus() == Download.STATUS_PAUSED ||
+                        download.getStatus() == Download.STATUS_CANCELLED;
 //            MFLog.d("downloadId:" + downloadId + " current:" + currentBytes + " total:" + wrapper.totalBytes);
-            if (!shouldProcess)
-                contract.triggerProgressEvent(download);
-            return !shouldProcess;
+                if (!shouldProcess)
+                    contract.triggerProgressEvent(download);
+                return !shouldProcess;
+            }
         }
 
         @Override

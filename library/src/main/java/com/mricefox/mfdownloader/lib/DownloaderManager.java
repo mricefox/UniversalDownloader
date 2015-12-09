@@ -43,6 +43,7 @@ public class DownloaderManager {
     }
 
     public long enqueue(Download download) {//todo enqueue same target file path download
+        download.reset();//in case of same object pass in
         return downloadConsumerExecutor.startDownload(download);
     }
 

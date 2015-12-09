@@ -27,7 +27,7 @@ public class Download {
     private final Handler callbackHandler;
 
     private long id;
-    private List<Block> blocks = new ArrayList<>();
+    private List<Block> blocks;
     private long totalBytes;
     private long currentBytes;
     private int status;
@@ -37,6 +37,7 @@ public class Download {
         this.targetFilePath = params.getTargetFilePath();
         this.priority = params.getPriority();
         this.downloadListener = params.getDownloadListener();
+        this.blocks = new ArrayList<>();
         Handler h = params.getCallbackHandler();
 
         //define a ui handler if constructor run in ui thread
@@ -45,6 +46,14 @@ public class Download {
         else
             this.callbackHandler = h;
 
+    }
+
+    public void reset() {
+        id = 0;
+        blocks = new ArrayList<>();
+        totalBytes = 0;
+        currentBytes = 0;
+        status = 0;
     }
 
 //    public Download(String uri, String targetFilePath, DownloadListener listener) {
