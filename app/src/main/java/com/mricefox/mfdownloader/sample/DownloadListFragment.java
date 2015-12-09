@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.mricefox.mfdownloader.lib.Download;
+import com.mricefox.mfdownloader.lib.DownloadParams;
 import com.mricefox.mfdownloader.lib.DownloaderManager;
 import com.mricefox.mfdownloader.lib.DownloadingListener;
 import com.mricefox.mfdownloader.lib.assist.JavaSerializer;
@@ -111,14 +112,14 @@ public class DownloadListFragment extends Fragment {
         }
     }
 
-    Download download1 = new Download(SampleUri3, TargetDir + File.separator + "novel1.zip", downloadingListener);
-    Download download2 = new Download(SampleUri4, TargetDir + File.separator + "novel2.zip", downloadingListener);
-    Download download3 = new Download(SampleUri5, TargetDir + File.separator + "novel3.zip", downloadingListener);
-    Download download4 = new Download(SampleUri6, TargetDir + File.separator + "novel4.zip", downloadingListener);
-    Download download5 = new Download(SampleUri2, TargetDir + File.separator + "qq.apk", downloadingListener);
-    Download download6 = new Download(SampleUri1, TargetDir + File.separator + "qq.exe", downloadingListener);
-    Download download7 = new Download(SampleUri7, TargetDir + File.separator + "Dianping_dianping-m_794.apk", downloadingListener);
-    Download download8 = new Download(SampleUri8, TargetDir + File.separator + "MobileAssistant_1.apk", downloadingListener);
+    Download download1 = new Download(new DownloadParams(SampleUri3, TargetDir + File.separator + "novel1.zip").downloadingListener(downloadingListener));
+    Download download2 = new Download(new DownloadParams(SampleUri4, TargetDir + File.separator + "novel2.zip").downloadingListener(downloadingListener));
+    Download download3 = new Download(new DownloadParams(SampleUri5, TargetDir + File.separator + "novel3.zip").downloadingListener(downloadingListener));
+    Download download4 = new Download(new DownloadParams(SampleUri6, TargetDir + File.separator + "novel4.zip").downloadingListener(downloadingListener));
+    Download download5 = new Download(new DownloadParams(SampleUri2, TargetDir + File.separator + "qq.apk").downloadingListener(downloadingListener));
+    Download download6 = new Download(new DownloadParams(SampleUri1, TargetDir + File.separator + "qq.exe").downloadingListener(downloadingListener));
+    Download download7 = new Download(new DownloadParams(SampleUri7, TargetDir + File.separator + "Dianping_dianping-m_794.apk").downloadingListener(downloadingListener));
+    Download download8 = new Download(new DownloadParams(SampleUri8, TargetDir + File.separator + "MobileAssistant_1.apk").downloadingListener(downloadingListener));
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -183,7 +184,7 @@ public class DownloadListFragment extends Fragment {
                 String s = sp.getString("obj", null);
                 MFLog.d("s=" + s);
                 downloadingListener = (SerializeListener) JavaSerializer.safeDeserialize2Object(s);
-                download1 = new Download(SampleUri3, TargetDir + File.separator + "novel1.zip", downloadingListener);
+                download1 = new Download(new DownloadParams(SampleUri3, TargetDir + File.separator + "novel1.zip").downloadingListener(downloadingListener));
                 new Handler(Looper.getMainLooper()).post(new Runnable() {
                     @Override
                     public void run() {
@@ -244,7 +245,7 @@ public class DownloadListFragment extends Fragment {
                     }
 
                     downloadingListener = (SerializeListener) JavaSerializer.safeDeserialize(bos.toByteArray());
-                    download1 = new Download(SampleUri3, TargetDir + File.separator + "novel1.zip", downloadingListener);
+                    download1 = new Download(new DownloadParams(SampleUri3, TargetDir + File.separator + "novel1.zip").downloadingListener(downloadingListener));
                     new Handler(Looper.getMainLooper()).post(new Runnable() {
                         @Override
                         public void run() {

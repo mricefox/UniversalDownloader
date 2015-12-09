@@ -17,7 +17,7 @@ import java.util.List;
 public class DownloaderManager {
     private static DownloaderManager instance;
     private DownloadConsumerExecutor downloadConsumerExecutor;
-    private Persistence<DownloadWrapper> persistence;
+    private Persistence<Download> persistence;
 
     private DownloaderManager() {
     }
@@ -40,8 +40,7 @@ public class DownloaderManager {
     }
 
     public long enqueue(Download download) {//todo enqueue same target file path download
-        DownloadWrapper wrapper = new DownloadWrapper(download);
-        return downloadConsumerExecutor.startDownload(wrapper);
+        return downloadConsumerExecutor.startDownload(download);
     }
 
     public void pause(long id) {
@@ -50,25 +49,25 @@ public class DownloaderManager {
     }
 
     public void resume(long id, DownloadingListener listener) {
-        DownloadWrapper wrapper = persistence.query(id);
-        if (wrapper == null)
+        Download download = persistence.query(id);
+        if (download == null)
             throw new IllegalArgumentException("can not find download");
-        if (wrapper.getStatus() != Download.STATUS_PAUSED)
+        if (download.getStatus() != Download.STATUS_PAUSED)
             throw new IllegalArgumentException("can not resume a not paused download");
-        wrapper.getDownload().setDownloadingListener(listener);
+        download.setDownloadingListener(listener);
 //        MFLog.d("resume total:"+wrapper.getTotalBytes());
         MFLog.d("resume id:" + id);
-        downloadConsumerExecutor.resumeDownload(wrapper);
+        downloadConsumerExecutor.resumeDownload(download);
     }
 
     public void cancel(long id, boolean deleteFile, DownloadingListener listener) {
-        DownloadWrapper wrapper = persistence.query(id);
-        if (wrapper == null)
+        Download download = persistence.query(id);
+        if (download == null)
             throw new IllegalArgumentException("can not find download");
-        if (wrapper.getStatus() == Download.STATUS_SUCCESSFUL) {
+        if (download.getStatus() == Download.STATUS_SUCCESSFUL) {
             throw new IllegalArgumentException("can not cancel a not successful download");
         }
-        wrapper.getDownload().setDownloadingListener(listener);
+        download.setDownloadingListener(listener);
         MFLog.d("cancel id:" + id);
     }
 
@@ -83,28 +82,28 @@ public class DownloaderManager {
     private Contract ConsumerContract = new Contract() {
 
         @Override
-        public long insertDownload(DownloadWrapper wrapper) {
-            return persistence.insert(wrapper);
+        public long insertDownload(Download download) {
+            return persistence.insert(download);
         }
 
         @Override
-        public long updateDownload(DownloadWrapper wrapper) {
-            return persistence.update(wrapper);
+        public long updateDownload(Download download) {
+            return persistence.update(download);
         }
 
         @Override
-        public List<DownloadWrapper> queryAll() {
+        public List<Download> queryAll() {
             return persistence.queryAll();
         }
 
         @Override
-        public void triggerAddEvent(final DownloadWrapper wrapper) {
-            final DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
+        public void triggerAddEvent(final Download download) {
+            final DownloadingListener listener = download.getDownloadingListener();
             if (listener != null) {
 //                Runnable r = new Runnable() {
 //                    @Override
 //                    public void run() {
-                        listener.onAdded(wrapper.getDownload().getId());
+                        listener.onAdded(download.getId());
 //                    }
 //                };
 //                runTask(wrapper.getDownload().getOptions().getHandler(), r);
@@ -112,46 +111,46 @@ public class DownloaderManager {
         }
 
         @Override
-        public void triggerStartEvent(DownloadWrapper wrapper) {
-            DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
-            if (listener != null) listener.onStart(wrapper.getDownload().getId());
+        public void triggerStartEvent(Download download) {
+            DownloadingListener listener = download.getDownloadingListener();
+            if (listener != null) listener.onStart(download.getId());
         }
 
         @Override
-        public void triggerFailEvent(DownloadWrapper wrapper) {
-            DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
-            if (listener != null) listener.onFailed(wrapper.getDownload().getId());
+        public void triggerFailEvent(Download download) {
+            DownloadingListener listener = download.getDownloadingListener();
+            if (listener != null) listener.onFailed(download.getId());
         }
 
         @Override
-        public void triggerProgressEvent(DownloadWrapper wrapper) {
-            DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
+        public void triggerProgressEvent(Download download) {
+            DownloadingListener listener = download.getDownloadingListener();
             if (listener != null)
-                listener.onProgressUpdate(wrapper.getDownload().getId(), wrapper.getCurrentBytes(), wrapper.getTotalBytes(), 0);
+                listener.onProgressUpdate(download.getId(), download.getCurrentBytes(), download.getTotalBytes(), 0);
         }
 
         @Override
-        public void triggerCompleteEvent(DownloadWrapper wrapper) {
-            DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
-            if (listener != null) listener.onComplete(wrapper.getDownload().getId());
+        public void triggerCompleteEvent(Download download) {
+            DownloadingListener listener = download.getDownloadingListener();
+            if (listener != null) listener.onComplete(download.getId());
         }
 
         @Override
-        public void triggerPauseEvent(DownloadWrapper wrapper) {
-            DownloadingListener listener = wrapper.getDownload().getDownloadingListener();
-            if (listener != null) listener.onPaused(wrapper.getDownload().getId());
+        public void triggerPauseEvent(Download download) {
+            DownloadingListener listener = download.getDownloadingListener();
+            if (listener != null) listener.onPaused(download.getId());
         }
 
         @Override
-        public DownloadWrapper queryFirstPendingDownload() {
-            List<DownloadWrapper> all = persistence.queryAll();
+        public Download queryFirstPendingDownload() {
+            List<Download> all = persistence.queryAll();
             if (all == null || all.size() == 0) {
                 MFLog.d("query all fail");
                 return null;
             }
-            Collections.sort(all, new Comparator<DownloadWrapper>() {//sort by priority desc
+            Collections.sort(all, new Comparator<Download>() {//sort by priority desc
                 @Override
-                public int compare(DownloadWrapper lhs, DownloadWrapper rhs) {
+                public int compare(Download lhs, Download rhs) {
 //                    int lp = lhs.getDownload().getPriority();
 //                    int rp = rhs.getDownload().getOptions().getPriority();
                     // TODO: 2015/12/8
@@ -163,10 +162,10 @@ public class DownloaderManager {
                 }
             });
             for (int i = 0, size = all.size(); i < size; ++i) {
-                DownloadWrapper wrapper = all.get(i);
-                MFLog.d("wrapper.getStatus():" + wrapper.getStatus() + "#id:" + wrapper.getDownload().getId());
-                if (wrapper.getStatus() == Download.STATUS_PENDING)
-                    return wrapper;
+                Download download = all.get(i);
+                MFLog.d("download.getStatus():" + download.getStatus() + "#id:" + download.getId());
+                if (download.getStatus() == Download.STATUS_PENDING)
+                    return download;
             }
             return null;
         }

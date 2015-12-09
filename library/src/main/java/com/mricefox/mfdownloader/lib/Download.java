@@ -1,6 +1,10 @@
 package com.mricefox.mfdownloader.lib;
 
-import com.mricefox.mfdownloader.lib.assist.JavaSerializer;
+import android.os.Handler;
+import android.os.Looper;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Author:zengzifeng email:zeng163mail@163.com
@@ -14,22 +18,39 @@ public class Download {
     public static final int STATUS_SUCCESSFUL = 1 << 4;
     public static final int STATUS_FAILED = 1 << 5;
 
-    private long id;
+    //user config attrs
     private final String uri;
     private final String targetFilePath;
-    private int priority;
-    private DownloadingListener downloadingListener;
+    private final int priority;
+    private final DownloadingListener downloadingListener;
+    private final Handler callbackHandler;
 
-    public Download(String uri, String targetFilePath) {
-        this.uri = uri;
-        this.targetFilePath = targetFilePath;
+    private long id;
+    private List<Block> blocks = new ArrayList<>();
+    private long totalBytes;
+    private long currentBytes;
+    private int status;
+
+    public Download(DownloadParams params) {
+        this.uri = params.getUri();
+        this.targetFilePath = params.getTargetFilePath();
+        this.priority = params.getPriority();
+        this.downloadingListener = params.getDownloadingListener();
+        Handler h = params.getCallbackHandler();
+
+        //define a ui handler if constructor run in ui thread
+        if (h == null && Looper.myLooper() == Looper.getMainLooper())
+            this.callbackHandler = new Handler();
+        else
+            this.callbackHandler = h;
+
     }
 
-    public Download(String uri, String targetFilePath, DownloadingListener listener) {
-        this.uri = uri;
-        this.targetFilePath = targetFilePath;
-        this.downloadingListener = listener;
-    }
+//    public Download(String uri, String targetFilePath, DownloadingListener listener) {
+//        this.uri = uri;
+//        this.targetFilePath = targetFilePath;
+//        this.downloadingListener = listener;
+//    }
 
     public String getUri() {
         return uri;
@@ -51,9 +72,9 @@ public class Download {
         return downloadingListener;
     }
 
-    public void setDownloadingListener(DownloadingListener downloadingListener) {
-        this.downloadingListener = downloadingListener;
-    }
+//    public void setDownloadingListener(DownloadingListener downloadingListener) {
+//        this.downloadingListener = downloadingListener;
+//    }
 
     public long getId() {
         return id;
@@ -67,16 +88,48 @@ public class Download {
         return priority;
     }
 
-    public void setPriority(int priority) {
-        this.priority = priority;
+//    public void setPriority(int priority) {
+//        this.priority = priority;
+//    }
+
+    public List<Block> getBlocks() {
+        return blocks;
     }
 
-    @Override
-    public boolean equals(Object o) {
-//        return super.equals(o);
-        if (o instanceof Download) {
-            return ((Download) o).uri.equals(uri) && ((Download) o).targetFilePath.equals(targetFilePath);
-        }
-        return false;
+    public void setBlocks(List<Block> blocks) {
+        this.blocks = blocks;
     }
+
+    public long getTotalBytes() {
+        return totalBytes;
+    }
+
+    public void setTotalBytes(long totalBytes) {
+        this.totalBytes = totalBytes;
+    }
+
+    public long getCurrentBytes() {
+        return currentBytes;
+    }
+
+    public void setCurrentBytes(long currentBytes) {
+        this.currentBytes = currentBytes;
+    }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
+//    @Override
+//    public boolean equals(Object o) {
+////        return super.equals(o);
+//        if (o instanceof Download) {
+//            return ((Download) o).uri.equals(uri) && ((Download) o).targetFilePath.equals(targetFilePath);
+//        }
+//        return false;
+//    }
 }

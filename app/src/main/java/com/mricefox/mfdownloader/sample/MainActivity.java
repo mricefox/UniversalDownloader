@@ -11,7 +11,6 @@ import android.widget.TextView;
 import com.mricefox.mfdownloader.lib.Block;
 import com.mricefox.mfdownloader.lib.Configuration;
 import com.mricefox.mfdownloader.lib.Download;
-import com.mricefox.mfdownloader.lib.DownloadWrapper;
 import com.mricefox.mfdownloader.lib.DownloaderManager;
 import com.mricefox.mfdownloader.lib.DownloadingListener;
 import com.mricefox.mfdownloader.lib.assist.MFLog;
@@ -77,11 +76,11 @@ public class MainActivity extends AppCompatActivity {
                     total + "#%" + String.format("%.2f", (current + 0.0f) * 100 / total));
         }
     };
-    Download download1 = new Download(SampleUri3, TargetDir + File.separator + "novel1.zip");
-    Download download2 = new Download(SampleUri4, TargetDir + File.separator + "novel2.zip");
-    Download download3 = new Download(SampleUri5, TargetDir + File.separator + "novel3.zip");
-    Download download4 = new Download(SampleUri6, TargetDir + File.separator + "novel4.zip", listener);
-    Download download5 = new Download(SampleUri2, TargetDir + File.separator + "qq.apk", listener);
+//    Download download1 = new Download(SampleUri3, TargetDir + File.separator + "novel1.zip");
+//    Download download2 = new Download(SampleUri4, TargetDir + File.separator + "novel2.zip");
+//    Download download3 = new Download(SampleUri5, TargetDir + File.separator + "novel3.zip");
+//    Download download4 = new Download(SampleUri6, TargetDir + File.separator + "novel4.zip", listener);
+//    Download download5 = new Download(SampleUri2, TargetDir + File.separator + "qq.apk", listener);
 
     DownloadListFragment fragment;
 
@@ -173,53 +172,53 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private DownloadWrapper dummyD() {
-        Download download = new Download("xxx", "xxx");
-        DownloadWrapper wrapper = new DownloadWrapper(download);
-        List<Block> blocks = new ArrayList<>();
-        for (int j = 0; j < 3; ++j) {
-            Block b = new Block(j + 99, j * 200, j * 10000, j * 50);
-            blocks.add(b);
-        }
-        wrapper.setBlocks(blocks);
-        return wrapper;
-    }
+//    private DownloadWrapper dummyD() {
+//        Download download = new Download("xxx", "xxx");
+//        DownloadWrapper wrapper = new DownloadWrapper(download);
+//        List<Block> blocks = new ArrayList<>();
+//        for (int j = 0; j < 3; ++j) {
+//            Block b = new Block(j + 99, j * 200, j * 10000, j * 50);
+//            blocks.add(b);
+//        }
+//        wrapper.setBlocks(blocks);
+//        return wrapper;
+//    }
 
-    private List<DownloadWrapper> dummyDownloads() {
-        List<DownloadWrapper> list = new ArrayList<>();
+//    private List<DownloadWrapper> dummyDownloads() {
+//        List<DownloadWrapper> list = new ArrayList<>();
+//
+//        for (int i = 0; i < 5; ++i) {
+//            Download download = new Download("a" + i, "b" + i);
+//            DownloadWrapper wrapper = new DownloadWrapper(download);
+//            List<Block> blocks = new ArrayList<>();
+//            for (int j = 0; j < 3; ++j) {
+//                Block b = new Block(j, j * 2, j * 10, j * 3);
+//                blocks.add(b);
+//            }
+//            wrapper.setBlocks(blocks);
+//            list.add(wrapper);
+//        }
+//        return list;
+//    }
 
-        for (int i = 0; i < 5; ++i) {
-            Download download = new Download("a" + i, "b" + i);
-            DownloadWrapper wrapper = new DownloadWrapper(download);
-            List<Block> blocks = new ArrayList<>();
-            for (int j = 0; j < 3; ++j) {
-                Block b = new Block(j, j * 2, j * 10, j * 3);
-                blocks.add(b);
-            }
-            wrapper.setBlocks(blocks);
-            list.add(wrapper);
-        }
-        return list;
-    }
-
-    private class Trigger implements View.OnClickListener {
-        Handler h;
-        int num;
-        String tag;
-
-        @Override
-        public void onClick(View v) {
-            h.post(new Runnable() {
-                @Override
-                public void run() {
-                    print();
-                }
-            });
-        }
-
-        void print() {
-            MFLog.d("Trigger tag:" + tag + "#num:" + num);
-        }
-    }
+//    private class Trigger implements View.OnClickListener {
+//        Handler h;
+//        int num;
+//        String tag;
+//
+//        @Override
+//        public void onClick(View v) {
+//            h.post(new Runnable() {
+//                @Override
+//                public void run() {
+//                    print();
+//                }
+//            });
+//        }
+//
+//        void print() {
+//            MFLog.d("Trigger tag:" + tag + "#num:" + num);
+//        }
+//    }
 
 }

@@ -27,9 +27,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 class DownloadConsumerExecutor {
     private ExecutorService downloadExecutor;
-    private BlockingQueue downloadQueue;
+//    private BlockingQueue downloadQueue;
     private DownloadOperator downloadOperator;
-    private final ConcurrentHashMap<Long, DownloadWrapper> runningDownloads;
+    private final ConcurrentHashMap<Long, Download> runningDownloads;
     private Contract contract;
     private ConcurrentHashMap<Long, CountDownLatch> downloadOnStopLocks;
     private AtomicInteger maxDownloadCount;
@@ -44,7 +44,7 @@ class DownloadConsumerExecutor {
                 60L, TimeUnit.SECONDS,
                 new SynchronousQueue<Runnable>(),
                 new DefaultThreadFactory(Thread.NORM_PRIORITY - 2, "download-t-"));
-        downloadQueue = new PriorityBlockingQueue();
+//        downloadQueue = new PriorityBlockingQueue();
         runningDownloads = new ConcurrentHashMap<>();
         downloadOnStopLocks = new ConcurrentHashMap<>();
     }
@@ -53,19 +53,19 @@ class DownloadConsumerExecutor {
 
         @Override
         public boolean onBytesDownload(long downloadId, int blockIndex, long current, long total, long bytesThisStep) {
-            final DownloadWrapper wrapper = runningDownloads.get(downloadId);
-            wrapper.setCurrentBytes(wrapper.getCurrentBytes() + bytesThisStep);
+            final Download download = runningDownloads.get(downloadId);
+            download.setCurrentBytes(download.getCurrentBytes() + bytesThisStep);
 //            MFLog.d("downloadId:" + downloadId + " current:" + currentBytes + " total:" + wrapper.totalBytes);
 //            contract.updateDownload(wrapper);
-            contract.triggerProgressEvent(wrapper);
-            return wrapper.getStatus() != Download.STATUS_PAUSED;
+            contract.triggerProgressEvent(download);
+            return download.getStatus() != Download.STATUS_PAUSED;
         }
 
         @Override
         public void onDownloadStop(long downloadId, int blockIndex, long currentBytes) {
-            final DownloadWrapper wrapper = runningDownloads.get(downloadId);
-            synchronized (wrapper) {//wrapper access by each block download thread
-                Block block = wrapper.getBlocks().get(blockIndex);
+            final Download download = runningDownloads.get(downloadId);
+            synchronized (download) {//wrapper access by each block download thread
+                Block block = download.getBlocks().get(blockIndex);
                 block.setDownloadedBytes(currentBytes);
             }
             countDownLock(downloadId);
@@ -93,48 +93,48 @@ class DownloadConsumerExecutor {
 
         @Override
         public void onDownloadFail(long downloadId, int blockIndex, long currentBytes) {
-            final DownloadWrapper wrapper = runningDownloads.get(downloadId);
-            synchronized (wrapper) {//wrapper access by each block download thread
-                Block block = wrapper.getBlocks().get(blockIndex);
+            final Download download = runningDownloads.get(downloadId);
+            synchronized (download) {//wrapper access by each block download thread
+                Block block = download.getBlocks().get(blockIndex);
                 block.setDownloadedBytes(currentBytes);
             }
             countDownLock(downloadId);
         }
     };
 
-    long startDownload(DownloadWrapper wrapper) {
+    long startDownload(Download download) {
         long time = System.currentTimeMillis();
         MFLog.d("runningDownloads.size()=" + runningDownloads.size());
         MFLog.d("runningDownloads size time:" + (System.currentTimeMillis() - time));
         long id = -1L;
         if (runningDownloads.size() < maxDownloadCount.get()) {
-            id = contract.insertDownload(wrapper);
+            id = contract.insertDownload(download);
             if (id == -1) throw new RuntimeException("insert record fail");
-            DownloadConsumer downloadConsumer = new DownloadConsumer(wrapper, false);
+            DownloadConsumer downloadConsumer = new DownloadConsumer(download, false);
             downloadExecutor.execute(downloadConsumer);
-            runningDownloads.put(id, wrapper);
+            runningDownloads.put(id, download);
             //store wrapper
-            wrapper.setStatus(Download.STATUS_RUNNING);
-            contract.updateDownload(wrapper);
-            contract.triggerAddEvent(wrapper);
+            download.setStatus(Download.STATUS_RUNNING);
+            contract.updateDownload(download);
+            contract.triggerAddEvent(download);
         } else {
-            wrapper.setStatus(Download.STATUS_PENDING);
-            id = contract.insertDownload(wrapper);
+            download.setStatus(Download.STATUS_PENDING);
+            id = contract.insertDownload(download);
             if (id == -1) throw new RuntimeException("insert record fail");
-            contract.triggerAddEvent(wrapper);
+            contract.triggerAddEvent(download);
             MFLog.d("insert pending id:" + id);
         }
         return id;
     }
 
-    void startPendingDownload(DownloadWrapper wrapper) {
+    void startPendingDownload(Download download) {
         if (runningDownloads.size() < maxDownloadCount.get()) {
-            DownloadConsumer downloadConsumer = new DownloadConsumer(wrapper, false);
+            DownloadConsumer downloadConsumer = new DownloadConsumer(download, false);
             downloadExecutor.execute(downloadConsumer);
-            runningDownloads.put(wrapper.getDownload().getId(), wrapper);
+            runningDownloads.put(download.getId(), download);
             //store wrapper
-            wrapper.setStatus(Download.STATUS_RUNNING);
-            contract.updateDownload(wrapper);
+            download.setStatus(Download.STATUS_RUNNING);
+            contract.updateDownload(download);
         } else
             MFLog.d("download num max");
     }
@@ -142,24 +142,24 @@ class DownloadConsumerExecutor {
     void setDownloadPaused(long id) {
         if (!runningDownloads.containsKey(id))
             throw new IllegalArgumentException("can not pause a not running download");
-        final DownloadWrapper wrapper = runningDownloads.get(id);
-        wrapper.setStatus(Download.STATUS_PAUSED);
+        final Download download = runningDownloads.get(id);
+        download.setStatus(Download.STATUS_PAUSED);
     }
 
-    void resumeDownload(DownloadWrapper wrapper) {
+    void resumeDownload(Download download) {
         if (runningDownloads.size() < maxDownloadCount.get()) {
-            DownloadConsumer downloadConsumer = new DownloadConsumer(wrapper, true);
+            DownloadConsumer downloadConsumer = new DownloadConsumer(download, true);
             downloadExecutor.execute(downloadConsumer);
-            runningDownloads.put(wrapper.getDownload().getId(), wrapper);
-            wrapper.setStatus(Download.STATUS_RUNNING);
+            runningDownloads.put(download.getId(), download);
+            download.setStatus(Download.STATUS_RUNNING);
         } else {
-            wrapper.setStatus(Download.STATUS_PENDING);
+            download.setStatus(Download.STATUS_PENDING);
         }
-        long id = contract.updateDownload(wrapper);
+        long id = contract.updateDownload(download);
         if (id == -1) throw new RuntimeException("update download fail");
     }
 
-    void cancelDownload(DownloadWrapper wrapper) {
+    void cancelDownload(Download download) {
 // TODO: 2015/12/7
     }
 
@@ -190,38 +190,38 @@ class DownloadConsumerExecutor {
     }
 
     private class DownloadConsumer implements Runnable {
-        private DownloadWrapper wrapper;
-        private boolean resume;
+        private final Download download;
+        private final boolean resume;
 
-        DownloadConsumer(DownloadWrapper wrapper, boolean resume) {
-            this.wrapper = wrapper;
+        DownloadConsumer(Download download, boolean resume) {
+            this.download = download;
             this.resume = resume;
         }
 
         @Override
         public void run() {
             //call back on start
-            contract.triggerStartEvent(wrapper);
+            contract.triggerStartEvent(download);
             try {
-                if (!resume) setupDownload(wrapper);
+                if (!resume) setupDownload(download);
             } catch (IOException e) {
                 e.printStackTrace();
-                wrapper.setStatus(Download.STATUS_FAILED);
+                download.setStatus(Download.STATUS_FAILED);
             } catch (Exception e) {
                 e.printStackTrace();
-                wrapper.setStatus(Download.STATUS_FAILED);
+                download.setStatus(Download.STATUS_FAILED);
             } finally {
-                contract.updateDownload(wrapper);
+                contract.updateDownload(download);
             }
-            if (wrapper.getStatus() == Download.STATUS_FAILED) {
-                contract.triggerFailEvent(wrapper);
+            if (download.getStatus() == Download.STATUS_FAILED) {
+                contract.triggerFailEvent(download);
                 return;
             }
-            if (wrapper.getStatus() == Download.STATUS_PAUSED) {
-                contract.triggerPauseEvent(wrapper);
+            if (download.getStatus() == Download.STATUS_PAUSED) {
+                contract.triggerPauseEvent(download);
                 return;
             }
-            List<Block> blocks = wrapper.getBlocks();
+            List<Block> blocks = download.getBlocks();
             int runningConsumerCount = 0;
             for (int i = 0, size = blocks.size(); i < size; ++i) {
                 final Block block = blocks.get(i);
@@ -231,36 +231,35 @@ class DownloadConsumerExecutor {
                 }
                 long startPos = block.getStartPos() + block.getDownloadedBytes();
                 BlockConsumer consumer = new BlockConsumer(block.getIndex(), startPos, block.getEndPos(),
-                        wrapper.getDownload().getUri(), wrapper.getDownload().getTargetFilePath(),
-                        wrapper.getDownload().getId());
+                        download.getUri(), download.getTargetFilePath(), download.getId());
 //                MFLog.d("init block pos#s:" + startPos + "#e:" + block.getEndPos());
                 downloadExecutor.execute(consumer);
                 ++runningConsumerCount;
             }
-            downloadOnStopLocks.put(wrapper.getDownload().getId(), new CountDownLatch(runningConsumerCount));
-            waitForDownloadStopLock(wrapper.getDownload().getId());
+            downloadOnStopLocks.put(download.getId(), new CountDownLatch(runningConsumerCount));
+            waitForDownloadStopLock(download.getId());
 
-            runningDownloads.remove(wrapper.getDownload().getId());
-            downloadOnStopLocks.remove(wrapper.getDownload().getId());
+            runningDownloads.remove(download.getId());
+            downloadOnStopLocks.remove(download.getId());
 
-            if (wrapper.getCurrentBytes() == wrapper.getTotalBytes()) {
-                wrapper.setStatus(Download.STATUS_SUCCESSFUL);
-                MFLog.d("wrapper.setStatus(Download.STATUS_SUCCESSFUL);id:" + wrapper.getDownload().getId());
-                contract.triggerCompleteEvent(wrapper);
-            } else if (wrapper.getStatus() == Download.STATUS_PAUSED) {
+            if (download.getCurrentBytes() == download.getTotalBytes()) {
+                download.setStatus(Download.STATUS_SUCCESSFUL);
+                MFLog.d("wrapper.setStatus(Download.STATUS_SUCCESSFUL);id:" + download.getId());
+                contract.triggerCompleteEvent(download);
+            } else if (download.getStatus() == Download.STATUS_PAUSED) {
                 //stream I/O loop interrupt by paused
-                contract.triggerPauseEvent(wrapper);
+                contract.triggerPauseEvent(download);
             } else {//stopped by error
-                wrapper.setStatus(Download.STATUS_FAILED);
-                contract.triggerFailEvent(wrapper);
+                download.setStatus(Download.STATUS_FAILED);
+                contract.triggerFailEvent(download);
             }
-            contract.updateDownload(wrapper);
+            contract.updateDownload(download);
 
             MFLog.d("autoStartPending=" + autoStartPending);
             if (autoStartPending) {
-                DownloadWrapper pendingDownload = contract.queryFirstPendingDownload();
+                Download pendingDownload = contract.queryFirstPendingDownload();
                 if (pendingDownload != null) {
-                    MFLog.d("pendingDownload id=" + pendingDownload.getDownload().getId());
+                    MFLog.d("pendingDownload id=" + pendingDownload.getId());
                     startPendingDownload(pendingDownload);
                 } else MFLog.d("pendingDownload=null");
             }
@@ -269,20 +268,20 @@ class DownloadConsumerExecutor {
         /**
          * init new download, fill in blocks and total bytes
          *
-         * @param wrapper
+         * @param download
          * @throws IOException
          */
-        void setupDownload(DownloadWrapper wrapper) throws IOException {
-            final long fileLength = downloadOperator.getRemoteFileLength(wrapper.getDownload().getUri());
+        void setupDownload(Download download) throws IOException {
+            final long fileLength = downloadOperator.getRemoteFileLength(download.getUri());
             if (fileLength != -1) {
                 List<Block> blocks = downloadOperator.split2Block(fileLength);
                 MFLog.d("file size:" + fileLength);
-                if (downloadOperator.createFile(fileLength, wrapper.getDownload().getTargetFilePath())) {
-                    wrapper.setBlocks(blocks);
+                if (downloadOperator.createFile(fileLength, download.getTargetFilePath())) {
+                    download.setBlocks(blocks);
                     /**
                      * wrapper blocks access by every thread of download block
                      */
-                    wrapper.setTotalBytes(fileLength);
+                    download.setTotalBytes(fileLength);
                 } else
                     throw new IOException("Create file fail");
             } else {

@@ -8,23 +8,23 @@ import java.util.List;
  * Date:2015/12/2
  */
 public interface Contract {
-    long insertDownload(DownloadWrapper wrapper);
+    long insertDownload(Download download);
 
-    long updateDownload(DownloadWrapper wrapper);
+    long updateDownload(Download download);
 
-    List<DownloadWrapper> queryAll();
+    List<Download> queryAll();
 
-    DownloadWrapper queryFirstPendingDownload();
+    Download queryFirstPendingDownload();
 
-    void triggerAddEvent(DownloadWrapper wrapper);
+    void triggerAddEvent(Download download);
 
-    void triggerStartEvent(DownloadWrapper wrapper);
+    void triggerStartEvent(Download download);
 
-    void triggerFailEvent(DownloadWrapper wrapper);
+    void triggerFailEvent(Download download);
 
-    void triggerProgressEvent(DownloadWrapper wrapper);
+    void triggerProgressEvent(Download download);
 
-    void triggerCompleteEvent(DownloadWrapper wrapper);
+    void triggerCompleteEvent(Download download);
 
-    void triggerPauseEvent(DownloadWrapper wrapper);
+    void triggerPauseEvent(Download download);
 }
