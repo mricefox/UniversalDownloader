@@ -16,6 +16,8 @@ public interface Contract {
 
     Download queryFirstPendingDownload();
 
+    long deleteDownload(Download download);
+
     void triggerAddEvent(Download download);
 
     void triggerStartEvent(Download download);
@@ -27,4 +29,6 @@ public interface Contract {
     void triggerCompleteEvent(Download download);
 
     void triggerPauseEvent(Download download);
+
+    void triggerCancelEvent(Download download);
 }

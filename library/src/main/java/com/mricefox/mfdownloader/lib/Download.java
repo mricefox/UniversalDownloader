@@ -17,12 +17,13 @@ public class Download {
     public static final int STATUS_PAUSED = 1 << 3;
     public static final int STATUS_SUCCESSFUL = 1 << 4;
     public static final int STATUS_FAILED = 1 << 5;
+    public static final int STATUS_CANCELLED = 1 << 6;
 
     //user config attrs
     private final String uri;
     private final String targetFilePath;
     private final int priority;
-    private final DownloadingListener downloadingListener;
+    private final DownloadListener downloadListener;
     private final Handler callbackHandler;
 
     private long id;
@@ -35,7 +36,7 @@ public class Download {
         this.uri = params.getUri();
         this.targetFilePath = params.getTargetFilePath();
         this.priority = params.getPriority();
-        this.downloadingListener = params.getDownloadingListener();
+        this.downloadListener = params.getDownloadListener();
         Handler h = params.getCallbackHandler();
 
         //define a ui handler if constructor run in ui thread
@@ -46,10 +47,10 @@ public class Download {
 
     }
 
-//    public Download(String uri, String targetFilePath, DownloadingListener listener) {
+//    public Download(String uri, String targetFilePath, DownloadListener listener) {
 //        this.uri = uri;
 //        this.targetFilePath = targetFilePath;
-//        this.downloadingListener = listener;
+//        this.downloadListener = listener;
 //    }
 
     public String getUri() {
@@ -68,12 +69,12 @@ public class Download {
 //        this.targetFilePath = targetFilePath;
 //    }
 
-    public DownloadingListener getDownloadingListener() {
-        return downloadingListener;
+    public DownloadListener getDownloadListener() {
+        return downloadListener;
     }
 
-//    public void setDownloadingListener(DownloadingListener downloadingListener) {
-//        this.downloadingListener = downloadingListener;
+//    public void setDownloadingListener(DownloadListener downloadListener) {
+//        this.downloadListener = downloadListener;
 //    }
 
     public long getId() {
@@ -124,7 +125,11 @@ public class Download {
         this.status = status;
     }
 
-//    @Override
+    public Handler getCallbackHandler() {
+        return callbackHandler;
+    }
+
+    //    @Override
 //    public boolean equals(Object o) {
 ////        return super.equals(o);
 //        if (o instanceof Download) {

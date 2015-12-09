@@ -39,7 +39,7 @@ public class DefaultDownloadOperator implements DownloadOperator {
     /**
      * {@value}
      */
-    protected static final int DEFAULT_BLOCK_NUM = 1 << 2;
+    protected static final int DEFAULT_BLOCK_NUM = 1 << 1;
 
     @Override
     public long getRemoteFileLength(String urlStr) {

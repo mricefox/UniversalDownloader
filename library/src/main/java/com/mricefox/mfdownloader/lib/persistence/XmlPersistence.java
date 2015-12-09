@@ -41,10 +41,25 @@ import javax.xml.transform.stream.StreamResult;
  */
 public class XmlPersistence implements Persistence<Download> {
     private final static String XML_FILE_NAME = "mf_download.xml";
-    private final static String ROOT_TAG = "download_group";
-    private final static String MAX_ID_TAG = "max_id";
+
+    private final static String ROOT_TAG = "dgp";
+    private final static String MAX_ID_TAG = "maxid";
     private final static String ELEMENT_DOWNLOAD_TAG = "download";
     private final static String ELEMENT_BLOCK_TAG = "block";
+
+    private final static String D_ATTR_ID = "id";
+    private final static String D_ATTR_TOTAL_BYTES = "tbs";
+    private final static String D_ATTR_CURRENT_BYTES = "cbs";
+    private final static String D_ATTR_STATUS = "sta";
+    private final static String D_ATTR_URI = "uri";
+    private final static String D_ATTR_FILE_PATH = "path";
+    private final static String D_ATTR_PRIORITY = "pry";
+
+    private final static String B_ATTR_INDEX = "idx";
+    private final static String B_ATTR_START_POS = "spos";
+    private final static String B_ATTR_END_POS = "epos";
+    private final static String B_ATTR_DOWNLOADED_BYTES = "dbs";
+
     private static XmlPersistence instance;
     private static File xmlFile;
 
@@ -88,33 +103,42 @@ public class XmlPersistence implements Persistence<Download> {
 
     private Element convertEntityToElement(Download download, Document document) {
         Element element = document.createElement(ELEMENT_DOWNLOAD_TAG);
-        element.setAttribute("id", String.valueOf(download.getId()));
-        element.setAttribute("uri", download.getUri());
-        element.setAttribute("path", download.getTargetFilePath());
-        element.setAttribute("status", String.valueOf(download.getStatus()));
-        element.setAttribute("totalBytes", String.valueOf(download.getTotalBytes()));
-        element.setAttribute("currentBytes", String.valueOf(download.getCurrentBytes()));
-        element.setAttribute("priority", String.valueOf(download.getPriority()));
+        element.setAttribute(D_ATTR_ID, String.valueOf(download.getId()));
+        element.setAttribute(D_ATTR_URI, download.getUri());
+        element.setAttribute(D_ATTR_FILE_PATH, download.getTargetFilePath());
+        element.setAttribute(D_ATTR_STATUS, String.valueOf(download.getStatus()));
+        element.setAttribute(D_ATTR_TOTAL_BYTES, String.valueOf(download.getTotalBytes()));
+        element.setAttribute(D_ATTR_CURRENT_BYTES, String.valueOf(download.getCurrentBytes()));
+        element.setAttribute(D_ATTR_PRIORITY, String.valueOf(download.getPriority()));
+        //serialize listener
+//        DownloadListener listener = download.getDownloadListener();
+//        String s = JavaSerializer.safeSerialize2String(listener);
+//        element.setAttribute("dlistener", TextUtils.isEmpty(s) ? "" : s);
+
         for (int i = 0, size = download.getBlocks().size(); i < size; ++i) {
             Block block = download.getBlocks().get(i);
             Element blockElement = document.createElement(ELEMENT_BLOCK_TAG);
-            blockElement.setAttribute("index", String.valueOf(block.getIndex()));
-            blockElement.setAttribute("startPos", String.valueOf(block.getStartPos()));
-            blockElement.setAttribute("endPos", String.valueOf(block.getEndPos()));
-            blockElement.setAttribute("downloadedBytes", String.valueOf(block.getDownloadedBytes()));
+            blockElement.setAttribute(B_ATTR_INDEX, String.valueOf(block.getIndex()));
+            blockElement.setAttribute(B_ATTR_START_POS, String.valueOf(block.getStartPos()));
+            blockElement.setAttribute(B_ATTR_END_POS, String.valueOf(block.getEndPos()));
+            blockElement.setAttribute(B_ATTR_DOWNLOADED_BYTES, String.valueOf(block.getDownloadedBytes()));
             element.appendChild(blockElement);
         }
         return element;
     }
 
     private void updateElement(Download download, Element element, Document document) {
-        element.setAttribute("id", String.valueOf(download.getId()));
-        element.setAttribute("uri", download.getUri());
-        element.setAttribute("path", download.getTargetFilePath());
-        element.setAttribute("status", String.valueOf(download.getStatus()));
-        element.setAttribute("totalBytes", String.valueOf(download.getTotalBytes()));
-        element.setAttribute("currentBytes", String.valueOf(download.getCurrentBytes()));
-        element.setAttribute("priority", String.valueOf(download.getPriority()));
+        element.setAttribute(D_ATTR_ID, String.valueOf(download.getId()));
+        element.setAttribute(D_ATTR_URI, download.getUri());
+        element.setAttribute(D_ATTR_FILE_PATH, download.getTargetFilePath());
+        element.setAttribute(D_ATTR_STATUS, String.valueOf(download.getStatus()));
+        element.setAttribute(D_ATTR_TOTAL_BYTES, String.valueOf(download.getTotalBytes()));
+        element.setAttribute(D_ATTR_CURRENT_BYTES, String.valueOf(download.getCurrentBytes()));
+        element.setAttribute(D_ATTR_PRIORITY, String.valueOf(download.getPriority()));
+        //serialize listener
+//        DownloadListener listener = download.getDownloadListener();
+//        String s = JavaSerializer.safeSerialize2String(listener);
+//        element.setAttribute("dlistener", TextUtils.isEmpty(s) ? "" : s);
 
         NodeList blockElements = element.getChildNodes();
         for (int i = 0, size = blockElements.getLength(); i < size; ++i) {
@@ -125,10 +149,10 @@ public class XmlPersistence implements Persistence<Download> {
         for (int i = 0, size = download.getBlocks().size(); i < size; ++i) {
             Block block = download.getBlocks().get(i);
             Element blockElement = document.createElement(ELEMENT_BLOCK_TAG);
-            blockElement.setAttribute("index", String.valueOf(block.getIndex()));
-            blockElement.setAttribute("startPos", String.valueOf(block.getStartPos()));
-            blockElement.setAttribute("endPos", String.valueOf(block.getEndPos()));
-            blockElement.setAttribute("downloadedBytes", String.valueOf(block.getDownloadedBytes()));
+            blockElement.setAttribute(B_ATTR_INDEX, String.valueOf(block.getIndex()));
+            blockElement.setAttribute(B_ATTR_START_POS, String.valueOf(block.getStartPos()));
+            blockElement.setAttribute(B_ATTR_END_POS, String.valueOf(block.getEndPos()));
+            blockElement.setAttribute(B_ATTR_DOWNLOADED_BYTES, String.valueOf(block.getDownloadedBytes()));
             element.appendChild(blockElement);
         }
     }
@@ -153,24 +177,33 @@ public class XmlPersistence implements Persistence<Download> {
                         if (parser.getName().equals(ROOT_TAG)) {
                             downloadList = new ArrayList<>();
                         } else if (parser.getName().equals(ELEMENT_DOWNLOAD_TAG)) {
-                            String id = parser.getAttributeValue(null, "id");
-                            String uri = parser.getAttributeValue(null, "uri");
-                            String path = parser.getAttributeValue(null, "path");
-                            String status = parser.getAttributeValue(null, "status");
-                            String currentBytes = parser.getAttributeValue(null, "currentBytes");
-                            String totalBytes = parser.getAttributeValue(null, "totalBytes");
-                            String priority = parser.getAttributeValue(null, "priority");
-                            download = new Download(new DownloadParams(uri, path).priority(Integer.valueOf(priority)));
+                            String id = parser.getAttributeValue(null, D_ATTR_ID);
+                            String uri = parser.getAttributeValue(null, D_ATTR_URI);
+                            String path = parser.getAttributeValue(null, D_ATTR_FILE_PATH);
+                            String status = parser.getAttributeValue(null, D_ATTR_STATUS);
+                            String currentBytes = parser.getAttributeValue(null, D_ATTR_CURRENT_BYTES);
+                            String totalBytes = parser.getAttributeValue(null, D_ATTR_TOTAL_BYTES);
+                            String priority = parser.getAttributeValue(null, D_ATTR_PRIORITY);
+
+//                            String str = parser.getAttributeValue(null, "dlistener");
+//                            Object o = JavaSerializer.safeDeserialize2Object(str);
+//                            DownloadListener listener = null;
+//                            if (o != null) {
+//                                listener = (DownloadListener) o;
+//                            }
+
+                            download = new Download(new DownloadParams(uri, path).
+                                    priority(Integer.valueOf(priority)));
                             download.setId(Long.valueOf(id));
                             download.setStatus(Integer.valueOf(status));
                             download.setCurrentBytes(Long.valueOf(currentBytes));
                             download.setTotalBytes(Long.valueOf(totalBytes));
                             blockList = new ArrayList<>();
                         } else if (parser.getName().equals(ELEMENT_BLOCK_TAG)) {
-                            String index = parser.getAttributeValue(null, "index");
-                            String startPos = parser.getAttributeValue(null, "startPos");
-                            String endPos = parser.getAttributeValue(null, "endPos");
-                            String downloadedBytes = parser.getAttributeValue(null, "downloadedBytes");
+                            String index = parser.getAttributeValue(null, B_ATTR_INDEX);
+                            String startPos = parser.getAttributeValue(null, B_ATTR_START_POS);
+                            String endPos = parser.getAttributeValue(null, B_ATTR_END_POS);
+                            String downloadedBytes = parser.getAttributeValue(null, B_ATTR_DOWNLOADED_BYTES);
                             block = new Block(Integer.valueOf(index),
                                     Long.valueOf(startPos), Long.valueOf(endPos), Long.valueOf(downloadedBytes));
                         }

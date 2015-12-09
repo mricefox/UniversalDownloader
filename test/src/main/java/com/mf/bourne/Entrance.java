@@ -128,14 +128,44 @@ public class Entrance {
         for (KK k : list) {
             System.out.println("==" + k.a);
         }
+
+        GG g1 = new GG();
+        g1.a = 3;
+        g1.b = "bb";
+        List<GG> l = new ArrayList<>();
+        l.add(g1);
+        GG[] arr = new GG[l.size()];
+        l.toArray(arr);
+
+        g1.a = 4;
+        g1.b = "aa";
+        System.out.println("---" + arr[0].a);
+        System.out.println("---" + arr[0].b);
+
+
+        g1.out();
     }
 
-    public static interface Serialize extends Serializable{
+    public static class GG {
+        int a;
+        String b;
+
+        synchronized void out(){
+            inner();
+            System.out.println("---out");
+        }
+
+        synchronized void inner(){
+            System.out.println("---inner" );
+        }
+    }
+
+    public static interface Serialize extends Serializable {
         void print();
     }
 
 
-    private static class A implements Serializable{
+    private static class A implements Serializable {
         String a;
     }
 
@@ -143,9 +173,6 @@ public class Entrance {
         int a;
     }
 
-    public static class En {
-        static int a = 0;
-    }
 
     public static int ex() {
         try {

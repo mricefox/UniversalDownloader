@@ -71,12 +71,26 @@ public class JavaSerializer {
         return null;
     }
 
+    /**
+     * serialize object to string
+     *
+     * @param object
+     * @return
+     */
     public static String safeSerialize2String(Object object) {
         byte[] bytes = safeSerialize(object);
+        if (bytes == null) return null;
         return Base64.encodeToString(bytes, Base64.DEFAULT);
     }
 
+    /**
+     * deserialize string to object
+     *
+     * @param s
+     * @return
+     */
     public static Object safeDeserialize2Object(String s) {
+        if (s == null || s.length() == 0) return null;
         byte[] bytes = Base64.decode(s, Base64.DEFAULT);
         return safeDeserialize(bytes);
     }

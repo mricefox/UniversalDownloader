@@ -1,13 +1,11 @@
 package com.mricefox.mfdownloader.lib;
 
-import java.io.Serializable;
-
 /**
  * Author:zengzifeng email:zeng163mail@163.com
  * Description:
  * Date:2015/11/30
  */
-public interface DownloadingListener extends Serializable {
+public interface DownloadListener {
     void onAdded(long id);
 
     void onStart(long id);
