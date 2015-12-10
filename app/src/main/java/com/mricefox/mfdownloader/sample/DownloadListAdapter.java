@@ -24,21 +24,11 @@ public class DownloadListAdapter extends RecyclerView.Adapter {
     private List<Download> downloadList;
     private Context context;
     private OnItemClickListener onItemClickListener;
-//    private Map<Long, Integer> downloadIdMap;
 
     public DownloadListAdapter(List<Download> downloadList, Context context) {
         this.downloadList = downloadList;
         this.context = context;
-//        downloadIdMap = new HashMap<>();
     }
-
-//    public Map<Long, Integer> getDownloadIdMap() {
-//        return downloadIdMap;
-//    }
-//
-//    public void setDownloadIdMap(Map<Long, Integer> downloadIdMap) {
-//        this.downloadIdMap = downloadIdMap;
-//    }
 
     public interface OnItemClickListener {
         void onItemClick(View view, int position, long id);
@@ -52,11 +42,8 @@ public class DownloadListAdapter extends RecyclerView.Adapter {
         this.onItemClickListener = onItemClickListener;
     }
 
-    static int num = 0;
-
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        MFLog.d("onCreateViewHolde0r num:" + num++);
         ItemViewHolder holder = new ItemViewHolder(
                 LayoutInflater.from(context).inflate(R.layout.download_item, parent, false));
 
@@ -125,5 +112,4 @@ public class DownloadListAdapter extends RecyclerView.Adapter {
             });
         }
     }
-
 }

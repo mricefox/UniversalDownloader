@@ -36,7 +36,8 @@ public class DownloaderManager {
     public synchronized void init(Configuration configuration) {
         downloadConsumerExecutor =
                 new DownloadConsumerExecutor(configuration.getDownloadOperator(), ConsumerContract,
-                        configuration.getMaxDownloadNum(), configuration.isAutoStartPending());
+                        configuration.getMaxDownloadNum(), configuration.isAutoStartPending(),
+                        configuration.getProgressRefreshTimeMills());
         persistence = configuration.getPersistence();
         MFLog.setDebugState(configuration.isDebuggable());
         downloadObservable = new DownloadObservable();
@@ -70,6 +71,19 @@ public class DownloaderManager {
         downloadConsumerExecutor.resumeDownload(download);
     }
 
+    public void resume(long id, DownloadListener listener) {
+        Download download = persistence.query(id);
+        if (download == null)
+            throw new IllegalArgumentException("can not find download");
+        if (download.getStatus() != Download.STATUS_PAUSED
+                && download.getStatus() != Download.STATUS_RUNNING)//paused or interrupt
+            throw new IllegalArgumentException("can not resume download");
+        download.setDownloadingListener(listener);
+//        MFLog.d("resume total:"+wrapper.getTotalBytes());
+        MFLog.d("resume id:" + id);
+        downloadConsumerExecutor.resumeDownload(download);
+    }
+
     public void cancel(long id) {
         Download download = persistence.query(id);
         if (download == null)
@@ -78,6 +92,18 @@ public class DownloaderManager {
             throw new IllegalArgumentException("can not cancel a not successful download");
         }
 //        download.setDownloadingListener(listener);
+        downloadConsumerExecutor.cancelDownload(download);
+        MFLog.d("cancel id:" + id);
+    }
+
+    public void cancel(long id, DownloadListener listener) {
+        Download download = persistence.query(id);
+        if (download == null)
+            throw new IllegalArgumentException("can not find download");
+        if (download.getStatus() == Download.STATUS_SUCCESSFUL) {
+            throw new IllegalArgumentException("can not cancel a not successful download");
+        }
+        download.setDownloadingListener(listener);
         downloadConsumerExecutor.cancelDownload(download);
         MFLog.d("cancel id:" + id);
     }

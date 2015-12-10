@@ -16,6 +16,7 @@ public class Configuration {
     private boolean debuggable;
     private Persistence persistence;
     private boolean autoStartPending;
+    private long progressRefreshTimeMills;
 
     private Configuration(Builder builder) {
         maxDownloadNum = builder.maxDownloadNum;
@@ -23,6 +24,7 @@ public class Configuration {
         debuggable = builder.debuggable;
         persistence = builder.persistence;
         autoStartPending = builder.autoStartPending;
+        progressRefreshTimeMills = builder.progressRefreshTimeMills;
     }
 
     public int getMaxDownloadNum() {
@@ -45,12 +47,17 @@ public class Configuration {
         return autoStartPending;
     }
 
+    public long getProgressRefreshTimeMills() {
+        return progressRefreshTimeMills;
+    }
+
     public static class Builder {
         private int maxDownloadNum = DEFAULT_MAX_DOWNLOAD_NUM;
         private DownloadOperator operator;
         private boolean debuggable;
         private Persistence persistence;
         private boolean autoStartPending;
+        private long progressRefreshTimeMills;
 
         public Builder() {
         }
@@ -77,6 +84,11 @@ public class Configuration {
 
         public Builder autoStartPending(boolean autoStartPending) {
             this.autoStartPending = autoStartPending;
+            return this;
+        }
+
+        public Builder progressRefreshTimeMills(long progressRefreshTimeMills) {
+            this.progressRefreshTimeMills = progressRefreshTimeMills;
             return this;
         }
 

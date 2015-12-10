@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Author:zengzifeng email:zeng163mail@163.com
- * Description:
+ * Description:executor for download
  * Date:2015/11/23
  */
 class DownloadConsumerExecutor {
@@ -37,7 +37,8 @@ class DownloadConsumerExecutor {
     private boolean autoStartPending;
     private ProgressMonitor progressMonitor;
 
-    DownloadConsumerExecutor(DownloadOperator downloadOperator, Contract contract, int maxDownloadCount, boolean autoStartPending) {
+    DownloadConsumerExecutor(DownloadOperator downloadOperator, Contract contract,
+                             int maxDownloadCount, boolean autoStartPending, long monitorCallbackPeriod) {
         this.maxDownloadCount = new AtomicInteger(maxDownloadCount);
         this.downloadOperator = downloadOperator;
         this.autoStartPending = autoStartPending;
@@ -45,11 +46,12 @@ class DownloadConsumerExecutor {
         downloadExecutor = new DefaultPool(0, Integer.MAX_VALUE,
                 60L, TimeUnit.SECONDS,
                 new SynchronousQueue<Runnable>(),
-                new DefaultThreadFactory(Thread.NORM_PRIORITY - 2, "mfdownloader"));
+                new DownloadThreadFactory(Thread.NORM_PRIORITY - 2, "mfdownloader-"));
 //        downloadQueue = new PriorityBlockingQueue();
         runningDownloads = new ConcurrentHashMap<>();
         downloadOnStopLocks = new ConcurrentHashMap<>();
-        progressMonitor = new ProgressMonitor(runningDownloads, 1000, dispatcher);
+        if (monitorCallbackPeriod == 0) monitorCallbackPeriod = ProgressMonitor.DEFAULT_PERIOD;
+        progressMonitor = new ProgressMonitor(runningDownloads, monitorCallbackPeriod, dispatcher);
         progressMonitor.start();
     }
 
@@ -340,29 +342,6 @@ class DownloadConsumerExecutor {
         public void run() {
             downloadOperator.downloadBlock(downloadId, startPos, endPos, blockIndex, uri, new File(targetFilePath),
                     blockDownloadListener, DefaultDownloadOperator.BUFFER_SIZE);
-        }
-    }
-
-    private class DefaultThreadFactory implements ThreadFactory {
-        private final AtomicInteger poolNumber = new AtomicInteger(1);
-
-        private final ThreadGroup group;
-        private final AtomicInteger threadNumber = new AtomicInteger(1);
-        private final String namePrefix;
-        private final int threadPriority;
-
-        DefaultThreadFactory(int threadPriority, String threadNamePrefix) {
-            this.threadPriority = threadPriority;
-            group = Thread.currentThread().getThreadGroup();
-            namePrefix = threadNamePrefix + poolNumber.getAndIncrement() + "-thread-";
-        }
-
-        @Override
-        public Thread newThread(Runnable r) {
-            Thread t = new Thread(group, r, namePrefix + threadNumber.getAndIncrement(), 0);
-            if (t.isDaemon()) t.setDaemon(false);
-            t.setPriority(threadPriority);
-            return t;
         }
     }
 

@@ -25,7 +25,7 @@ public class Download {
     private final String uri;//persistence
     private final String targetFilePath;//persistence
     private final int priority;//persistence
-    private final DownloadListener downloadListener;
+    private DownloadListener downloadListener;
     private final Handler callbackHandler;
 
     private long id;//persistence
@@ -89,9 +89,9 @@ public class Download {
         return downloadListener;
     }
 
-//    public void setDownloadingListener(DownloadListener downloadListener) {
-//        this.downloadListener = downloadListener;
-//    }
+    public void setDownloadingListener(DownloadListener downloadListener) {
+        this.downloadListener = downloadListener;
+    }
 
     public long getId() {
         return id;

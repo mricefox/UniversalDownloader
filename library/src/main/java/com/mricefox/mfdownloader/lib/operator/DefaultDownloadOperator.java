@@ -14,7 +14,12 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Author:zengzifeng email:zeng163mail@163.com
@@ -50,6 +55,7 @@ public class DefaultDownloadOperator implements DownloadOperator {
             connection = (HttpURLConnection) new URL(urlStr).openConnection();
             connection.setConnectTimeout(DEFAULT_HTTP_CONNECT_TIMEOUT);
             connection.setReadTimeout(DEFAULT_HTTP_READ_TIMEOUT);
+            getHttpResponseHeader(connection);
             if (connection.getResponseCode() == 200)//todo redirectCount
                 return connection.getContentLength();
             else
@@ -132,8 +138,8 @@ public class DefaultDownloadOperator implements DownloadOperator {
             e.printStackTrace();
             if (listener != null) listener.onDownloadFail(downloadId, blockIndex, current);
         } finally {
-            close(raf);
-            close(is);
+            safeClose(raf);
+            safeClose(is);
             if (connection != null) connection.disconnect();
         }
 
@@ -199,7 +205,7 @@ public class DefaultDownloadOperator implements DownloadOperator {
         return false;
     }
 
-    private void close(Closeable closeable) {
+    private void safeClose(Closeable closeable) {
         if (closeable != null) try {
             closeable.close();
         } catch (IOException e) {
@@ -207,4 +213,36 @@ public class DefaultDownloadOperator implements DownloadOperator {
         }
     }
 
+    private Map<String, String> getHttpResponseHeader(HttpURLConnection conn) {
+        Map<String, String> header = new LinkedHashMap();
+        for (int i = 0; ; i++) {
+            String mine = conn.getHeaderField(i);
+            if (mine == null) {
+                break;
+            }
+            MFLog.d("head k:" + conn.getHeaderFieldKey(i) + " v:" + mine);
+            header.put(conn.getHeaderFieldKey(i), mine);
+        }
+        return header;
+    }
+
+    private String getFileName(HttpURLConnection conn) {
+        String filename = this.downloadUrl.substring(this.downloadUrl.lastIndexOf('/') + 1);
+        if (filename == null || "".equals(filename.trim())) {// 如果获取不到文件名称
+            for (int i = 0;; i++) {
+                String mine = conn.getHeaderField(i);
+                if (mine == null) {
+                    break;
+                }
+                if ("content-disposition".equals(conn.getHeaderFieldKey(i).toLowerCase())) {
+                    Matcher m = Pattern.compile(".*filename=(.*)").matcher(mine.toLowerCase());
+                    if (m.find()) {
+                        return m.group(1);
+                    }
+                }
+            }
+            filename = UUID.randomUUID() + "";// 默认取一个文件名
+        }
+        return filename;
+    }
 }

@@ -1,11 +1,8 @@
 package com.mricefox.mfdownloader.sample;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -15,18 +12,12 @@ import android.view.ViewGroup;
 
 import com.mricefox.mfdownloader.lib.Download;
 import com.mricefox.mfdownloader.lib.DownloadListener;
+import com.mricefox.mfdownloader.lib.DownloadObserver;
 import com.mricefox.mfdownloader.lib.DownloadParams;
 import com.mricefox.mfdownloader.lib.DownloaderManager;
-import com.mricefox.mfdownloader.lib.assist.JavaSerializer;
 import com.mricefox.mfdownloader.lib.assist.MFLog;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -113,6 +104,12 @@ public class DownloadListFragment extends Fragment {
     private static RecyclerView downloadRecyclerView;
     private DownloadListAdapter downloadListAdapter;
     private List<Download> downloadList = new ArrayList<>();
+    private DownloadObserver downloadObserver = new DownloadObserver() {
+        @Override
+        public void onChanged(Download download) {
+
+        }
+    };
 
     public DownloadListFragment() {
         // Required empty public constructor
@@ -169,7 +166,6 @@ public class DownloadListFragment extends Fragment {
         downloadList.add(download8);
 
         downloadRecyclerView.setHasFixedSize(true);
-//        adapter.setHasStableIds(true);
         LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
         downloadRecyclerView.setLayoutManager(layoutManager);
         downloadRecyclerView.setAdapter(downloadListAdapter);

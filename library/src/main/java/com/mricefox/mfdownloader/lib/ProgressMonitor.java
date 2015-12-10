@@ -5,9 +5,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Author:zengzifeng email:zeng163mail@163.com
@@ -15,8 +13,17 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Date:2015/12/10
  */
 public class ProgressMonitor {
+    /**
+     * {@value}
+     */
     public final static long MIN_PERIOD = 1000;
+    /**
+     * {@value}
+     */
     public final static long MAX_PERIOD = 5000;
+    /**
+     * {@value}
+     */
     public final static long DEFAULT_PERIOD = 1000;
 
     private final ScheduledExecutorService progressMonitorExecutor;
@@ -25,17 +32,20 @@ public class ProgressMonitor {
     private long callbackPeriod;
     private boolean start;
     private long internalUpdatePeriod;//time interval of internal update the speed data
+    /**
+     * interface between {@link DownloadConsumerExecutor}
+     */
     private MonitorDispatcher dispatcher;
 
     /**
      * @param runningDownloads
-     * @param callbackPeriod   MILLISECONDS
+     * @param callbackPeriod   MILLISECONDS must >  {@link ProgressMonitor#MIN_PERIOD} and < {@link ProgressMonitor#MAX_PERIOD}
      */
     public ProgressMonitor(ConcurrentHashMap<Long, Download> runningDownloads, long callbackPeriod, MonitorDispatcher dispatcher) {
         this.runningDownloads = runningDownloads;
 //        monitorContents = new ConcurrentHashMap<>();
         progressMonitorExecutor = new ScheduledThreadPoolExecutor(2,
-                new DefaultThreadFactory(Thread.NORM_PRIORITY - 2, "mfdownloader-monitor"));
+                new DownloadThreadFactory(Thread.NORM_PRIORITY - 2, "mf-monitor-"));
         this.internalUpdatePeriod = DEFAULT_PERIOD;
         this.dispatcher = dispatcher;
         if (callbackPeriod < MIN_PERIOD || callbackPeriod > MAX_PERIOD) {
@@ -139,28 +149,5 @@ public class ProgressMonitor {
 
     public interface MonitorDispatcher {
         void onUpdate(ConcurrentHashMap<Long, Download> runningDownloads);
-    }
-
-    private class DefaultThreadFactory implements ThreadFactory {
-        private final AtomicInteger poolNumber = new AtomicInteger(1);
-
-        private final ThreadGroup group;
-        private final AtomicInteger threadNumber = new AtomicInteger(1);
-        private final String namePrefix;
-        private final int threadPriority;
-
-        DefaultThreadFactory(int threadPriority, String threadNamePrefix) {
-            this.threadPriority = threadPriority;
-            group = Thread.currentThread().getThreadGroup();
-            namePrefix = threadNamePrefix + poolNumber.getAndIncrement() + "-thread-";
-        }
-
-        @Override
-        public Thread newThread(Runnable r) {
-            Thread t = new Thread(group, r, namePrefix + threadNumber.getAndIncrement(), 0);
-            if (t.isDaemon()) t.setDaemon(false);
-            t.setPriority(threadPriority);
-            return t;
-        }
     }
 }
