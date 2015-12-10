@@ -5,11 +5,11 @@ import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
+import java.text.DecimalFormat;
 import java.util.Date;
-import java.util.List;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
 
 public class Entrance {
     public static void main(String[] args) throws Exception {
@@ -97,66 +97,158 @@ public class Entrance {
 //        En e2 = new En();
 //        System.out.println("e2.a="+e2.a);
 
-        KK k1 = new KK();
-        k1.a = 4;
-        KK k2 = new KK();
-        k2.a = 7;
-        KK k3 = new KK();
-        k3.a = 3;
-        KK k4 = new KK();
-        k4.a = 8;
+//        KK k1 = new KK();
+//        k1.a = 4;
+//        KK k2 = new KK();
+//        k2.a = 7;
+//        KK k3 = new KK();
+//        k3.a = 3;
+//        KK k4 = new KK();
+//        k4.a = 8;
+//
+//        List<KK> list = new ArrayList<>();
+//        list.add(k1);
+//        list.add(k2);
+//        list.add(k3);
+//        list.add(k4);
+//
+//        for (KK k : list) {
+//            System.out.println("==" + k.a);
+//        }
+//
+//        Collections.sort(list, new Comparator<KK>() {
+//            @Override
+//            public int compare(KK o1, KK o2) {
+//                if (o1.a > o2.a) return 1;
+//                else if (o1.a < o2.a) return -1;
+//                else return 0;
+//            }
+//        });
+//        System.out.println("===");
+//        for (KK k : list) {
+//            System.out.println("==" + k.a);
+//        }
 
-        List<KK> list = new ArrayList<>();
-        list.add(k1);
-        list.add(k2);
-        list.add(k3);
-        list.add(k4);
+//        GG g1 = new GG();
+//        g1.a = 3;
+//        g1.b = "bb";
+//        List<GG> l = new ArrayList<>();
+//        l.add(g1);
+//        GG[] arr = new GG[l.size()];
+//        l.toArray(arr);
+//
+//        g1.a = 4;
+//        g1.b = "aa";
+//        System.out.println("---" + arr[0].a);
+//        System.out.println("---" + arr[0].b);
 
-        for (KK k : list) {
-            System.out.println("==" + k.a);
+
+//        g1.out();
+//
+//        Command command0 = new Command();
+//        command0.id = 0;
+//        command0.doTaskTime = 500;
+//
+//        Command command1 = new Command();
+//        command1.id = 1;
+//        command1.doTaskTime = 3000;
+//
+//        Command command2 = new Command();
+//        command2.id = 2;
+//        command2.doTaskTime = 4000;
+//
+
+
+//        Stpe stpe = new Stpe(1);
+//        stpe.scheduleAtFixedRate(command0, 1000, 1000, TimeUnit.MILLISECONDS);
+////        stpe.scheduleWithFixedDelay(command0, 1000, 1000, TimeUnit.MILLISECONDS);
+//        command0.startTime = System.currentTimeMillis();
+//
+//        stpe.scheduleAtFixedRate(command1, 1000, 1000, TimeUnit.MILLISECONDS);
+//        command1.startTime = System.currentTimeMillis();
+//
+//        stpe.scheduleAtFixedRate(command2, 1000, 1000, TimeUnit.MILLISECONDS);
+//        command2.startTime = System.currentTimeMillis();
+
+        System.out.println("size=" + displayFilesize(10));
+    }
+
+    public static String displayFilesize(long fileSize) {
+        if (fileSize <= 0) {
+            return "0";
+        } else {
+            final String[] fileUnit = new String[]{"B", "KB", "MB", "GB", "TB"};
+            int group = (int) (Math.log10(fileSize) / Math.log10(1024));
+            return new DecimalFormat("#,##0.#").format(fileSize
+                    / Math.pow(1024, group)) + fileUnit[group];
+        }
+    }
+
+    private static class Stpe extends ScheduledThreadPoolExecutor {
+
+        public Stpe(int corePoolSize) {
+            super(corePoolSize);
         }
 
-        Collections.sort(list, new Comparator<KK>() {
-            @Override
-            public int compare(KK o1, KK o2) {
-                if (o1.a > o2.a) return 1;
-                else if (o1.a < o2.a) return -1;
-                else return 0;
+        public Stpe(int corePoolSize, ThreadFactory threadFactory) {
+            super(corePoolSize, threadFactory);
+        }
+
+        public Stpe(int corePoolSize, RejectedExecutionHandler handler) {
+            super(corePoolSize, handler);
+        }
+
+        public Stpe(int corePoolSize, ThreadFactory threadFactory, RejectedExecutionHandler handler) {
+            super(corePoolSize, threadFactory, handler);
+        }
+
+        @Override
+        protected void beforeExecute(Thread t, Runnable r) {
+            super.beforeExecute(t, r);
+//            System.out.println("r="+r);
+//
+////            if (r instanceof Command){
+//                System.out.println("instanceof");
+//                Command c = (Command) r;
+//                c.startTime = System.currentTimeMillis();
+////            }
+//            System.out.println("not instanceof");
+        }
+
+        @Override
+        protected void afterExecute(Runnable r, Throwable t) {
+            super.afterExecute(r, t);
+        }
+    }
+
+    public static class Command implements Runnable {
+        long id;
+        long startTime;
+        long doTaskTime;
+
+        public void run() {
+            try {
+                Thread.sleep(doTaskTime);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-        });
-        System.out.println("===");
-        for (KK k : list) {
-            System.out.println("==" + k.a);
+            long interval = System.currentTimeMillis() - startTime;
+            System.out.println("id:" + id + "interval:" + interval);
+//            int i = 10/0;
         }
-
-        GG g1 = new GG();
-        g1.a = 3;
-        g1.b = "bb";
-        List<GG> l = new ArrayList<>();
-        l.add(g1);
-        GG[] arr = new GG[l.size()];
-        l.toArray(arr);
-
-        g1.a = 4;
-        g1.b = "aa";
-        System.out.println("---" + arr[0].a);
-        System.out.println("---" + arr[0].b);
-
-
-        g1.out();
     }
 
     public static class GG {
         int a;
         String b;
 
-        synchronized void out(){
+        synchronized void out() {
             inner();
             System.out.println("---out");
         }
 
-        synchronized void inner(){
-            System.out.println("---inner" );
+        synchronized void inner() {
+            System.out.println("---inner");
         }
     }
 

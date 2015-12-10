@@ -52,8 +52,11 @@ public class DownloadListAdapter extends RecyclerView.Adapter {
         this.onItemClickListener = onItemClickListener;
     }
 
+    static int num = 0;
+
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        MFLog.d("onCreateViewHolde0r num:" + num++);
         ItemViewHolder holder = new ItemViewHolder(
                 LayoutInflater.from(context).inflate(R.layout.download_item, parent, false));
 

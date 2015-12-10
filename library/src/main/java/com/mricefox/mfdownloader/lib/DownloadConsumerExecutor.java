@@ -7,7 +7,9 @@ import com.mricefox.mfdownloader.lib.operator.DownloadOperator;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -33,6 +35,7 @@ class DownloadConsumerExecutor {
     private ConcurrentHashMap<Long, CountDownLatch> downloadOnStopLocks;
     private AtomicInteger maxDownloadCount;
     private boolean autoStartPending;
+    private ProgressMonitor progressMonitor;
 
     DownloadConsumerExecutor(DownloadOperator downloadOperator, Contract contract, int maxDownloadCount, boolean autoStartPending) {
         this.maxDownloadCount = new AtomicInteger(maxDownloadCount);
@@ -42,70 +45,13 @@ class DownloadConsumerExecutor {
         downloadExecutor = new DefaultPool(0, Integer.MAX_VALUE,
                 60L, TimeUnit.SECONDS,
                 new SynchronousQueue<Runnable>(),
-                new DefaultThreadFactory(Thread.NORM_PRIORITY - 2, "download-t-"));
+                new DefaultThreadFactory(Thread.NORM_PRIORITY - 2, "mfdownloader"));
 //        downloadQueue = new PriorityBlockingQueue();
         runningDownloads = new ConcurrentHashMap<>();
         downloadOnStopLocks = new ConcurrentHashMap<>();
+        progressMonitor = new ProgressMonitor(runningDownloads, 1000, dispatcher);
+        progressMonitor.start();
     }
-
-    private BlockDownloadListener blockDownloadListener = new BlockDownloadListener() {
-
-        @Override
-        public boolean onBytesDownload(long downloadId, int blockIndex, long current, long total, long bytesThisStep) {
-            final Download download = runningDownloads.get(downloadId);
-            synchronized (download) {
-                download.setCurrentBytes(download.getCurrentBytes() + bytesThisStep);
-                boolean shouldProcess = download.getStatus() == Download.STATUS_PAUSED ||
-                        download.getStatus() == Download.STATUS_CANCELLED;
-//            MFLog.d("downloadId:" + downloadId + " current:" + currentBytes + " total:" + wrapper.totalBytes);
-                if (!shouldProcess)
-                    contract.triggerProgressEvent(download);
-                return !shouldProcess;
-            }
-        }
-
-        @Override
-        public void onDownloadStop(long downloadId, int blockIndex, long currentBytes) {
-            final Download download = runningDownloads.get(downloadId);
-            synchronized (download) {//download access by each block download thread
-                Block block = download.getBlocks().get(blockIndex);
-                block.setDownloadedBytes(currentBytes);
-            }
-            countDownLock(downloadId);
-
-//            Block block = wrapper.getBlocks().get(blockIndex);
-//            block.setDownloadedBytes(currentBytes);
-//            if (wrapper.getCurrentBytes() == wrapper.getTotalBytes()) {
-//                runningDownloads.remove(downloadId);
-//                wrapper.setStatus(Download.STATUS_SUCCESSFUL);
-//                contract.updateDownload(wrapper);
-//                contract.triggerCompleteEvent(wrapper);
-//            } else if (wrapper.getStatus() == Download.STATUS_PAUSED) {
-//                //stream I/O loop interrupt by paused
-//                block.setStop(true);
-//                if (wrapper.allBlockStopped()) {
-//                    MFLog.d("allBlockStopped");
-//                    runningDownloads.remove(downloadId);
-//                    contract.updateDownload(wrapper);
-//                    contract.triggerPauseEvent(wrapper);
-//                } else {
-//                    MFLog.d("not allBlockStopped");
-//                }
-//            }
-        }
-
-        @Override
-        public void onDownloadFail(long downloadId, int blockIndex, long currentBytes) {
-            final Download download = runningDownloads.get(downloadId);
-            synchronized (download) {//download access by each block download thread
-                Block block = download.getBlocks().get(blockIndex);
-                block.setDownloadedBytes(currentBytes);
-
-                download.setStatus(Download.STATUS_FAILED);
-            }
-            countDownLock(downloadId);
-        }
-    };
 
     long startDownload(Download download) {
         long time = System.currentTimeMillis();
@@ -119,6 +65,7 @@ class DownloadConsumerExecutor {
             DownloadConsumer downloadConsumer = new DownloadConsumer(download, false);
             downloadExecutor.execute(downloadConsumer);
             runningDownloads.put(id, download);
+//            progressMonitor.addMonitorContent(id);
             contract.triggerAddEvent(download);
         } else {
             download.setStatus(Download.STATUS_PENDING);
@@ -135,6 +82,7 @@ class DownloadConsumerExecutor {
             DownloadConsumer downloadConsumer = new DownloadConsumer(download, false);
             downloadExecutor.execute(downloadConsumer);
             runningDownloads.put(download.getId(), download);
+//            progressMonitor.addMonitorContent(download.getId());
             //store wrapper
             download.setStatus(Download.STATUS_RUNNING);
             contract.updateDownload(download);
@@ -154,6 +102,7 @@ class DownloadConsumerExecutor {
             DownloadConsumer downloadConsumer = new DownloadConsumer(download, true);
             downloadExecutor.execute(downloadConsumer);
             runningDownloads.put(download.getId(), download);
+//            progressMonitor.addMonitorContent(download.getId());
             download.setStatus(Download.STATUS_RUNNING);
         } else {
             download.setStatus(Download.STATUS_PENDING);
@@ -204,6 +153,63 @@ class DownloadConsumerExecutor {
             if (latch != null) latch.countDown();
         }
     }
+
+    private BlockDownloadListener blockDownloadListener = new BlockDownloadListener() {
+
+        @Override
+        public boolean onBytesDownload(long downloadId, int blockIndex, long current, long total, long bytesThisStep) {
+            final Download download = runningDownloads.get(downloadId);
+            synchronized (download) {
+                download.setCurrentBytes(download.getCurrentBytes() + bytesThisStep);
+                boolean shouldProcess = download.getStatus() == Download.STATUS_PAUSED ||
+                        download.getStatus() == Download.STATUS_CANCELLED;
+//            MFLog.d("downloadId:" + downloadId + " current:" + currentBytes + " total:" + wrapper.totalBytes);
+//                if (!shouldProcess)
+//                    contract.triggerProgressEvent(download);
+                return !shouldProcess;
+            }
+        }
+
+        @Override
+        public void onDownloadStop(long downloadId, int blockIndex, long currentBytes) {
+            final Download download = runningDownloads.get(downloadId);
+            synchronized (download) {//download access by each block download thread
+                Block block = download.getBlocks().get(blockIndex);
+                block.setDownloadedBytes(currentBytes);
+            }
+            countDownLock(downloadId);
+        }
+
+        @Override
+        public void onDownloadFail(long downloadId, int blockIndex, long currentBytes) {
+            final Download download = runningDownloads.get(downloadId);
+            synchronized (download) {//download access by each block download thread
+                Block block = download.getBlocks().get(blockIndex);
+                block.setDownloadedBytes(currentBytes);
+                download.setStatus(Download.STATUS_FAILED);
+            }
+            countDownLock(downloadId);
+        }
+    };
+
+    private ProgressMonitor.MonitorDispatcher dispatcher = new ProgressMonitor.MonitorDispatcher() {
+        @Override
+        public void onUpdate(ConcurrentHashMap<Long, Download> monitorContents) {
+            Iterator<Map.Entry<Long, Download>> iterator =
+                    monitorContents.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<Long, Download> entry = iterator.next();
+//                MFLog.d(entry.getKey() + "#" + entry.getValue().showSpeed());
+                final Download download = runningDownloads.get(entry.getKey());
+                synchronized (download) {
+                    boolean shouldProcess = download.getStatus() == Download.STATUS_PAUSED ||
+                            download.getStatus() == Download.STATUS_CANCELLED;
+                    if (!shouldProcess)
+                        contract.triggerProgressEvent(download);
+                }
+            }
+        }
+    };
 
     private class DownloadConsumer implements Runnable {
         private final Download download;
@@ -256,6 +262,7 @@ class DownloadConsumerExecutor {
             waitForDownloadStopLock(download.getId());
 
             runningDownloads.remove(download.getId());
+//            progressMonitor.removeMonitorContent(download.getId());
             downloadOnStopLocks.remove(download.getId());
 
             if (download.getCurrentBytes() == download.getTotalBytes()) {
@@ -379,11 +386,13 @@ class DownloadConsumerExecutor {
         @Override
         protected void beforeExecute(Thread t, Runnable r) {
             super.beforeExecute(t, r);
+            MFLog.d("beforeExecute thread:" + t.getName());
         }
 
         @Override
         protected void afterExecute(Runnable r, Throwable t) {
             super.afterExecute(r, t);
+            MFLog.d("afterExecute thread:" + Thread.currentThread().getName());
         }
     }
 }

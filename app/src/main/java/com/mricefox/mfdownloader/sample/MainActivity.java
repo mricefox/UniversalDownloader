@@ -5,7 +5,6 @@ import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 
 import com.mricefox.mfdownloader.lib.Configuration;
 import com.mricefox.mfdownloader.lib.Download;
@@ -14,6 +13,7 @@ import com.mricefox.mfdownloader.lib.DownloadObserver;
 import com.mricefox.mfdownloader.lib.DownloadParams;
 import com.mricefox.mfdownloader.lib.DownloaderManager;
 import com.mricefox.mfdownloader.lib.assist.MFLog;
+import com.mricefox.mfdownloader.lib.assist.StringUtil;
 import com.mricefox.mfdownloader.lib.operator.DefaultDownloadOperator;
 import com.mricefox.mfdownloader.lib.persistence.XmlPersistence;
 
@@ -62,8 +62,9 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onProgressUpdate(long id, long current, long total, long bytesPerSecond) {
-            MFLog.d("id:" + id + "#onProgressUpdate" + "#current" + current + "#total" +
-                    total + "#%" + String.format("%.2f", (current + 0.0f) * 100 / total));
+            MFLog.d("id:" + id + " onProgressUpdate" + " current" + StringUtil.displayFilesize(current) +
+                    " total" + StringUtil.displayFilesize(total) + " %" + String.format("%.2f", (current + .0f) * 100 / total)
+                    + " speed:" + StringUtil.displayFilesize(bytesPerSecond));
         }
     };
     //    Download download1 = new Download(SampleUri3, TargetDir + File.separator + "novel1.zip");
@@ -167,11 +168,6 @@ public class MainActivity extends AppCompatActivity {
                 case R.id.resume_btn:
                     DownloaderManager.getInstance().resume(d_id);
 
-//                    Trigger trigger = new Trigger();
-//                    trigger.num=3;
-//                    trigger.h = new Handler();
-//                    trigger.tag = "AKOP";
-//                    trigger.onClick();
                     break;
                 case R.id.cancel_btn:
                     DownloaderManager.getInstance().cancel(d_id);
@@ -209,24 +205,5 @@ public class MainActivity extends AppCompatActivity {
 //        return list;
 //    }
 
-//    private class Trigger implements View.OnClickListener {
-//        Handler h;
-//        int num;
-//        String tag;
-//
-//        @Override
-//        public void onClick(View v) {
-//            h.post(new Runnable() {
-//                @Override
-//                public void run() {
-//                    print();
-//                }
-//            });
-//        }
-//
-//        void print() {
-//            MFLog.d("Trigger tag:" + tag + "#num:" + num);
-//        }
-//    }
 
 }

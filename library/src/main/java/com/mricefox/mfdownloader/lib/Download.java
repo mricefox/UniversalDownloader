@@ -3,6 +3,8 @@ package com.mricefox.mfdownloader.lib;
 import android.os.Handler;
 import android.os.Looper;
 
+import com.mricefox.mfdownloader.lib.assist.StringUtil;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,17 +22,22 @@ public class Download {
     public static final int STATUS_CANCELLED = 1 << 6;
 
     //user config attrs
-    private final String uri;
-    private final String targetFilePath;
-    private final int priority;
+    private final String uri;//persistence
+    private final String targetFilePath;//persistence
+    private final int priority;//persistence
     private final DownloadListener downloadListener;
     private final Handler callbackHandler;
 
-    private long id;
-    private List<Block> blocks;
-    private long totalBytes;
-    private long currentBytes;
-    private int status;
+    private long id;//persistence
+    private List<Block> blocks;//persistence
+    private long totalBytes;//persistence
+    private long currentBytes;//persistence
+    private int status;//persistence
+    private long bytesPerSecondNow;
+    private long bytesPerSecondMax;
+    private long bytesPerSecondAverage;
+    private long downloadTimeMills;//persistence
+    private long prevBytes;// bytes for progress monitor
 
     public Download(DownloadParams params) {
         this.uri = params.getUri();
@@ -136,6 +143,53 @@ public class Download {
 
     public Handler getCallbackHandler() {
         return callbackHandler;
+    }
+
+    public long getBytesPerSecondNow() {
+        return bytesPerSecondNow;
+    }
+
+    public void setBytesPerSecondNow(long bytesPerSecondNow) {
+        this.bytesPerSecondNow = bytesPerSecondNow;
+    }
+
+    public long getBytesPerSecondMax() {
+        return bytesPerSecondMax;
+    }
+
+    public void setBytesPerSecondMax(long bytesPerSecondMax) {
+        this.bytesPerSecondMax = bytesPerSecondMax;
+    }
+
+    public long getBytesPerSecondAverage() {
+        return bytesPerSecondAverage;
+    }
+
+    public void setBytesPerSecondAverage(long bytesPerSecondAverage) {
+        this.bytesPerSecondAverage = bytesPerSecondAverage;
+    }
+
+    public long getDownloadTimeMills() {
+        return downloadTimeMills;
+    }
+
+    public void setDownloadTimeMills(long downloadTimeMills) {
+        this.downloadTimeMills = downloadTimeMills;
+    }
+
+    public long getPrevBytes() {
+        return prevBytes;
+    }
+
+    public void setPrevBytes(long prevBytes) {
+        this.prevBytes = prevBytes;
+    }
+
+    public String showSpeed() {
+        return "bytes:" + StringUtil.displayFilesize(currentBytes) + " mills:" + downloadTimeMills / 1000 +
+                " bpsn:" + StringUtil.displayFilesize(bytesPerSecondNow) + " bpsm:" +
+                StringUtil.displayFilesize(bytesPerSecondMax) +
+                " bpsa:" + StringUtil.displayFilesize(bytesPerSecondAverage);
     }
 
     //    @Override

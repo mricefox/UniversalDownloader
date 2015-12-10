@@ -54,6 +54,7 @@ public class XmlPersistence implements Persistence<Download> {
     private final static String D_ATTR_URI = "uri";
     private final static String D_ATTR_FILE_PATH = "path";
     private final static String D_ATTR_PRIORITY = "pry";
+    private final static String D_ATTR_Time = "time";
 
     private final static String B_ATTR_INDEX = "idx";
     private final static String B_ATTR_START_POS = "spos";
@@ -110,6 +111,7 @@ public class XmlPersistence implements Persistence<Download> {
         element.setAttribute(D_ATTR_TOTAL_BYTES, String.valueOf(download.getTotalBytes()));
         element.setAttribute(D_ATTR_CURRENT_BYTES, String.valueOf(download.getCurrentBytes()));
         element.setAttribute(D_ATTR_PRIORITY, String.valueOf(download.getPriority()));
+        element.setAttribute(D_ATTR_Time, String.valueOf(download.getDownloadTimeMills()));
         //serialize listener
 //        DownloadListener listener = download.getDownloadListener();
 //        String s = JavaSerializer.safeSerialize2String(listener);
@@ -135,6 +137,7 @@ public class XmlPersistence implements Persistence<Download> {
         element.setAttribute(D_ATTR_TOTAL_BYTES, String.valueOf(download.getTotalBytes()));
         element.setAttribute(D_ATTR_CURRENT_BYTES, String.valueOf(download.getCurrentBytes()));
         element.setAttribute(D_ATTR_PRIORITY, String.valueOf(download.getPriority()));
+        element.setAttribute(D_ATTR_Time, String.valueOf(download.getDownloadTimeMills()));
         //serialize listener
 //        DownloadListener listener = download.getDownloadListener();
 //        String s = JavaSerializer.safeSerialize2String(listener);
@@ -159,7 +162,7 @@ public class XmlPersistence implements Persistence<Download> {
 
     @Override
     public synchronized List<Download> queryAll() {
-        long time = System.currentTimeMillis();
+        long startTime = System.currentTimeMillis();
 
         XmlPullParser parser = Xml.newPullParser();
         List<Download> downloadList = null;
@@ -184,6 +187,7 @@ public class XmlPersistence implements Persistence<Download> {
                             String currentBytes = parser.getAttributeValue(null, D_ATTR_CURRENT_BYTES);
                             String totalBytes = parser.getAttributeValue(null, D_ATTR_TOTAL_BYTES);
                             String priority = parser.getAttributeValue(null, D_ATTR_PRIORITY);
+                            String time = parser.getAttributeValue(null, D_ATTR_Time);
 
 //                            String str = parser.getAttributeValue(null, "dlistener");
 //                            Object o = JavaSerializer.safeDeserialize2Object(str);
@@ -198,6 +202,7 @@ public class XmlPersistence implements Persistence<Download> {
                             download.setStatus(Integer.valueOf(status));
                             download.setCurrentBytes(Long.valueOf(currentBytes));
                             download.setTotalBytes(Long.valueOf(totalBytes));
+                            download.setDownloadTimeMills(Long.valueOf(time));
                             blockList = new ArrayList<>();
                         } else if (parser.getName().equals(ELEMENT_BLOCK_TAG)) {
                             String index = parser.getAttributeValue(null, B_ATTR_INDEX);
@@ -228,7 +233,7 @@ public class XmlPersistence implements Persistence<Download> {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        MFLog.d("XmlPersistence readall time:" + (System.currentTimeMillis() - time));
+        MFLog.d("XmlPersistence readall time:" + (System.currentTimeMillis() - startTime));
         return downloadList;
     }
 
@@ -266,7 +271,7 @@ public class XmlPersistence implements Persistence<Download> {
 
     @Override
     public synchronized long update(Download download) {
-//        long time = System.currentTimeMillis();
+        long time = System.currentTimeMillis();
 
         DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
         long res = -1;
@@ -295,7 +300,7 @@ public class XmlPersistence implements Persistence<Download> {
         } catch (TransformerException e) {
             e.printStackTrace();
         }
-//        MFLog.d("XmlPersistence update time:" + (System.currentTimeMillis() - time));
+        MFLog.d("XmlPersistence update time:" + (System.currentTimeMillis() - time));
         return res;
     }
 

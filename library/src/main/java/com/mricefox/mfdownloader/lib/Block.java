@@ -4,9 +4,9 @@ package com.mricefox.mfdownloader.lib;
  * Created by Bourne on 15/11/25.
  */
 public class Block {
-    private int index;
-    private long startPos, endPos;
-    private long downloadedBytes;
+    private int index;//persistence
+    private long startPos, endPos;//persistence
+    private long downloadedBytes;//persistence
 //    private transient boolean stop = false;
 
 //    public Block(int index, long startPos, long endPos, long downloadedBytes, boolean stop) {

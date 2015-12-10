@@ -10,11 +10,13 @@ import android.util.Log;
  */
 public class MFLog {
     private static boolean DEBUG = true;
-    private static final String TAG = "mf-download-log";
+    private static final String TAG = "mf_download";
 
     private static String className;
     private static String methodName;
     private static int lineNumber;
+
+    private MFLog(){}
 
     public static void setDebugState(boolean enable) {
         DEBUG = enable;

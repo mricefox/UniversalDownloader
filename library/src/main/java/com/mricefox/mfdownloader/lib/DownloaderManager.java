@@ -180,7 +180,8 @@ public class DownloaderManager {
                 Runnable r = new Runnable() {
                     @Override
                     public void run() {
-                        listener.onProgressUpdate(download.getId(), download.getCurrentBytes(), download.getTotalBytes(), 0);
+                        listener.onProgressUpdate(download.getId(),
+                                download.getCurrentBytes(), download.getTotalBytes(), download.getBytesPerSecondNow());
                     }
                 };
                 runTask(download.getCallbackHandler(), r);

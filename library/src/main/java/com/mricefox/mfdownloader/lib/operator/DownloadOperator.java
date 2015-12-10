@@ -8,7 +8,7 @@ import java.util.List;
 
 /**
  * Author:zengzifeng email:zeng163mail@163.com
- * Description:
+ * Description:download operator
  * Date:2015/11/24
  */
 public interface DownloadOperator {
