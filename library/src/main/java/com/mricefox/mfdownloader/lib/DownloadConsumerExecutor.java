@@ -1,5 +1,7 @@
 package com.mricefox.mfdownloader.lib;
 
+import android.util.Pair;
+
 import com.mricefox.mfdownloader.lib.assist.MFLog;
 import com.mricefox.mfdownloader.lib.operator.BlockDownloadListener;
 import com.mricefox.mfdownloader.lib.operator.DefaultDownloadOperator;
@@ -196,9 +198,9 @@ class DownloadConsumerExecutor {
 
     private ProgressMonitor.MonitorDispatcher dispatcher = new ProgressMonitor.MonitorDispatcher() {
         @Override
-        public void onUpdate(ConcurrentHashMap<Long, Download> monitorContents) {
+        public void onUpdate() {
             Iterator<Map.Entry<Long, Download>> iterator =
-                    monitorContents.entrySet().iterator();
+                    runningDownloads.entrySet().iterator();
             while (iterator.hasNext()) {
                 Map.Entry<Long, Download> entry = iterator.next();
 //                MFLog.d(entry.getKey() + "#" + entry.getValue().showSpeed());
@@ -255,7 +257,8 @@ class DownloadConsumerExecutor {
                 }
                 long startPos = block.getStartPos() + block.getDownloadedBytes();
                 BlockConsumer consumer = new BlockConsumer(block.getIndex(), startPos, block.getEndPos(),
-                        download.getUri(), download.getTargetFilePath(), download.getId());
+                        download.getUri(), download.getTargetDir() + File.separator + download.getFileName(),
+                        download.getId());
 //                MFLog.d("init block pos#s:" + startPos + "#e:" + block.getEndPos());
                 downloadExecutor.execute(consumer);
                 ++runningConsumerCount;
@@ -303,33 +306,38 @@ class DownloadConsumerExecutor {
          * @throws IOException
          */
         void setupDownload(Download download) throws IOException {
-            final long fileLength = downloadOperator.getRemoteFileLength(download.getUri());
-            if (fileLength != -1) {
-                List<Block> blocks = downloadOperator.split2Block(fileLength);
-                MFLog.d("file size:" + fileLength);
-                if (downloadOperator.createFile(fileLength, download.getTargetFilePath())) {
-                    download.setBlocks(blocks);
-                    /**
-                     * wrapper blocks access by every thread of download block
-                     */
-                    download.setTotalBytes(fileLength);
-                } else
+            final Pair<Long, String> lenNamePair = downloadOperator.getRemoteFileLengthAndName(download.getUri());
+            if (lenNamePair != null) {
+                List<Block> blocks = downloadOperator.split2Block(lenNamePair.first);
+                MFLog.d("file size:" + lenNamePair.first);
+                download.setBlocks(blocks);
+                /**
+                 * wrapper blocks access by every thread of download block
+                 */
+                download.setTotalBytes(lenNamePair.first);
+                String fileName = download.getFileName();
+                if (fileName == null) {//user did not set file name, use generated file name
+                    fileName = lenNamePair.second;
+                    download.setFileName(fileName);
+                }
+                if (!downloadOperator.createFile(lenNamePair.first,
+                        download.getTargetDir() + File.separator + fileName))
                     throw new IOException("Create file fail");
             } else {
-                throw new IOException("Remote file length = -1");
+                throw new IOException("setup download fail");
             }
         }
     }
 
     private class BlockConsumer implements Runnable {
-        private int blockIndex;
-        private long startPos, endPos;
-        private String uri;
-        private String targetFilePath;
-        private long downloadId;
+        private final int blockIndex;
+        private final long startPos, endPos;
+        private final String uri;
+        private final String targetFilePath;
+        private final long downloadId;
 
-        BlockConsumer(int blockIndex, long startPos, long endPos, String uri,
-                      String targetFilePath, long downloadId) {
+        private BlockConsumer(int blockIndex, long startPos, long endPos, String uri,
+                              String targetFilePath, long downloadId) {
             this.blockIndex = blockIndex;
             this.startPos = startPos;
             this.endPos = endPos;

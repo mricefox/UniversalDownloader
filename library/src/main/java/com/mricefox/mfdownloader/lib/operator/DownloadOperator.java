@@ -1,5 +1,7 @@
 package com.mricefox.mfdownloader.lib.operator;
 
+import android.util.Pair;
+
 import com.mricefox.mfdownloader.lib.Block;
 
 import java.io.File;
@@ -12,7 +14,7 @@ import java.util.List;
  * Date:2015/11/24
  */
 public interface DownloadOperator {
-    long getRemoteFileLength(String urlStr);
+    Pair<Long, String> getRemoteFileLengthAndName(String uri);
 
     List<Block> split2Block(long len) throws IllegalArgumentException;
 

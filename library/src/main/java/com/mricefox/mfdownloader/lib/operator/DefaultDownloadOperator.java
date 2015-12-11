@@ -1,5 +1,7 @@
 package com.mricefox.mfdownloader.lib.operator;
 
+import android.util.Pair;
+
 import com.mricefox.mfdownloader.lib.Block;
 import com.mricefox.mfdownloader.lib.assist.ContentLengthInputStream;
 import com.mricefox.mfdownloader.lib.assist.MFLog;
@@ -47,18 +49,23 @@ public class DefaultDownloadOperator implements DownloadOperator {
     protected static final int DEFAULT_BLOCK_NUM = 1 << 1;
 
     @Override
-    public long getRemoteFileLength(String urlStr) {
+    public Pair<Long, String> getRemoteFileLengthAndName(String uri) {
         long time = System.currentTimeMillis();
         MFLog.d("start getRemoteFileLength");
         HttpURLConnection connection = null;
         try {
-            connection = (HttpURLConnection) new URL(urlStr).openConnection();
+            connection = (HttpURLConnection) new URL(uri).openConnection();
             connection.setConnectTimeout(DEFAULT_HTTP_CONNECT_TIMEOUT);
             connection.setReadTimeout(DEFAULT_HTTP_READ_TIMEOUT);
             getHttpResponseHeader(connection);
-            if (connection.getResponseCode() == 200)//todo redirectCount
-                return connection.getContentLength();
-            else
+            if (connection.getResponseCode() == 200) {//todo redirectCount
+                long length = connection.getContentLength();
+                if (length == -1) throw new IOException("Remote file length = -1");
+                String filename = getFileName(connection, uri);
+                if (filename == null || filename.trim().length() == 0)
+                    filename = UUID.randomUUID().toString();
+                return new Pair<>(length, filename);
+            } else
                 throw new IOException("open stream fail with response code " + connection.getResponseCode());
         } catch (MalformedURLException e) {
             e.printStackTrace();
@@ -69,7 +76,7 @@ public class DefaultDownloadOperator implements DownloadOperator {
                 connection.disconnect();
             MFLog.d("end getRemoteFileLength time:" + (System.currentTimeMillis() - time));
         }
-        return -1;
+        return null;
     }
 
     @Override
@@ -226,22 +233,30 @@ public class DefaultDownloadOperator implements DownloadOperator {
         return header;
     }
 
-    private String getFileName(HttpURLConnection conn) {
-        String filename = this.downloadUrl.substring(this.downloadUrl.lastIndexOf('/') + 1);
-        if (filename == null || "".equals(filename.trim())) {// 如果获取不到文件名称
-            for (int i = 0;; i++) {
+    /**
+     * generate download file name base on {@link HttpURLConnection} header or uri string
+     *
+     * @param conn
+     * @param uri
+     * @return
+     */
+    public String getFileName(HttpURLConnection conn, String uri) {
+        String filename = null;
+        if (uri.lastIndexOf('/') != -1)
+            filename = uri.substring(uri.lastIndexOf('/') + 1);
+        if (filename == null || filename.trim().length() == 0) {
+            for (int i = 0; ; ++i) {
                 String mine = conn.getHeaderField(i);
                 if (mine == null) {
                     break;
                 }
-                if ("content-disposition".equals(conn.getHeaderFieldKey(i).toLowerCase())) {
-                    Matcher m = Pattern.compile(".*filename=(.*)").matcher(mine.toLowerCase());
+                if ("content-disposition".equalsIgnoreCase(conn.getHeaderFieldKey(i))) {
+                    Matcher m = Pattern.compile(".*filename=(.*)", Pattern.CASE_INSENSITIVE).matcher(mine);
                     if (m.find()) {
                         return m.group(1);
                     }
                 }
             }
-            filename = UUID.randomUUID() + "";// 默认取一个文件名
         }
         return filename;
     }

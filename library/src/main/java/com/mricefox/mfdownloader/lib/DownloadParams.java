@@ -9,14 +9,21 @@ import android.os.Handler;
  */
 public class DownloadParams {
     private final String uri;
-    private final String targetFilePath;
+    private final String targetDir;
+
+    private String fileName;
     private int priority;
     private DownloadListener downloadListener;
     private Handler callbackHandler;
 
-    public DownloadParams(String uri, String targetFilePath) {
+    public DownloadParams(String uri, String targetDir) {
         this.uri = uri;
-        this.targetFilePath = targetFilePath;
+        this.targetDir = targetDir;
+    }
+
+    public DownloadParams fileName(String fileName) {
+        this.fileName = fileName;
+        return this;
     }
 
     public DownloadParams priority(int priority) {
@@ -38,8 +45,12 @@ public class DownloadParams {
         return uri;
     }
 
-    public String getTargetFilePath() {
-        return targetFilePath;
+    public String getTargetDir() {
+        return targetDir;
+    }
+
+    public String getFileName() {
+        return fileName;
     }
 
     public int getPriority() {

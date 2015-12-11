@@ -123,7 +123,7 @@ public class ProgressMonitor {
     private Runnable dispatchTask = new Runnable() {
         @Override
         public void run() {
-            if (dispatcher != null) dispatcher.onUpdate(runningDownloads);
+            if (dispatcher != null) dispatcher.onUpdate();
         }
     };
 
@@ -148,6 +148,6 @@ public class ProgressMonitor {
 //    }
 
     public interface MonitorDispatcher {
-        void onUpdate(ConcurrentHashMap<Long, Download> runningDownloads);
+        void onUpdate();
     }
 }

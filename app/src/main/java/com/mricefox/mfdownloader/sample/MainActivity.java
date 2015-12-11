@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
 //    Download download4 = new Download(SampleUri6, TargetDir + File.separator + "novel4.zip", listener);
 //    Download download5 = new Download(new DownloadParams(SampleUris.SampleUri2, TargetDir + File.separator + "qq.apk").
 //            downloadingListener(listener));
-    Download download8 = new Download(new DownloadParams(SampleUris.SampleUri8, TargetDir + File.separator + "MobileAssistant_1.apk")
+    Download download8 = new Download(new DownloadParams(SampleUris.SampleUri8, TargetDir)
             .downloadingListener(listener));
 
     DownloadListFragment fragment;

@@ -23,7 +23,8 @@ public class Download {
 
     //user config attrs
     private final String uri;//persistence
-    private final String targetFilePath;//persistence
+    private final String targetDir;//persistence
+    private String fileName;
     private final int priority;//persistence
     private DownloadListener downloadListener;
     private final Handler callbackHandler;
@@ -33,20 +34,21 @@ public class Download {
     private long totalBytes;//persistence
     private long currentBytes;//persistence
     private int status;//persistence
+    private long downloadTimeMills;//persistence
     private long bytesPerSecondNow;
     private long bytesPerSecondMax;
     private long bytesPerSecondAverage;
-    private long downloadTimeMills;//persistence
     private long prevBytes;// bytes for progress monitor
 
     public Download(DownloadParams params) {
         this.uri = params.getUri();
-        this.targetFilePath = params.getTargetFilePath();
+        this.targetDir = params.getTargetDir();
+        this.fileName = params.getFileName();
         this.priority = params.getPriority();
         this.downloadListener = params.getDownloadListener();
         this.blocks = new ArrayList<>();
-        Handler h = params.getCallbackHandler();
 
+        Handler h = params.getCallbackHandler();
         //define a ui handler if constructor run in ui thread
         if (h == null && Looper.myLooper() == Looper.getMainLooper())
             this.callbackHandler = new Handler();
@@ -63,9 +65,9 @@ public class Download {
         status = 0;
     }
 
-//    public Download(String uri, String targetFilePath, DownloadListener listener) {
+//    public Download(String uri, String targetDir, DownloadListener listener) {
 //        this.uri = uri;
-//        this.targetFilePath = targetFilePath;
+//        this.targetDir = targetDir;
 //        this.downloadListener = listener;
 //    }
 
@@ -77,12 +79,12 @@ public class Download {
 //        this.uri = uri;
 //    }
 
-    public String getTargetFilePath() {
-        return targetFilePath;
+    public String getTargetDir() {
+        return targetDir;
     }
 
-//    public void setTargetFilePath(String targetFilePath) {
-//        this.targetFilePath = targetFilePath;
+//    public void setTargetFilePath(String targetDir) {
+//        this.targetDir = targetDir;
 //    }
 
     public DownloadListener getDownloadListener() {
@@ -185,6 +187,14 @@ public class Download {
         this.prevBytes = prevBytes;
     }
 
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
+
     public String showSpeed() {
         return "bytes:" + StringUtil.displayFilesize(currentBytes) + " mills:" + downloadTimeMills / 1000 +
                 " bpsn:" + StringUtil.displayFilesize(bytesPerSecondNow) + " bpsm:" +
@@ -196,7 +206,7 @@ public class Download {
 //    public boolean equals(Object o) {
 ////        return super.equals(o);
 //        if (o instanceof Download) {
-//            return ((Download) o).uri.equals(uri) && ((Download) o).targetFilePath.equals(targetFilePath);
+//            return ((Download) o).uri.equals(uri) && ((Download) o).targetDir.equals(targetDir);
 //        }
 //        return false;
 //    }

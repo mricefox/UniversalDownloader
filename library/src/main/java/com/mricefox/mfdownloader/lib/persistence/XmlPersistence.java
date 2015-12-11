@@ -52,9 +52,10 @@ public class XmlPersistence implements Persistence<Download> {
     private final static String D_ATTR_CURRENT_BYTES = "cbs";
     private final static String D_ATTR_STATUS = "sta";
     private final static String D_ATTR_URI = "uri";
-    private final static String D_ATTR_FILE_PATH = "path";
+    private final static String D_ATTR_DIR = "dir";
     private final static String D_ATTR_PRIORITY = "pry";
-    private final static String D_ATTR_Time = "time";
+    private final static String D_ATTR_TIME = "time";
+    private final static String D_ATTR_NAME = "name";
 
     private final static String B_ATTR_INDEX = "idx";
     private final static String B_ATTR_START_POS = "spos";
@@ -106,12 +107,13 @@ public class XmlPersistence implements Persistence<Download> {
         Element element = document.createElement(ELEMENT_DOWNLOAD_TAG);
         element.setAttribute(D_ATTR_ID, String.valueOf(download.getId()));
         element.setAttribute(D_ATTR_URI, download.getUri());
-        element.setAttribute(D_ATTR_FILE_PATH, download.getTargetFilePath());
+        element.setAttribute(D_ATTR_DIR, download.getTargetDir());
+        element.setAttribute(D_ATTR_NAME, download.getFileName() == null ? "" : download.getFileName());
         element.setAttribute(D_ATTR_STATUS, String.valueOf(download.getStatus()));
         element.setAttribute(D_ATTR_TOTAL_BYTES, String.valueOf(download.getTotalBytes()));
         element.setAttribute(D_ATTR_CURRENT_BYTES, String.valueOf(download.getCurrentBytes()));
         element.setAttribute(D_ATTR_PRIORITY, String.valueOf(download.getPriority()));
-        element.setAttribute(D_ATTR_Time, String.valueOf(download.getDownloadTimeMills()));
+        element.setAttribute(D_ATTR_TIME, String.valueOf(download.getDownloadTimeMills()));
         //serialize listener
 //        DownloadListener listener = download.getDownloadListener();
 //        String s = JavaSerializer.safeSerialize2String(listener);
@@ -132,12 +134,13 @@ public class XmlPersistence implements Persistence<Download> {
     private void updateElement(Download download, Element element, Document document) {
         element.setAttribute(D_ATTR_ID, String.valueOf(download.getId()));
         element.setAttribute(D_ATTR_URI, download.getUri());
-        element.setAttribute(D_ATTR_FILE_PATH, download.getTargetFilePath());
+        element.setAttribute(D_ATTR_DIR, download.getTargetDir());
+        element.setAttribute(D_ATTR_NAME, download.getFileName() == null ? "" : download.getFileName());
         element.setAttribute(D_ATTR_STATUS, String.valueOf(download.getStatus()));
         element.setAttribute(D_ATTR_TOTAL_BYTES, String.valueOf(download.getTotalBytes()));
         element.setAttribute(D_ATTR_CURRENT_BYTES, String.valueOf(download.getCurrentBytes()));
         element.setAttribute(D_ATTR_PRIORITY, String.valueOf(download.getPriority()));
-        element.setAttribute(D_ATTR_Time, String.valueOf(download.getDownloadTimeMills()));
+        element.setAttribute(D_ATTR_TIME, String.valueOf(download.getDownloadTimeMills()));
         //serialize listener
 //        DownloadListener listener = download.getDownloadListener();
 //        String s = JavaSerializer.safeSerialize2String(listener);
@@ -182,12 +185,13 @@ public class XmlPersistence implements Persistence<Download> {
                         } else if (parser.getName().equals(ELEMENT_DOWNLOAD_TAG)) {
                             String id = parser.getAttributeValue(null, D_ATTR_ID);
                             String uri = parser.getAttributeValue(null, D_ATTR_URI);
-                            String path = parser.getAttributeValue(null, D_ATTR_FILE_PATH);
+                            String dir = parser.getAttributeValue(null, D_ATTR_DIR);
+                            String fileName = parser.getAttributeValue(null, D_ATTR_NAME);
                             String status = parser.getAttributeValue(null, D_ATTR_STATUS);
                             String currentBytes = parser.getAttributeValue(null, D_ATTR_CURRENT_BYTES);
                             String totalBytes = parser.getAttributeValue(null, D_ATTR_TOTAL_BYTES);
                             String priority = parser.getAttributeValue(null, D_ATTR_PRIORITY);
-                            String time = parser.getAttributeValue(null, D_ATTR_Time);
+                            String time = parser.getAttributeValue(null, D_ATTR_TIME);
 
 //                            String str = parser.getAttributeValue(null, "dlistener");
 //                            Object o = JavaSerializer.safeDeserialize2Object(str);
@@ -196,8 +200,8 @@ public class XmlPersistence implements Persistence<Download> {
 //                                listener = (DownloadListener) o;
 //                            }
 
-                            download = new Download(new DownloadParams(uri, path).
-                                    priority(Integer.valueOf(priority)));
+                            download = new Download(new DownloadParams(uri, dir).
+                                    priority(Integer.valueOf(priority)).fileName(fileName));
                             download.setId(Long.valueOf(id));
                             download.setStatus(Integer.valueOf(status));
                             download.setCurrentBytes(Long.valueOf(currentBytes));
