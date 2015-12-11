@@ -6,5 +6,10 @@ package com.mricefox.mfdownloader.lib;
  * Date:2015/12/9
  */
 public interface DownloadObserver {
+    /**
+     * invoked in background thread, so be careful to do ui operation here
+     *
+     * @param download
+     */
     void onChanged(Download download);
 }

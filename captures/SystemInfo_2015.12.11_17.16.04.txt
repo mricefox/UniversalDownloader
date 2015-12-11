@@ -1,0 +1,66 @@
+TASK com.mf.bourne.mfdownloader id=598
+  ACTIVITY com.mf.bourne.mfdownloader/com.mricefox.mfdownloader.sample.MainActivity 430b6608 pid=27416
+    Local FragmentActivity 42e86e80 State:
+      mCreated=truemResumed=true mStopped=false mReallyStopped=false
+      mLoadersStarted=true
+    Active Fragments in 42e88cc8:
+      #0: DownloadListFragment{42ece6d0 #0 id=0x7f0c0055 DownloadListFragment}
+        mFragmentId=#7f0c0055 mContainerId=#7f0c0055 mTag=DownloadListFragment
+        mState=5 mIndex=0 mWho=android:fragment:0 mBackStackNesting=0
+        mAdded=true mRemoving=false mResumed=true mFromLayout=false mInLayout=false
+        mHidden=false mDetached=false mMenuVisible=true mHasMenu=false
+        mRetainInstance=false mRetaining=false mUserVisibleHint=true
+        mFragmentManager=FragmentManager{42e88cc8 in HostCallbacks{42e87de8}}
+        mHost=android.support.v4.app.FragmentActivity$HostCallbacks@42e87de8
+        mContainer=android.widget.FrameLayout{42ecd980 V.E..... ........ 0,144-1080,1860 #7f0c0055 app:id/fragment_container}
+        mView=android.widget.FrameLayout{42ed8820 V.E..... ........ 0,0-1080,1716}
+        mInnerView=android.widget.FrameLayout{42ed8820 V.E..... ........ 0,0-1080,1716}
+        Child FragmentManager{42ed82a0 in DownloadListFragment{42ece6d0}}:
+          FragmentManager misc state:
+            mHost=android.support.v4.app.FragmentActivity$HostCallbacks@42e87de8
+            mContainer=android.support.v4.app.Fragment$1@42ed85f0
+            mParent=DownloadListFragment{42ece6d0 #0 id=0x7f0c0055 DownloadListFragment}
+            mCurState=5 mStateSaved=false mDestroyed=false
+    Added Fragments:
+      #0: DownloadListFragment{42ece6d0 #0 id=0x7f0c0055 DownloadListFragment}
+    FragmentManager misc state:
+      mHost=android.support.v4.app.FragmentActivity$HostCallbacks@42e87de8
+      mContainer=android.support.v4.app.FragmentActivity$HostCallbacks@42e87de8
+      mCurState=5 mStateSaved=false mDestroyed=false
+    View Hierarchy:
+      com.android.internal.policy.impl.PhoneWindow$DecorView{42e912e8 V.E..... ... 0,0-1080,1920}
+        android.widget.LinearLayout{42e9bf40 V.E..... ... 0,0-1080,1920}
+          android.view.ViewStub{42e9f4d8 G.E..... ... 0,0-0,0 #102031c}
+          android.widget.FrameLayout{42e9f910 V.E..... ... 0,60-1080,1920}
+            android.support.v7.widget.FitWindowsLinearLayout{42eb4968 V.E..... ... 0,0-1080,1860 #7f0c003d app:id/action_bar_root}
+              android.support.v7.widget.ViewStubCompat{42eb5020 G.E..... ... 0,0-0,0 #7f0c003e app:id/action_mode_bar_stub}
+              android.support.v7.widget.ContentFrameLayout{42eb5870 V.ED.... ... 0,0-1080,1860 #1020002 android:id/content}
+                android.widget.LinearLayout{42ebbed0 V.E..... ... 0,0-1080,1860}
+                  android.widget.LinearLayout{42ebc1a8 V.E..... ... 0,0-1080,144}
+                    android.support.v7.widget.AppCompatButton{42ebcce0 VFED..C. ... 0,0-264,144 #7f0c0051 app:id/pause_btn}
+                    android.support.v7.widget.AppCompatButton{42ecc090 VFED..C. ... 264,0-528,144 #7f0c0052 app:id/resume_btn}
+                    android.support.v7.widget.AppCompatButton{42ecc8b0 VFED..C. ... 528,0-792,144 #7f0c0053 app:id/retry_btn}
+                    android.support.v7.widget.AppCompatButton{42ecd0d0 VFED..C. ... 792,0-1056,144 #7f0c0054 app:id/cancel_btn}
+                  android.widget.FrameLayout{42ecd980 V.E..... ... 0,144-1080,1860 #7f0c0055 app:id/fragment_container}
+                    android.widget.FrameLayout{42ed8820 V.E..... ... 0,0-1080,1716}
+                      android.support.v7.widget.RecyclerView{42ed9ff0 VFED.... F.. 0,0-1080,1716 #7f0c005a app:id/download_list}
+                        android.widget.RelativeLayout{431941b8 V.E...C. ... 0,0-1080,434}
+                          android.support.v7.widget.AppCompatTextView{431945d0 V.ED.... ... 120,120-301,163 #7f0c0056 app:id/name_txt}
+                          android.support.v7.widget.AppCompatTextView{43194b78 V.ED.... ... 120,193-381,236 #7f0c0057 app:id/size_txt}
+                          android.widget.ProgressBar{43195120 V.ED.... ... 120,266-960,314 #7f0c0058 app:id/progress}
+                          android.support.v7.widget.AppCompatTextView{43100300 V.ED.... ... 835,120-960,163 #7f0c0059 app:id/speed_txt}
+                        android.widget.RelativeLayout{42e7ab80 V.E...C. ... 0,434-1080,868}
+                          android.support.v7.widget.AppCompatTextView{4324d580 V.ED.... ... 120,120-497,163 #7f0c0056 app:id/name_txt}
+                          android.support.v7.widget.AppCompatTextView{42eda348 V.ED.... ... 120,193-404,236 #7f0c0057 app:id/size_txt}
+                          android.widget.ProgressBar{42ece3f8 V.ED.... ... 120,266-960,314 #7f0c0058 app:id/progress}
+                          android.support.v7.widget.AppCompatTextView{42edcf08 V.ED.... ... 812,120-960,163 #7f0c0059 app:id/speed_txt}
+                        android.widget.RelativeLayout{433ec6d8 V.E...C. ... 0,868-1080,1302}
+                          android.support.v7.widget.AppCompatTextView{433ecb00 V.ED.... ... 120,120-120,163 #7f0c0056 app:id/name_txt}
+                          android.support.v7.widget.AppCompatTextView{433ed088 V.ED.... ... 120,193-178,236 #7f0c0057 app:id/size_txt}
+                          android.widget.ProgressBar{433ed610 V.ED.... ... 120,266-960,314 #7f0c0058 app:id/progress}
+                          android.support.v7.widget.AppCompatTextView{433f0050 V.ED.... ... 907,120-960,163 #7f0c0059 app:id/speed_txt}
+                        android.widget.RelativeLayout{43470510 V.E...C. ... 0,1302-1080,1736}
+                          android.support.v7.widget.AppCompatTextView{43470938 V.ED.... ... 120,120-120,163 #7f0c0056 app:id/name_txt}
+                          android.support.v7.widget.AppCompatTextView{43470ee0 V.ED.... ... 120,193-178,236 #7f0c0057 app:id/size_txt}
+                          android.widget.ProgressBar{43471468 V.ED.... ... 120,266-960,314 #7f0c0058 app:id/progress}
+                          android.support.v7.widget.AppCompatTextView{43473ea8 V.ED.... ... 907,120-960,163 #7f0c0059 app:id/speed_txt}

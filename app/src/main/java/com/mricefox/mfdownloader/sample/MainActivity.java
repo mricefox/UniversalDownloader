@@ -112,8 +112,8 @@ public class MainActivity extends AppCompatActivity {
 
         Configuration configuration = new Configuration.Builder().
                 downloadOperator(new DefaultDownloadOperator()).
-                maxDownloadNum(2).persistence(XmlPersistence.getInstance()).debuggable(true)
-                .autoStartPending(true)
+                maxDownloadNum(Integer.MAX_VALUE).persistence(XmlPersistence.getInstance()).debuggable(true)
+                .autoStartPending(false)
                 .build();
 //        downloaderManager =  DownloaderManager.getInstance();
         DownloaderManager.getInstance().init(configuration);
@@ -141,69 +141,21 @@ public class MainActivity extends AppCompatActivity {
         public void onClick(View v) {
             switch (v.getId()) {
                 case R.id.pause_btn:
-//                    fragment.serializeV2();
-                    DownloaderManager.getInstance().pause(d_id);
-//                    XmlPersistence.getInstance().insert(null);
-//                    List<DownloadWrapper> list = dummyDownloads();
-//
-//                    for (DownloadWrapper wrapper : list) {
-//                        XmlPersistence.getInstance().insert(wrapper);
-//                    }
-//                    XmlPersistence.getInstance().update(dummyD());
-//                    DownloadWrapper wrapper = new DownloadWrapper(null, 3);
-//                    long id = XmlPersistence.getInstance().delete(wrapper);
-//                    MFLog.d("delete id:" + id);
-//                    List<DownloadWrapper> list = XmlPersistence.getInstance().readAll();
-//                    MFLog.d("list:" + list);
+                    for (int i = 0; i < 1; ++i)
+                        fragment.startNextDownload();
+//                    DownloaderManager.getInstance().pause(d_id);
                     break;
                 case R.id.retry_btn:
-//                    fragment.deserializeV2();
-                    d_id = DownloaderManager.getInstance().enqueue(download8);
-//                    try {
-//                        XmlPersistence.getInstance().init(TargetDir);
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
+//                    d_id = DownloaderManager.getInstance().enqueue(download8);
                     break;
                 case R.id.resume_btn:
-                    DownloaderManager.getInstance().resume(d_id);
+//                    DownloaderManager.getInstance().resume(d_id);
 
                     break;
                 case R.id.cancel_btn:
-                    DownloaderManager.getInstance().cancel(d_id);
+//                    DownloaderManager.getInstance().cancel(d_id);
                     break;
             }
         }
     }
-
-//    private DownloadWrapper dummyD() {
-//        Download download = new Download("xxx", "xxx");
-//        DownloadWrapper wrapper = new DownloadWrapper(download);
-//        List<Block> blocks = new ArrayList<>();
-//        for (int j = 0; j < 3; ++j) {
-//            Block b = new Block(j + 99, j * 200, j * 10000, j * 50);
-//            blocks.add(b);
-//        }
-//        wrapper.setBlocks(blocks);
-//        return wrapper;
-//    }
-
-//    private List<DownloadWrapper> dummyDownloads() {
-//        List<DownloadWrapper> list = new ArrayList<>();
-//
-//        for (int i = 0; i < 5; ++i) {
-//            Download download = new Download("a" + i, "b" + i);
-//            DownloadWrapper wrapper = new DownloadWrapper(download);
-//            List<Block> blocks = new ArrayList<>();
-//            for (int j = 0; j < 3; ++j) {
-//                Block b = new Block(j, j * 2, j * 10, j * 3);
-//                blocks.add(b);
-//            }
-//            wrapper.setBlocks(blocks);
-//            list.add(wrapper);
-//        }
-//        return list;
-//    }
-
-
 }

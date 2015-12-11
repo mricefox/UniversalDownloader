@@ -64,6 +64,7 @@ public class DefaultDownloadOperator implements DownloadOperator {
                 String filename = getFileName(connection, uri);
                 if (filename == null || filename.trim().length() == 0)
                     filename = UUID.randomUUID().toString();
+                MFLog.d("file name=" + filename);
                 return new Pair<>(length, filename);
             } else
                 throw new IOException("open stream fail with response code " + connection.getResponseCode());

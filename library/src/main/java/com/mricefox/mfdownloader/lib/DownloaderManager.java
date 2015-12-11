@@ -58,7 +58,7 @@ public class DownloaderManager {
         MFLog.d("pause id:" + id);
     }
 
-    public void resume(long id) {
+    public Download resume(long id) {
         Download download = persistence.query(id);
         if (download == null)
             throw new IllegalArgumentException("can not find download");
@@ -67,11 +67,13 @@ public class DownloaderManager {
             throw new IllegalArgumentException("can not resume download");
 //        download.setDownloadingListener(listener);
 //        MFLog.d("resume total:"+wrapper.getTotalBytes());
+        download.setPrevBytes(download.getCurrentBytes()); //fix resume speed too fast
         MFLog.d("resume id:" + id);
         downloadConsumerExecutor.resumeDownload(download);
+        return download;
     }
 
-    public void resume(long id, DownloadListener listener) {
+    public Download resume(long id, DownloadListener listener) {
         Download download = persistence.query(id);
         if (download == null)
             throw new IllegalArgumentException("can not find download");
@@ -80,8 +82,10 @@ public class DownloaderManager {
             throw new IllegalArgumentException("can not resume download");
         download.setDownloadingListener(listener);
 //        MFLog.d("resume total:"+wrapper.getTotalBytes());
+        download.setPrevBytes(download.getCurrentBytes()); //fix resume speed too fast
         MFLog.d("resume id:" + id);
         downloadConsumerExecutor.resumeDownload(download);
+        return download;
     }
 
     public void cancel(long id) {

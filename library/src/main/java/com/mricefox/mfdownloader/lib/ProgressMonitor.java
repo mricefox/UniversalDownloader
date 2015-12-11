@@ -75,7 +75,8 @@ public class ProgressMonitor {
 //    }
 
     /**
-     * update per second
+     * update per second, but running download will be removed on complete,so download progress maybe not 100% on
+     * the right time.
      *
      * @param id
      */

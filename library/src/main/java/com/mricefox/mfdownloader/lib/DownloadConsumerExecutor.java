@@ -58,7 +58,6 @@ class DownloadConsumerExecutor {
     }
 
     long startDownload(Download download) {
-        long time = System.currentTimeMillis();
         MFLog.d("runningDownloads.size()=" + runningDownloads.size());
 //        MFLog.d("runningDownloads size time:" + (System.currentTimeMillis() - time));
         long id = -1L;
@@ -69,7 +68,6 @@ class DownloadConsumerExecutor {
             DownloadConsumer downloadConsumer = new DownloadConsumer(download, false);
             downloadExecutor.execute(downloadConsumer);
             runningDownloads.put(id, download);
-//            progressMonitor.addMonitorContent(id);
             contract.triggerAddEvent(download);
         } else {
             download.setStatus(Download.STATUS_PENDING);
@@ -219,7 +217,7 @@ class DownloadConsumerExecutor {
         private final Download download;
         private final boolean resume;
 
-        DownloadConsumer(Download download, boolean resume) {
+        private DownloadConsumer(Download download, boolean resume) {
             this.download = download;
             this.resume = resume;
         }
@@ -266,6 +264,7 @@ class DownloadConsumerExecutor {
             downloadOnStopLocks.put(download.getId(), new CountDownLatch(runningConsumerCount));
             waitForDownloadStopLock(download.getId());
 
+            contract.triggerProgressEvent(download);//update the progress to 100%
             runningDownloads.remove(download.getId());
 //            progressMonitor.removeMonitorContent(download.getId());
             downloadOnStopLocks.remove(download.getId());
