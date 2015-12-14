@@ -21,6 +21,9 @@ public class Download {
     public static final int STATUS_FAILED = 1 << 5;
     public static final int STATUS_CANCELLED = 1 << 6;
 
+    public static final int STATUS_CONNECTING = 1 << 7;
+    public static final int STATUS_PAUSING = 1 << 8;
+
     //user config attrs
     private final String uri;//persistence
     private final String targetDir;//persistence
@@ -39,6 +42,7 @@ public class Download {
     private long bytesPerSecondMax;
     private long bytesPerSecondAverage;
     private long prevBytes;// bytes for progress monitor
+    private long timeRemain;//remain seconds in current speed
 
     public Download(DownloadParams params) {
         this.uri = params.getUri();
@@ -55,6 +59,7 @@ public class Download {
         else
             this.callbackHandler = h;
 
+//        reset();
     }
 
     public void reset() {
@@ -91,7 +96,7 @@ public class Download {
         return downloadListener;
     }
 
-    public void setDownloadingListener(DownloadListener downloadListener) {
+    public void setDownloadListener(DownloadListener downloadListener) {
         this.downloadListener = downloadListener;
     }
 
@@ -193,6 +198,14 @@ public class Download {
 
     public void setFileName(String fileName) {
         this.fileName = fileName;
+    }
+
+    public long getTimeRemain() {
+        return timeRemain;
+    }
+
+    public void setTimeRemain(long timeRemain) {
+        this.timeRemain = timeRemain;
     }
 
     public String showSpeed() {

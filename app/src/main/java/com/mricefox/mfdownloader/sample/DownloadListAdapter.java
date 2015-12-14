@@ -10,7 +10,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.mricefox.mfdownloader.lib.Download;
-import com.mricefox.mfdownloader.lib.assist.MFLog;
 import com.mricefox.mfdownloader.lib.assist.StringUtil;
 
 import java.util.List;
@@ -58,45 +57,60 @@ public class DownloadListAdapter extends RecyclerView.Adapter {
     @Override
     public long getItemId(int position) {
 //        return super.getItemId(position);
-        MFLog.d("getItemId#pos:" + position + "#id:" + downloadList.get(position).getId());
+//        MFLog.d("getItemId#pos:" + position + "#id:" + downloadList.get(position).getId());
         return downloadList.get(position).getId();
     }
 
     @Override
     public void onBindViewHolder(final RecyclerView.ViewHolder holder, int position) {
-        MFLog.d("onBindViewHolder pos:" + position + " holder:" + holder);
-        Download download = downloadList.get(position);
-        ((ItemViewHolder) holder).nameTxt.setText(download.getFileName());
+//        MFLog.d("onBindViewHolder pos:" + position + " holder:" + holder);
+        final Download download = downloadList.get(position);
+        ItemViewHolder itemViewHolder = ((ItemViewHolder) holder);
+        itemViewHolder.nameTxt.setText(download.getFileName());
         long totalBytes = download.getTotalBytes();
         long currentBytes = download.getCurrentBytes();
 
-        ((ItemViewHolder) holder).sizeTxt.setText(
-                StringUtil.displayFilesize(currentBytes) + "/" + StringUtil.displayFilesize(totalBytes));
+        String progress;
+        if (totalBytes <= 0)
+            progress = "unknown size";
+        else
+            progress = StringUtil.displayFilesize(currentBytes) + "/" + StringUtil.displayFilesize(totalBytes);
+        itemViewHolder.sizeTxt.setText(progress);
+
         switch (download.getStatus()) {
             case Download.STATUS_PAUSED:
-                ((ItemViewHolder) holder).speedTxt.setText("paused");
+                itemViewHolder.speedTxt.setText("paused");
                 break;
             case Download.STATUS_RUNNING:
-                ((ItemViewHolder) holder).speedTxt.setText(
-                        StringUtil.displayFilesize(download.getBytesPerSecondNow()) + "/s");
+                if (totalBytes == 0)
+                    itemViewHolder.speedTxt.setText("connecting");
+                else
+                    itemViewHolder.speedTxt.setText(
+                            StringUtil.displayFilesize(download.getBytesPerSecondNow()) + "/s");
                 break;
             case Download.STATUS_PENDING:
-                ((ItemViewHolder) holder).speedTxt.setText("pending");
+                itemViewHolder.speedTxt.setText("pending");
                 break;
             case Download.STATUS_SUCCESSFUL:
-                ((ItemViewHolder) holder).speedTxt.setText("success");
+                itemViewHolder.speedTxt.setText("success");
                 break;
             case Download.STATUS_FAILED:
-                ((ItemViewHolder) holder).speedTxt.setText("failed");
+                itemViewHolder.speedTxt.setText("failed");
                 break;
             case Download.STATUS_CANCELLED:
-                ((ItemViewHolder) holder).speedTxt.setText("cancelled");
+                itemViewHolder.speedTxt.setText("cancelled");
                 break;
         }
         if (totalBytes != 0)
-            ((ItemViewHolder) holder).progressBar.setProgress((int) (currentBytes * 100 / totalBytes));
+            itemViewHolder.progressBar.setProgress((int) Math.ceil((currentBytes + .0f) * 100 / totalBytes));
         else
-            ((ItemViewHolder) holder).progressBar.setProgress(0);//in case of view holder reuse
+            itemViewHolder.progressBar.setProgress(0);//in case of view holder reuse
+        long remainTime = download.getTimeRemain();
+        if (remainTime < 0)
+            itemViewHolder.remainTimeTxt.setText("--:--:--");
+        else
+            itemViewHolder.remainTimeTxt.setText(StringUtil.convertMills2hhmmss(remainTime * 1000));
+
     }
 
     @Override
@@ -105,7 +119,7 @@ public class DownloadListAdapter extends RecyclerView.Adapter {
     }
 
     public class ItemViewHolder extends RecyclerView.ViewHolder {
-        TextView nameTxt, sizeTxt, speedTxt;
+        TextView nameTxt, sizeTxt, speedTxt, remainTimeTxt;
         ProgressBar progressBar;
 
         public ItemViewHolder(View itemView) {
@@ -113,6 +127,7 @@ public class DownloadListAdapter extends RecyclerView.Adapter {
             nameTxt = (TextView) itemView.findViewById(R.id.name_txt);
             sizeTxt = (TextView) itemView.findViewById(R.id.size_txt);
             speedTxt = (TextView) itemView.findViewById(R.id.speed_txt);
+            remainTimeTxt = (TextView) itemView.findViewById(R.id.remain_time_txt);
             progressBar = (ProgressBar) itemView.findViewById(R.id.progress);
 
             itemView.setOnClickListener(new View.OnClickListener() {

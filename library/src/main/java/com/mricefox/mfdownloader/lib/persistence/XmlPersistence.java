@@ -85,6 +85,7 @@ public class XmlPersistence implements Persistence<Download> {
             else
                 initRoot();// create success
         } else {//exists
+            // TODO: 2015/12/14 xml file integrity check
         }
         MFLog.d("XmlPersistence init time:" + (System.currentTimeMillis() - time));
     }
@@ -353,6 +354,13 @@ public class XmlPersistence implements Persistence<Download> {
         return null;
     }
 
+    /**
+     * write the document to file
+     *
+     * @param document
+     * @param file
+     * @throws TransformerException
+     */
     private void writeBack(Document document, File file) throws TransformerException {
         TransformerFactory factory = TransformerFactory.newInstance();
         Transformer transformer = factory.newTransformer();

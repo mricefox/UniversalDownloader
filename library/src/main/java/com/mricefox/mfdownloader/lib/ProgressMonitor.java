@@ -3,9 +3,12 @@ package com.mricefox.mfdownloader.lib;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Author:zengzifeng email:zeng163mail@163.com
@@ -28,14 +31,16 @@ public class ProgressMonitor {
 
     private final ScheduledExecutorService progressMonitorExecutor;
     //    private final ConcurrentHashMap<Long, MonitorContent> monitorContents;
+    private final ExecutorService manualUpdateExecutor;
     private final ConcurrentHashMap<Long, Download> runningDownloads;
     private long callbackPeriod;
-    private boolean start;
+    private AtomicBoolean start = new AtomicBoolean(false);
     private long internalUpdatePeriod;//time interval of internal update the speed data
     /**
      * interface between {@link DownloadConsumerExecutor}
      */
     private MonitorDispatcher dispatcher;
+//    private Object updateLock = new Object();
 
     /**
      * @param runningDownloads
@@ -52,20 +57,37 @@ public class ProgressMonitor {
             throw new IllegalArgumentException("period out of range");
         }
         this.callbackPeriod = callbackPeriod;
+        manualUpdateExecutor = Executors.newSingleThreadExecutor(
+                new DownloadThreadFactory(Thread.NORM_PRIORITY - 2, "mf-manual-"));
     }
 
     public void start() {
-        if (!start) {
+        if (!start.get()) {
+            /**
+             * monitorTask and dispatchTask execute in same ScheduledThreadPoolExecutor, so they are executed in parallel
+             */
             progressMonitorExecutor.scheduleAtFixedRate(monitorTask, internalUpdatePeriod, internalUpdatePeriod, TimeUnit.MILLISECONDS);
             progressMonitorExecutor.scheduleAtFixedRate(dispatchTask, callbackPeriod, callbackPeriod, TimeUnit.MILLISECONDS);
-            start = true;
+            start.set(true);
         }
     }
 
     public void stop() {
         progressMonitorExecutor.shutdownNow();
+        start.set(false);
     }
 
+    /**
+     * manual update download and invoke callback
+     */
+    public void manualUpdate() {
+        if (!start.get()) return;
+        /**
+         * execute in parallel
+         */
+        manualUpdateExecutor.execute(monitorTask);
+        manualUpdateExecutor.execute(dispatchTask);
+    }
 //    public void addMonitorContent(long id) {
 //        monitorContents.put(id, new MonitorContent());
 //    }
@@ -92,6 +114,9 @@ public class ProgressMonitor {
             download.setBytesPerSecondMax(Math.max(download.getBytesPerSecondMax(), download.getBytesPerSecondNow()));
             download.setBytesPerSecondAverage(
                     Math.round((currentBytes + .0f) * 1000 / download.getDownloadTimeMills()));
+            if (download.getBytesPerSecondNow() <= 0) download.setTimeRemain(-1);
+            else
+                download.setTimeRemain((download.getTotalBytes() - currentBytes) / download.getBytesPerSecondNow());
         }
 //        synchronized (content) {
 //            content.monitor_mills += internalUpdatePeriod;
@@ -106,11 +131,20 @@ public class ProgressMonitor {
     private Runnable monitorTask = new Runnable() {
         @Override
         public void run() {
+//            synchronized (updateLock) {
+//                try {
+//                    updateLock.wait();
             Iterator<Map.Entry<Long, Download>> iterator = runningDownloads.entrySet().iterator();
             while (iterator.hasNext()) {
                 Map.Entry<Long, Download> entry = iterator.next();
                 update(entry.getKey());
             }
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                } finally {
+//                    updateLock.notifyAll();
+//                }
+//            }
         }
     };
 

@@ -84,7 +84,6 @@ class DownloadConsumerExecutor {
             DownloadConsumer downloadConsumer = new DownloadConsumer(download, false);
             downloadExecutor.execute(downloadConsumer);
             runningDownloads.put(download.getId(), download);
-//            progressMonitor.addMonitorContent(download.getId());
             //store wrapper
             download.setStatus(Download.STATUS_RUNNING);
             contract.updateDownload(download);
@@ -94,23 +93,32 @@ class DownloadConsumerExecutor {
 
     void setDownloadPaused(long id) {
         if (!runningDownloads.containsKey(id))
-            throw new IllegalArgumentException("can not pause a not running download");
+            throw new IllegalArgumentException("can not pause a not running download#id:" + id);
         final Download download = runningDownloads.get(id);
         download.setStatus(Download.STATUS_PAUSED);
+        MFLog.d("setStatus(Download.STATUS_PAUSED)");
     }
 
-    void resumeDownload(Download download) {
+    /**
+     * return really resume or not
+     *
+     * @param download
+     * @return
+     */
+    boolean resumeDownload(Download download) {
+        if (runningDownloads.containsKey(download.getId()))
+            return false;// status is set paused but has not paused indeed
         if (runningDownloads.size() < maxDownloadCount.get()) {
             DownloadConsumer downloadConsumer = new DownloadConsumer(download, true);
             downloadExecutor.execute(downloadConsumer);
             runningDownloads.put(download.getId(), download);
-//            progressMonitor.addMonitorContent(download.getId());
             download.setStatus(Download.STATUS_RUNNING);
         } else {
             download.setStatus(Download.STATUS_PENDING);
         }
         long id = contract.updateDownload(download);
         if (id == -1) throw new RuntimeException("update download fail");
+        return true;
     }
 
     void cancelDownload(Download download) {
@@ -177,7 +185,7 @@ class DownloadConsumerExecutor {
             final Download download = runningDownloads.get(downloadId);
             synchronized (download) {//download access by each block download thread
                 Block block = download.getBlocks().get(blockIndex);
-                block.setDownloadedBytes(currentBytes);
+                block.setDownloadedBytes(currentBytes + block.getDownloadedBytes());
             }
             countDownLock(downloadId);
         }
@@ -187,7 +195,7 @@ class DownloadConsumerExecutor {
             final Download download = runningDownloads.get(downloadId);
             synchronized (download) {//download access by each block download thread
                 Block block = download.getBlocks().get(blockIndex);
-                block.setDownloadedBytes(currentBytes);
+                block.setDownloadedBytes(currentBytes + block.getDownloadedBytes());
                 download.setStatus(Download.STATUS_FAILED);
             }
             countDownLock(downloadId);
@@ -224,7 +232,7 @@ class DownloadConsumerExecutor {
 
         @Override
         public void run() {
-            //call back on start
+            //invoke callback on start
             contract.triggerStartEvent(download);
             try {
                 if (!resume) setupDownload(download);
@@ -238,10 +246,13 @@ class DownloadConsumerExecutor {
                 contract.updateDownload(download);
             }
             if (download.getStatus() == Download.STATUS_FAILED) {
+                runningDownloads.remove(download.getId());
                 contract.triggerFailEvent(download);
                 return;
             }
             if (download.getStatus() == Download.STATUS_PAUSED) {
+                MFLog.d("setup remove status:" + download.getStatus() + " download:" + download);
+                runningDownloads.remove(download.getId());
                 contract.triggerPauseEvent(download);
                 return;
             }
@@ -257,7 +268,7 @@ class DownloadConsumerExecutor {
                 BlockConsumer consumer = new BlockConsumer(block.getIndex(), startPos, block.getEndPos(),
                         download.getUri(), download.getTargetDir() + File.separator + download.getFileName(),
                         download.getId());
-//                MFLog.d("init block pos#s:" + startPos + "#e:" + block.getEndPos());
+                MFLog.d("init block pos#s:" + startPos + "#e:" + block.getEndPos());
                 downloadExecutor.execute(consumer);
                 ++runningConsumerCount;
             }
@@ -265,17 +276,17 @@ class DownloadConsumerExecutor {
             waitForDownloadStopLock(download.getId());
 
             contract.triggerProgressEvent(download);//update the progress to 100%
+//            MFLog.d("remove status:" + download.getStatus() + " download:" + download + " id:" + download.getId());
             runningDownloads.remove(download.getId());
-//            progressMonitor.removeMonitorContent(download.getId());
             downloadOnStopLocks.remove(download.getId());
 
-            if (download.getCurrentBytes() == download.getTotalBytes()) {
+            if (download.getCurrentBytes() == download.getTotalBytes()) {// TODO: 2015/12/14 bytes=0
                 download.setStatus(Download.STATUS_SUCCESSFUL);
-                MFLog.d("wrapper.setStatus(Download.STATUS_SUCCESSFUL);id:" + download.getId());
+//                MFLog.d("wrapper.setStatus(Download.STATUS_SUCCESSFUL);id:" + download.getId());
                 contract.triggerCompleteEvent(download);
                 contract.updateDownload(download);
             } else if (download.getStatus() == Download.STATUS_PAUSED) {
-                //stream I/O loop interrupt by paused
+                //interrupt by paused
                 contract.triggerPauseEvent(download);
                 contract.updateDownload(download);
             } else if (download.getStatus() == Download.STATUS_CANCELLED) {

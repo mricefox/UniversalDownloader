@@ -21,4 +21,21 @@ public class StringUtil {
                     / Math.pow(1024, group)) + fileUnit[group];
         }
     }
+
+    /**
+     * convert millisecond to hh:mm:ss
+     * @param ms
+     * @return
+     */
+    public static String convertMills2hhmmss(long ms) {
+        long time;
+        int second, minute, hour;
+        time = ms / 1000;
+        second = (int) (time % 60);
+        minute = (int) (time / 60 % 60);
+        hour = (int) (time / 3600);
+        return (hour < 10 ? "0" : "") + hour
+                + ":" + (minute < 10 ? "0" : "") + minute
+                + ":" + (second < 10 ? "0" : "") + second;
+    }
 }

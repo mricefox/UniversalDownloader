@@ -54,10 +54,14 @@ public class DownloaderManager {
      * @param id
      */
     public void pause(long id) {
-        downloadConsumerExecutor.setDownloadPaused(id);
         MFLog.d("pause id:" + id);
+        downloadConsumerExecutor.setDownloadPaused(id);
     }
 
+    /**
+     * @param id
+     * @return the resume download or null, the download is new constructed, should update your data copy
+     */
     public Download resume(long id) {
         Download download = persistence.query(id);
         if (download == null)
@@ -65,14 +69,20 @@ public class DownloaderManager {
         if (download.getStatus() != Download.STATUS_PAUSED
                 && download.getStatus() != Download.STATUS_RUNNING)//paused or interrupt
             throw new IllegalArgumentException("can not resume download");
-//        download.setDownloadingListener(listener);
+//        download.setDownloadListener(listener);
 //        MFLog.d("resume total:"+wrapper.getTotalBytes());
         download.setPrevBytes(download.getCurrentBytes()); //fix resume speed too fast
         MFLog.d("resume id:" + id);
-        downloadConsumerExecutor.resumeDownload(download);
-        return download;
+        if (downloadConsumerExecutor.resumeDownload(download))
+            return download;
+        else return null;
     }
 
+    /**
+     * @param id
+     * @param listener
+     * @return the resume download or null, the download is new constructed, should update your data copy
+     */
     public Download resume(long id, DownloadListener listener) {
         Download download = persistence.query(id);
         if (download == null)
@@ -80,7 +90,7 @@ public class DownloaderManager {
         if (download.getStatus() != Download.STATUS_PAUSED
                 && download.getStatus() != Download.STATUS_RUNNING)//paused or interrupt
             throw new IllegalArgumentException("can not resume download");
-        download.setDownloadingListener(listener);
+        download.setDownloadListener(listener);
 //        MFLog.d("resume total:"+wrapper.getTotalBytes());
         download.setPrevBytes(download.getCurrentBytes()); //fix resume speed too fast
         MFLog.d("resume id:" + id);
@@ -95,7 +105,7 @@ public class DownloaderManager {
         if (download.getStatus() == Download.STATUS_SUCCESSFUL) {
             throw new IllegalArgumentException("can not cancel a not successful download");
         }
-//        download.setDownloadingListener(listener);
+//        download.setDownloadListener(listener);
         downloadConsumerExecutor.cancelDownload(download);
         MFLog.d("cancel id:" + id);
     }
@@ -107,7 +117,7 @@ public class DownloaderManager {
         if (download.getStatus() == Download.STATUS_SUCCESSFUL) {
             throw new IllegalArgumentException("can not cancel a not successful download");
         }
-        download.setDownloadingListener(listener);
+        download.setDownloadListener(listener);
         downloadConsumerExecutor.cancelDownload(download);
         MFLog.d("cancel id:" + id);
     }

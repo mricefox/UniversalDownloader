@@ -34,7 +34,7 @@ public class DownloadListFragment extends Fragment {
             = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "temp";
     private RecyclerView downloadRecyclerView;
     private DownloadListAdapter downloadListAdapter;
-    private List<Download> downloadList = new ArrayList<>();
+    private List<Download> downloadList = new ArrayList();
     private List<Download> todoDownloadList = new ArrayList<>();
 
     public DownloadListFragment() {
@@ -80,18 +80,22 @@ public class DownloadListFragment extends Fragment {
         downloadListAdapter.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                MFLog.d("onItemClick#pos:" + position);
+//                MFLog.d("onItemClick#pos:" + position);
                 Download download = downloadList.get(position);
+//                synchronized (download) {
                 int status = download.getStatus();
                 switch (status) {
                     case Download.STATUS_RUNNING:
                         DownloaderManager.getInstance().pause(id);
+//                        MFLog.d("pause download:" + download);
                         break;
                     case Download.STATUS_PAUSED:
                         Download d = DownloaderManager.getInstance().resume(id);
-                        downloadList.set(position, d);
+                        if (d != null)
+                            downloadList.set(position, d);
                         break;
                 }
+//                }
                 downloadListAdapter.notifyItemChanged(position);
             }
         });
@@ -109,7 +113,8 @@ public class DownloadListFragment extends Fragment {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         DownloaderManager.getInstance().cancel(id);
-                        downloadListAdapter.notifyItemChanged(position);
+                        downloadList.remove(position);
+                        downloadListAdapter.notifyItemRemoved(position);
                     }
                 }).setNegativeButton("no", new DialogInterface.OnClickListener() {
                     @Override

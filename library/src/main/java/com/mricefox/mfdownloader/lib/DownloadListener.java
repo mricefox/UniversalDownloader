@@ -5,6 +5,7 @@ package com.mricefox.mfdownloader.lib;
  * Description:
  * Date:2015/11/30
  */
+@Deprecated
 public interface DownloadListener {
     void onAdded(long id);
 

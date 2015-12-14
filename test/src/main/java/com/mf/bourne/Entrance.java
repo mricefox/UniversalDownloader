@@ -6,7 +6,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
@@ -170,7 +172,65 @@ public class Entrance {
 //        stpe.scheduleAtFixedRate(command2, 1000, 1000, TimeUnit.MILLISECONDS);
 //        command2.startTime = System.currentTimeMillis();
 
-        System.out.println("size=" + displayFilesize(10));
+//        System.out.println("size=" + displayFilesize(10));
+
+//        ExecutorService manualUpdateExecutor = Executors.newCachedThreadPool();
+//
+//        manualUpdateExecutor.execute(new Runnable() {
+//            @Override
+//            public void run() {
+//                System.out.println("1 s" + System.currentTimeMillis());
+//                try {
+//                    Thread.sleep(1000);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//                System.out.println("1 e" + System.currentTimeMillis());
+//            }
+//        });
+//        manualUpdateExecutor.execute(new Runnable() {
+//            @Override
+//            public void run() {
+//                System.out.println("2 s" + System.currentTimeMillis());
+//                try {
+//                    Thread.sleep(2000);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//                System.out.println("2 e" + System.currentTimeMillis());
+//            }
+//        });
+//        manualUpdateExecutor.execute(new Runnable() {
+//            @Override
+//            public void run() {
+//                System.out.println("3 s" + System.currentTimeMillis());
+//                System.out.println("3 e" + System.currentTimeMillis());
+//            }
+//        });
+
+        SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss");
+//        Calendar calendar =Calendar.getInstance();
+//        calendar.setTimeInMillis(300*1000);
+//        calendar.get(Calendar.HOUR)
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String str = sdf.format(new Date(300 * 1000));
+
+        System.out.println("str=" + str);
+
+        int a = 10 < 12 ? 3 : 4 + 5;
+        System.out.println("str=" + convertMills2hhmmss(99999999999L));
+    }
+
+    public static String convertMills2hhmmss(long ms) {
+        long time;
+        int second, minute, hour;
+        time = ms / 1000;
+        second = (int) (time % 60);
+        minute = (int) (time / 60 % 60);
+        hour = (int) (time / 3600);
+        return (hour < 10 ? "0" : "") + hour
+                + ":" + (minute < 10 ? "0" : "") + minute
+                + ":" + (second < 10 ? "0" : "") + second;
     }
 
     public static String displayFilesize(long fileSize) {
