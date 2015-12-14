@@ -18,17 +18,7 @@ public interface Contract {
 
     long deleteDownload(Download download);
 
-    void triggerAddEvent(Download download);
+    void notifyDownloadObserver(Download download);
 
-    void triggerStartEvent(Download download);
 
-    void triggerFailEvent(Download download);
-
-    void triggerProgressEvent(Download download);
-
-    void triggerCompleteEvent(Download download);
-
-    void triggerPauseEvent(Download download);
-
-    void triggerCancelEvent(Download download);
 }

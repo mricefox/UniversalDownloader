@@ -30,7 +30,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 class DownloadConsumerExecutor {
     private ExecutorService downloadExecutor;
-    //    private BlockingQueue downloadQueue;
     private DownloadOperator downloadOperator;
     private final ConcurrentHashMap<Long, Download> runningDownloads;
     private Contract contract;
@@ -49,7 +48,6 @@ class DownloadConsumerExecutor {
                 60L, TimeUnit.SECONDS,
                 new SynchronousQueue<Runnable>(),
                 new DownloadThreadFactory(Thread.NORM_PRIORITY - 2, "mfdownloader-"));
-//        downloadQueue = new PriorityBlockingQueue();
         runningDownloads = new ConcurrentHashMap<>();
         downloadOnStopLocks = new ConcurrentHashMap<>();
         if (monitorCallbackPeriod == 0) monitorCallbackPeriod = ProgressMonitor.DEFAULT_PERIOD;
@@ -59,23 +57,29 @@ class DownloadConsumerExecutor {
 
     long startDownload(Download download) {
         MFLog.d("runningDownloads.size()=" + runningDownloads.size());
-//        MFLog.d("runningDownloads size time:" + (System.currentTimeMillis() - time));
-        long id = -1L;
+        long id = -1;
         if (runningDownloads.size() < maxDownloadCount.get()) {
             download.setStatus(Download.STATUS_RUNNING);
+
             id = contract.insertDownload(download);
-            if (id == -1) throw new RuntimeException("insert record fail");
+            if (id == -1) {
+                MFLog.e("insert record fail");
+                return id;
+            }
+
             DownloadConsumer downloadConsumer = new DownloadConsumer(download, false);
             downloadExecutor.execute(downloadConsumer);
             runningDownloads.put(id, download);
-            contract.triggerAddEvent(download);
         } else {
             download.setStatus(Download.STATUS_PENDING);
             id = contract.insertDownload(download);
-            if (id == -1) throw new RuntimeException("insert record fail");
-            contract.triggerAddEvent(download);
+            if (id == -1) {
+                MFLog.e("insert record fail");
+                return id;
+            }
             MFLog.d("insert pending id:" + id);
         }
+        contract.notifyDownloadObserver(download);
         return id;
     }
 
@@ -96,7 +100,7 @@ class DownloadConsumerExecutor {
             throw new IllegalArgumentException("can not pause a not running download#id:" + id);
         final Download download = runningDownloads.get(id);
         download.setStatus(Download.STATUS_PAUSED);
-        MFLog.d("setStatus(Download.STATUS_PAUSED)");
+//        MFLog.d("setStatus(Download.STATUS_PAUSED)");
     }
 
     /**
@@ -251,7 +255,6 @@ class DownloadConsumerExecutor {
                 return;
             }
             if (download.getStatus() == Download.STATUS_PAUSED) {
-                MFLog.d("setup remove status:" + download.getStatus() + " download:" + download);
                 runningDownloads.remove(download.getId());
                 contract.triggerPauseEvent(download);
                 return;
@@ -261,7 +264,6 @@ class DownloadConsumerExecutor {
             for (int i = 0, size = blocks.size(); i < size; ++i) {
                 final Block block = blocks.get(i);
                 if (block.isComplete()) {
-//                    block.setStop(true);
                     continue;
                 }
                 long startPos = block.getStartPos() + block.getDownloadedBytes();

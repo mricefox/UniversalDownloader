@@ -174,14 +174,6 @@ public class DownloadListFragment extends Fragment {
         downloadListAdapter.notifyItemInserted(downloadList.size() - 1);
     }
 
-    private Download findDownload(List<Download> list, long id) {
-        if (list == null || list.isEmpty()) return null;
-        for (Download download : list) {
-            if (download.getId() == id) return download;
-        }
-        return null;
-    }
-
     private boolean isItemVisible(int position) {
         LinearLayoutManager layoutManager = (LinearLayoutManager) downloadRecyclerView.getLayoutManager();
         if (position >= layoutManager.findFirstVisibleItemPosition() &&

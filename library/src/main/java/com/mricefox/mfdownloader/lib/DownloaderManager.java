@@ -69,33 +69,12 @@ public class DownloaderManager {
         if (download.getStatus() != Download.STATUS_PAUSED
                 && download.getStatus() != Download.STATUS_RUNNING)//paused or interrupt
             throw new IllegalArgumentException("can not resume download");
-//        download.setDownloadListener(listener);
 //        MFLog.d("resume total:"+wrapper.getTotalBytes());
         download.setPrevBytes(download.getCurrentBytes()); //fix resume speed too fast
         MFLog.d("resume id:" + id);
         if (downloadConsumerExecutor.resumeDownload(download))
             return download;
         else return null;
-    }
-
-    /**
-     * @param id
-     * @param listener
-     * @return the resume download or null, the download is new constructed, should update your data copy
-     */
-    public Download resume(long id, DownloadListener listener) {
-        Download download = persistence.query(id);
-        if (download == null)
-            throw new IllegalArgumentException("can not find download");
-        if (download.getStatus() != Download.STATUS_PAUSED
-                && download.getStatus() != Download.STATUS_RUNNING)//paused or interrupt
-            throw new IllegalArgumentException("can not resume download");
-        download.setDownloadListener(listener);
-//        MFLog.d("resume total:"+wrapper.getTotalBytes());
-        download.setPrevBytes(download.getCurrentBytes()); //fix resume speed too fast
-        MFLog.d("resume id:" + id);
-        downloadConsumerExecutor.resumeDownload(download);
-        return download;
     }
 
     public void cancel(long id) {
@@ -105,19 +84,6 @@ public class DownloaderManager {
         if (download.getStatus() == Download.STATUS_SUCCESSFUL) {
             throw new IllegalArgumentException("can not cancel a not successful download");
         }
-//        download.setDownloadListener(listener);
-        downloadConsumerExecutor.cancelDownload(download);
-        MFLog.d("cancel id:" + id);
-    }
-
-    public void cancel(long id, DownloadListener listener) {
-        Download download = persistence.query(id);
-        if (download == null)
-            throw new IllegalArgumentException("can not find download");
-        if (download.getStatus() == Download.STATUS_SUCCESSFUL) {
-            throw new IllegalArgumentException("can not cancel a not successful download");
-        }
-        download.setDownloadListener(listener);
         downloadConsumerExecutor.cancelDownload(download);
         MFLog.d("cancel id:" + id);
     }
@@ -163,126 +129,6 @@ public class DownloaderManager {
         }
 
         @Override
-        public void triggerAddEvent(final Download download) {
-            final DownloadListener listener = download.getDownloadListener();
-            if (listener != null) {
-                Runnable r = new Runnable() {
-                    @Override
-                    public void run() {
-                        listener.onAdded(download.getId());
-                    }
-                };
-                runTask(download.getCallbackHandler(), r);
-            }
-            if (downloadObservable.hasObservers()) {
-                downloadObservable.notifyChanged(download);
-            }
-        }
-
-        @Override
-        public void triggerStartEvent(final Download download) {
-            final DownloadListener listener = download.getDownloadListener();
-            if (listener != null) {
-                Runnable r = new Runnable() {
-                    @Override
-                    public void run() {
-                        listener.onStart(download.getId());
-                    }
-                };
-                runTask(download.getCallbackHandler(), r);
-            }
-            if (downloadObservable.hasObservers()) {
-                downloadObservable.notifyChanged(download);
-            }
-        }
-
-        @Override
-        public void triggerFailEvent(final Download download) {
-            final DownloadListener listener = download.getDownloadListener();
-            if (listener != null) {
-                Runnable r = new Runnable() {
-                    @Override
-                    public void run() {
-                        listener.onFailed(download.getId());
-                    }
-                };
-                runTask(download.getCallbackHandler(), r);
-            }
-            if (downloadObservable.hasObservers()) {
-                downloadObservable.notifyChanged(download);
-            }
-        }
-
-        @Override
-        public void triggerProgressEvent(final Download download) {
-            final DownloadListener listener = download.getDownloadListener();
-            if (listener != null) {
-                Runnable r = new Runnable() {
-                    @Override
-                    public void run() {
-                        listener.onProgressUpdate(download.getId(),
-                                download.getCurrentBytes(), download.getTotalBytes(), download.getBytesPerSecondNow());
-                    }
-                };
-                runTask(download.getCallbackHandler(), r);
-            }
-            if (downloadObservable.hasObservers()) {
-                downloadObservable.notifyChanged(download);
-            }
-        }
-
-        @Override
-        public void triggerCompleteEvent(final Download download) {
-            final DownloadListener listener = download.getDownloadListener();
-            if (listener != null) {
-                Runnable r = new Runnable() {
-                    @Override
-                    public void run() {
-                        listener.onComplete(download.getId());
-                    }
-                };
-                runTask(download.getCallbackHandler(), r);
-            }
-            if (downloadObservable.hasObservers()) {
-                downloadObservable.notifyChanged(download);
-            }
-        }
-
-        @Override
-        public void triggerPauseEvent(final Download download) {
-            final DownloadListener listener = download.getDownloadListener();
-            if (listener != null) {
-                Runnable r = new Runnable() {
-                    @Override
-                    public void run() {
-                        listener.onPaused(download.getId());
-                    }
-                };
-                runTask(download.getCallbackHandler(), r);
-            }
-            if (downloadObservable.hasObservers()) {
-                downloadObservable.notifyChanged(download);
-            }
-        }
-
-        @Override
-        public void triggerCancelEvent(final Download download) {
-            final DownloadListener listener = download.getDownloadListener();
-            if (listener != null) {
-                Runnable r = new Runnable() {
-                    @Override
-                    public void run() {
-                        listener.onCancelled(download.getId());
-                    }
-                };
-                runTask(download.getCallbackHandler(), r);
-            }
-            if (downloadObservable.hasObservers()) {
-                downloadObservable.notifyChanged(download);
-            }
-        }
-
-        @Override
         public Download queryFirstPendingDownload() {
             List<Download> all = persistence.queryAll();
             if (all == null || all.size() == 0) {
@@ -311,6 +157,13 @@ public class DownloaderManager {
         @Override
         public long deleteDownload(Download download) {
             return persistence.delete(download);
+        }
+
+        @Override
+        public void notifyDownloadObserver(Download download) {
+            if (downloadObservable.hasObservers()) {
+                downloadObservable.notifyChanged(download);
+            }
         }
     };
 

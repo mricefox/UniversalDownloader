@@ -23,13 +23,13 @@ public class Download {
 
     public static final int STATUS_CONNECTING = 1 << 7;
     public static final int STATUS_PAUSING = 1 << 8;
+    public static final int STATUS_ADDED = 1 << 9;
 
     //user config attrs
     private final String uri;//persistence
     private final String targetDir;//persistence
     private String fileName;
     private final int priority;//persistence
-    private DownloadListener downloadListener;
     private final Handler callbackHandler;
 
     private long id;//persistence
@@ -49,7 +49,6 @@ public class Download {
         this.targetDir = params.getTargetDir();
         this.fileName = params.getFileName();
         this.priority = params.getPriority();
-        this.downloadListener = params.getDownloadListener();
         this.blocks = new ArrayList<>();
 
         Handler h = params.getCallbackHandler();
@@ -86,18 +85,6 @@ public class Download {
 
     public String getTargetDir() {
         return targetDir;
-    }
-
-//    public void setTargetFilePath(String targetDir) {
-//        this.targetDir = targetDir;
-//    }
-
-    public DownloadListener getDownloadListener() {
-        return downloadListener;
-    }
-
-    public void setDownloadListener(DownloadListener downloadListener) {
-        this.downloadListener = downloadListener;
     }
 
     public long getId() {

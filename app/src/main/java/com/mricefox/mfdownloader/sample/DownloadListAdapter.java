@@ -105,11 +105,15 @@ public class DownloadListAdapter extends RecyclerView.Adapter {
             itemViewHolder.progressBar.setProgress((int) Math.ceil((currentBytes + .0f) * 100 / totalBytes));
         else
             itemViewHolder.progressBar.setProgress(0);//in case of view holder reuse
-        long remainTime = download.getTimeRemain();
-        if (remainTime < 0)
-            itemViewHolder.remainTimeTxt.setText("--:--:--");
-        else
-            itemViewHolder.remainTimeTxt.setText(StringUtil.convertMills2hhmmss(remainTime * 1000));
+        if (download.getStatus() != Download.STATUS_RUNNING) itemViewHolder.remainTimeTxt.setVisibility(View.GONE);
+        else {
+            itemViewHolder.remainTimeTxt.setVisibility(View.VISIBLE);
+            long remainTime = download.getTimeRemain();
+            if (remainTime < 0)
+                itemViewHolder.remainTimeTxt.setText("--:--:--");
+            else
+                itemViewHolder.remainTimeTxt.setText(StringUtil.convertMills2hhmmss(remainTime * 1000));
+        }
 
     }
 

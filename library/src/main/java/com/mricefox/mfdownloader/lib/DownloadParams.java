@@ -13,7 +13,6 @@ public class DownloadParams {
 
     private String fileName;
     private int priority;
-    private DownloadListener downloadListener;
     private Handler callbackHandler;
 
     public DownloadParams(String uri, String targetDir) {
@@ -28,11 +27,6 @@ public class DownloadParams {
 
     public DownloadParams priority(int priority) {
         this.priority = priority;
-        return this;
-    }
-
-    public DownloadParams downloadingListener(DownloadListener listener) {
-        this.downloadListener = listener;
         return this;
     }
 
@@ -55,10 +49,6 @@ public class DownloadParams {
 
     public int getPriority() {
         return priority;
-    }
-
-    public DownloadListener getDownloadListener() {
-        return downloadListener;
     }
 
     public Handler getCallbackHandler() {
