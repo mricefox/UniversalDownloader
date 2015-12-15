@@ -318,6 +318,7 @@ class DownloadConsumerExecutor {
         MFLog.d("autoStartPending=" + autoStartPending);
         if (autoStartPending) {
             Download pendingDownload = contract.queryFirstPendingDownload();
+            // TODO: 2015/12/15 download entity re constructed, outer pointer should resign 
             if (pendingDownload != null) {
                 MFLog.d("pendingDownload id=" + pendingDownload.getId());
                 startPendingDownload(pendingDownload);
