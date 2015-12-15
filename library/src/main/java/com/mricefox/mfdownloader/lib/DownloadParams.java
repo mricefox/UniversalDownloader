@@ -18,6 +18,12 @@ public class DownloadParams {
     public DownloadParams(String uri, String targetDir) {
         this.uri = uri;
         this.targetDir = targetDir;
+
+        // TODO: 2015/12/15  
+//        String scheme = uri.getScheme();
+//        if (scheme == null || (!scheme.equals("http") && !scheme.equals("https"))) {
+//            throw new IllegalArgumentException("Can only download HTTP/HTTPS URIs: " + uri);
+//        }
     }
 
     public DownloadParams fileName(String fileName) {

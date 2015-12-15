@@ -69,7 +69,6 @@ public class DownloaderManager {
         if (download.getStatus() != Download.STATUS_PAUSED
                 && download.getStatus() != Download.STATUS_RUNNING)//paused or interrupt
             throw new IllegalArgumentException("can not resume download");
-//        MFLog.d("resume total:"+wrapper.getTotalBytes());
         download.setPrevBytes(download.getCurrentBytes()); //fix resume speed too fast
         MFLog.d("resume id:" + id);
         if (downloadConsumerExecutor.resumeDownload(download))
@@ -82,7 +81,7 @@ public class DownloaderManager {
         if (download == null)
             throw new IllegalArgumentException("can not find download");
         if (download.getStatus() == Download.STATUS_SUCCESSFUL) {
-            throw new IllegalArgumentException("can not cancel a not successful download");
+            throw new IllegalArgumentException("can not cancel a successful download");
         }
         downloadConsumerExecutor.cancelDownload(download);
         MFLog.d("cancel id:" + id);
@@ -115,12 +114,26 @@ public class DownloaderManager {
 
         @Override
         public long insertDownload(Download download) {
-            return persistence.insert(download);
+            final long id = persistence.insert(download);
+            if (id == -1) {
+                MFLog.e("insert record fail");
+                download.setError(Download.ERROR_PERSISTENCE_ERROR);
+                download.setStatus(Download.STATUS_FAILED);
+            }
+            this.notifyDownloadObserver(download);
+            return id;
         }
 
         @Override
         public long updateDownload(Download download) {
-            return persistence.update(download);
+            final long id = persistence.update(download);
+            if (id == -1) {
+                MFLog.e("update record fail");
+                download.setError(Download.ERROR_PERSISTENCE_ERROR);
+                download.setStatus(Download.STATUS_FAILED);
+            }
+            this.notifyDownloadObserver(download);
+            return id;
         }
 
         @Override
@@ -147,7 +160,7 @@ public class DownloaderManager {
             });
             for (int i = 0, size = all.size(); i < size; ++i) {
                 Download download = all.get(i);
-                MFLog.d("download.getStatus():" + download.getStatus() + "#id:" + download.getId());
+//                MFLog.d("download.getStatus():" + download.getStatus() + "#id:" + download.getId());
                 if (download.getStatus() == Download.STATUS_PENDING)
                     return download;
             }
@@ -156,7 +169,10 @@ public class DownloaderManager {
 
         @Override
         public long deleteDownload(Download download) {
-            return persistence.delete(download);
+            final long id = persistence.delete(download);
+            if (id == -1)
+                MFLog.e("delete record fail");
+            return id;
         }
 
         @Override
@@ -167,6 +183,9 @@ public class DownloaderManager {
         }
     };
 
+    /**
+     * notify observer regist by {@link DownloaderManager#registerObserver}
+     */
     private class DownloadObservable extends Observable<DownloadObserver> {
         public boolean hasObservers() {
             synchronized (mObservers) {

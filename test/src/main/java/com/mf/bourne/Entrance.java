@@ -1,17 +1,11 @@
 package com.mf.bourne;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Entrance {
     public static void main(String[] args) throws Exception {
@@ -51,22 +45,22 @@ public class Entrance {
 //        System.out.println("b_size:" + b_size);
 //
         //序列化对象
-        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("D:\\objectFile.obj"));
-        Ser customer = new Ser();
-        customer.name = "mklop";
-        customer.age = 121;
-        out.writeObject("mnb");    //写入字面值常量
-        out.writeObject(new Date());    //写入匿名Date对象
-        out.writeObject(new A());    //写入customer对象
-        out.close();
-
-        //反序列化对象
-        ObjectInputStream in = new ObjectInputStream(new FileInputStream("D:\\objectFile.obj"));
-        System.out.println("obj1 " + (String) in.readObject());    //读取字面值常量
-        System.out.println("obj2 " + (Date) in.readObject());    //读取匿名Date对象
-//        Ser obj3 = (Ser) in.readObject();    //读取customer对象
-//        System.out.println("obj3 " + obj3);
-        in.close();
+//        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("D:\\objectFile.obj"));
+//        Ser customer = new Ser();
+//        customer.name = "mklop";
+//        customer.age = 121;
+//        out.writeObject("mnb");    //写入字面值常量
+//        out.writeObject(new Date());    //写入匿名Date对象
+//        out.writeObject(new A());    //写入customer对象
+//        out.close();
+//
+//        //反序列化对象
+//        ObjectInputStream in = new ObjectInputStream(new FileInputStream("D:\\objectFile.obj"));
+//        System.out.println("obj1 " + (String) in.readObject());    //读取字面值常量
+//        System.out.println("obj2 " + (Date) in.readObject());    //读取匿名Date对象
+////        Ser obj3 = (Ser) in.readObject();    //读取customer对象
+////        System.out.println("obj3 " + obj3);
+//        in.close();
 
 
 //        long a = 67887, b = 4567;
@@ -208,18 +202,80 @@ public class Entrance {
 //            }
 //        });
 
-        SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss");
-//        Calendar calendar =Calendar.getInstance();
-//        calendar.setTimeInMillis(300*1000);
-//        calendar.get(Calendar.HOUR)
-        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-        String str = sdf.format(new Date(300 * 1000));
+//        SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss");
+////        Calendar calendar =Calendar.getInstance();
+////        calendar.setTimeInMillis(300*1000);
+////        calendar.get(Calendar.HOUR)
+//        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+//        String str = sdf.format(new Date(300 * 1000));
+//
+//        System.out.println("str=" + str);
+//
+//        int a = 10 < 12 ? 3 : 4 + 5;
+//        System.out.println("str=" + convertMills2hhmmss(99999999999L));
 
-        System.out.println("str=" + str);
 
-        int a = 10 < 12 ? 3 : 4 + 5;
-        System.out.println("str=" + convertMills2hhmmss(99999999999L));
+//        printBinary(COUNT_BITS);
+//        printBinary(RUNNING);
+//        printBinary(STOP);
+
+        printBinary(MODE_MASK);
+        int size = Integer.MAX_VALUE;
+        printBinary(size);
+        int mode = EXACTLY;
+        printBinary(mode);
+        int measureSpec = (size & ~MODE_MASK) | (mode & MODE_MASK);
+        printBinary(measureSpec);
+
+        int remode = (measureSpec & MODE_MASK);
+        printBinary(remode);
+        int resize = (measureSpec & ~MODE_MASK);
+        printBinary(resize);
+
+        try {
+            int a = 9/0;
+            System.out.println("eeeee");
+        }catch (Exception e){
+            e.printStackTrace();
+            System.out.println("bbb");
+        }
+        System.out.println("iiiiiiiiiiii");
     }
+
+
+    private static final int MODE_SHIFT = 31;
+    private static final int MODE_MASK = 0x3 << MODE_SHIFT;
+
+    public static final int EXACTLY = 1 << MODE_SHIFT;
+
+
+    private final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0));
+    private static final int COUNT_BITS = Integer.SIZE - 3;
+    private static final int CAPACITY = (1 << COUNT_BITS) - 1;
+
+    // runState is stored in the high-order bits
+    private static final int RUNNING = -1 << COUNT_BITS;
+    private static final int SHUTDOWN = 0 << COUNT_BITS;
+    private static final int STOP = 1 << COUNT_BITS;
+    private static final int TIDYING = 2 << COUNT_BITS;
+    private static final int TERMINATED = 3 << COUNT_BITS;
+
+    private static int runStateOf(int c) {
+        return c & ~CAPACITY;
+    }
+
+    private static int workerCountOf(int c) {
+        return c & CAPACITY;
+    }
+
+    private static int ctlOf(int rs, int wc) {
+        return rs | wc;
+    }
+
+    public static void printBinary(int i) {
+        System.out.println(i + " to binary:" + Integer.toBinaryString(i));
+    }
+
 
     public static String convertMills2hhmmss(long ms) {
         long time;

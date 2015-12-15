@@ -2,6 +2,7 @@ package com.mricefox.mfdownloader.sample;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.DownloadManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
@@ -14,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.RelativeLayout;
 
 import com.mricefox.mfdownloader.lib.Download;
 import com.mricefox.mfdownloader.lib.DownloadListener;
@@ -25,6 +27,7 @@ import com.mricefox.mfdownloader.lib.assist.MFLog;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  *
@@ -140,22 +143,14 @@ public class DownloadListFragment extends Fragment {
     }
 
     private void initDownload() {
-        Download download1 = new Download(new DownloadParams(SampleUris.SampleUri1, TargetDir).
-                downloadingListener(downloadingListener));
-        Download download2 = new Download(new DownloadParams(SampleUris.SampleUri2, TargetDir).
-                downloadingListener(downloadingListener));
-        Download download3 = new Download(new DownloadParams(SampleUris.SampleUri3, TargetDir).
-                downloadingListener(downloadingListener));
-        Download download4 = new Download(new DownloadParams(SampleUris.SampleUri4, TargetDir).
-                downloadingListener(downloadingListener));
-        Download download5 = new Download(new DownloadParams(SampleUris.SampleUri5, TargetDir).
-                downloadingListener(downloadingListener));
-        Download download6 = new Download(new DownloadParams(SampleUris.SampleUri6, TargetDir).
-                downloadingListener(downloadingListener));
-        Download download7 = new Download(new DownloadParams(SampleUris.SampleUri7, TargetDir).
-                downloadingListener(downloadingListener));
-        Download download8 = new Download(new DownloadParams(SampleUris.SampleUri8, TargetDir).
-                downloadingListener(downloadingListener));
+        Download download1 = new Download(new DownloadParams(SampleUris.SampleUri1, TargetDir));
+        Download download2 = new Download(new DownloadParams(SampleUris.SampleUri2, TargetDir));
+        Download download3 = new Download(new DownloadParams(SampleUris.SampleUri3, TargetDir));
+        Download download4 = new Download(new DownloadParams(SampleUris.SampleUri4, TargetDir));
+        Download download5 = new Download(new DownloadParams(SampleUris.SampleUri5, TargetDir));
+        Download download6 = new Download(new DownloadParams(SampleUris.SampleUri6, TargetDir));
+        Download download7 = new Download(new DownloadParams(SampleUris.SampleUri7, TargetDir));
+        Download download8 = new Download(new DownloadParams(SampleUris.SampleUri8, TargetDir));
         todoDownloadList.add(download1);
         todoDownloadList.add(download2);
         todoDownloadList.add(download3);

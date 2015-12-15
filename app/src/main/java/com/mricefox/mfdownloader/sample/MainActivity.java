@@ -73,8 +73,7 @@ public class MainActivity extends AppCompatActivity {
 //    Download download4 = new Download(SampleUri6, TargetDir + File.separator + "novel4.zip", listener);
 //    Download download5 = new Download(new DownloadParams(SampleUris.SampleUri2, TargetDir + File.separator + "qq.apk").
 //            downloadingListener(listener));
-    Download download8 = new Download(new DownloadParams(SampleUris.SampleUri8, TargetDir)
-            .downloadingListener(listener));
+    Download download8 = new Download(new DownloadParams(SampleUris.SampleUri8, TargetDir));
 
     DownloadListFragment fragment;
 
@@ -112,10 +111,9 @@ public class MainActivity extends AppCompatActivity {
 
         Configuration configuration = new Configuration.Builder().
                 downloadOperator(new DefaultDownloadOperator()).
-                maxDownloadNum(Integer.MAX_VALUE).persistence(XmlPersistence.getInstance()).debuggable(true)
-                .autoStartPending(false)
+                maxDownloadNum(2).persistence(XmlPersistence.getInstance()).debuggable(true)
+                .autoStartPending(true)
                 .build();
-//        downloaderManager =  DownloaderManager.getInstance();
         DownloaderManager.getInstance().init(configuration);
 
         pauseBtn.setOnClickListener(callback);

@@ -21,9 +21,14 @@ public class Download {
     public static final int STATUS_FAILED = 1 << 5;
     public static final int STATUS_CANCELLED = 1 << 6;
 
-    public static final int STATUS_CONNECTING = 1 << 7;
-    public static final int STATUS_PAUSING = 1 << 8;
-    public static final int STATUS_ADDED = 1 << 9;
+//    public static final int STATUS_CONNECTING = 1 << 7;
+//    public static final int STATUS_PAUSING = 1 << 8;
+//    public static final int STATUS_ADDED = 1 << 9;
+
+    public static final int ERROR_PERSISTENCE_ERROR = 1001;
+    public static final int ERROR_CREATE_FILE_ERROR = 1002;
+    public static final int ERROR_GET_REMOTE_FILE_INFO_ERROR = 1003;
+    public static final int ERROR_STREAM_ERROR = 1004;
 
     //user config attrs
     private final String uri;//persistence
@@ -43,6 +48,7 @@ public class Download {
     private long bytesPerSecondAverage;
     private long prevBytes;// bytes for progress monitor
     private long timeRemain;//remain seconds in current speed
+    private int error;
 
     public Download(DownloadParams params) {
         this.uri = params.getUri();
@@ -193,6 +199,14 @@ public class Download {
 
     public void setTimeRemain(long timeRemain) {
         this.timeRemain = timeRemain;
+    }
+
+    public int getError() {
+        return error;
+    }
+
+    public void setError(int error) {
+        this.error = error;
     }
 
     public String showSpeed() {

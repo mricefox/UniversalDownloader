@@ -60,26 +60,19 @@ class DownloadConsumerExecutor {
         long id = -1;
         if (runningDownloads.size() < maxDownloadCount.get()) {
             download.setStatus(Download.STATUS_RUNNING);
-
             id = contract.insertDownload(download);
-            if (id == -1) {
-                MFLog.e("insert record fail");
+            if (id == -1)
                 return id;
-            }
-
             DownloadConsumer downloadConsumer = new DownloadConsumer(download, false);
             downloadExecutor.execute(downloadConsumer);
             runningDownloads.put(id, download);
         } else {
             download.setStatus(Download.STATUS_PENDING);
             id = contract.insertDownload(download);
-            if (id == -1) {
-                MFLog.e("insert record fail");
+            if (id == -1)
                 return id;
-            }
-            MFLog.d("insert pending id:" + id);
+//            MFLog.d("insert pending download:" + download);
         }
-        contract.notifyDownloadObserver(download);
         return id;
     }
 
@@ -88,7 +81,6 @@ class DownloadConsumerExecutor {
             DownloadConsumer downloadConsumer = new DownloadConsumer(download, false);
             downloadExecutor.execute(downloadConsumer);
             runningDownloads.put(download.getId(), download);
-            //store wrapper
             download.setStatus(Download.STATUS_RUNNING);
             contract.updateDownload(download);
         } else
@@ -121,7 +113,7 @@ class DownloadConsumerExecutor {
             download.setStatus(Download.STATUS_PENDING);
         }
         long id = contract.updateDownload(download);
-        if (id == -1) throw new RuntimeException("update download fail");
+        if (id == -1) return false;
         return true;
     }
 
@@ -131,8 +123,7 @@ class DownloadConsumerExecutor {
             case Download.STATUS_PENDING:
             case Download.STATUS_PAUSED:
             case Download.STATUS_FAILED:
-                long id = contract.deleteDownload(download);
-                if (id == -1) throw new RuntimeException("delete download fail");
+                contract.deleteDownload(download);
                 break;
             case Download.STATUS_RUNNING:
                 if (!runningDownloads.containsKey(download.getId()))
@@ -201,6 +192,7 @@ class DownloadConsumerExecutor {
                 Block block = download.getBlocks().get(blockIndex);
                 block.setDownloadedBytes(currentBytes + block.getDownloadedBytes());
                 download.setStatus(Download.STATUS_FAILED);
+                download.setError(Download.ERROR_STREAM_ERROR);
             }
             countDownLock(downloadId);
         }
@@ -213,13 +205,12 @@ class DownloadConsumerExecutor {
                     runningDownloads.entrySet().iterator();
             while (iterator.hasNext()) {
                 Map.Entry<Long, Download> entry = iterator.next();
-//                MFLog.d(entry.getKey() + "#" + entry.getValue().showSpeed());
                 final Download download = runningDownloads.get(entry.getKey());
                 synchronized (download) {
                     boolean shouldProcess = download.getStatus() == Download.STATUS_PAUSED ||
                             download.getStatus() == Download.STATUS_CANCELLED;
                     if (!shouldProcess)
-                        contract.triggerProgressEvent(download);
+                        contract.updateDownload(download);
                 }
             }
         }
@@ -237,26 +228,19 @@ class DownloadConsumerExecutor {
         @Override
         public void run() {
             //invoke callback on start
-            contract.triggerStartEvent(download);
+//            contract.updateDownload(download);
             try {
                 if (!resume) setupDownload(download);
-            } catch (IOException e) {
-                e.printStackTrace();
-                download.setStatus(Download.STATUS_FAILED);
             } catch (Exception e) {
                 e.printStackTrace();
                 download.setStatus(Download.STATUS_FAILED);
-            } finally {
-                contract.updateDownload(download);
-            }
-            if (download.getStatus() == Download.STATUS_FAILED) {
                 runningDownloads.remove(download.getId());
-                contract.triggerFailEvent(download);
+                contract.updateDownload(download);
                 return;
             }
             if (download.getStatus() == Download.STATUS_PAUSED) {
                 runningDownloads.remove(download.getId());
-                contract.triggerPauseEvent(download);
+                contract.updateDownload(download);
                 return;
             }
             List<Block> blocks = download.getBlocks();
@@ -277,38 +261,26 @@ class DownloadConsumerExecutor {
             downloadOnStopLocks.put(download.getId(), new CountDownLatch(runningConsumerCount));
             waitForDownloadStopLock(download.getId());
 
-            contract.triggerProgressEvent(download);//update the progress to 100%
+            contract.updateDownload(download);//update the progress to 100% before removed
 //            MFLog.d("remove status:" + download.getStatus() + " download:" + download + " id:" + download.getId());
             runningDownloads.remove(download.getId());
             downloadOnStopLocks.remove(download.getId());
 
             if (download.getCurrentBytes() == download.getTotalBytes()) {// TODO: 2015/12/14 bytes=0
                 download.setStatus(Download.STATUS_SUCCESSFUL);
-//                MFLog.d("wrapper.setStatus(Download.STATUS_SUCCESSFUL);id:" + download.getId());
-                contract.triggerCompleteEvent(download);
                 contract.updateDownload(download);
             } else if (download.getStatus() == Download.STATUS_PAUSED) {
                 //interrupt by paused
-                contract.triggerPauseEvent(download);
                 contract.updateDownload(download);
             } else if (download.getStatus() == Download.STATUS_CANCELLED) {
                 //cancel
                 contract.deleteDownload(download);
-                contract.triggerCancelEvent(download);
             } else {//stopped by error
                 download.setStatus(Download.STATUS_FAILED);
-                contract.triggerFailEvent(download);
                 contract.updateDownload(download);
             }
 
-            MFLog.d("autoStartPending=" + autoStartPending);
-            if (autoStartPending) {
-                Download pendingDownload = contract.queryFirstPendingDownload();
-                if (pendingDownload != null) {
-                    MFLog.d("pendingDownload id=" + pendingDownload.getId());
-                    startPendingDownload(pendingDownload);
-                } else MFLog.d("pendingDownload=null");
-            }
+            handlePendingDownload();
         }
 
         /**
@@ -321,23 +293,35 @@ class DownloadConsumerExecutor {
             final Pair<Long, String> lenNamePair = downloadOperator.getRemoteFileLengthAndName(download.getUri());
             if (lenNamePair != null) {
                 List<Block> blocks = downloadOperator.split2Block(lenNamePair.first);
-                MFLog.d("file size:" + lenNamePair.first);
+//                MFLog.d("file size:" + lenNamePair.first);
                 download.setBlocks(blocks);
-                /**
-                 * wrapper blocks access by every thread of download block
-                 */
                 download.setTotalBytes(lenNamePair.first);
                 String fileName = download.getFileName();
-                if (fileName == null) {//user did not set file name, use generated file name
+                if (fileName == null || fileName.trim().length() == 0) {//user did not set file name, use generated file name
                     fileName = lenNamePair.second;
                     download.setFileName(fileName);
                 }
+                MFLog.d("file name:" + download.getFileName() + " id:" + download.getId());
                 if (!downloadOperator.createFile(lenNamePair.first,
-                        download.getTargetDir() + File.separator + fileName))
+                        download.getTargetDir() + File.separator + fileName)) {
+                    download.setError(Download.ERROR_CREATE_FILE_ERROR);
                     throw new IOException("Create file fail");
+                }
             } else {
+                download.setError(Download.ERROR_GET_REMOTE_FILE_INFO_ERROR);
                 throw new IOException("setup download fail");
             }
+        }
+    }
+
+    private void handlePendingDownload() {
+        MFLog.d("autoStartPending=" + autoStartPending);
+        if (autoStartPending) {
+            Download pendingDownload = contract.queryFirstPendingDownload();
+            if (pendingDownload != null) {
+                MFLog.d("pendingDownload id=" + pendingDownload.getId());
+                startPendingDownload(pendingDownload);
+            } else MFLog.d("pendingDownload=null");
         }
     }
 
