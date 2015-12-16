@@ -233,13 +233,56 @@ public class Entrance {
         printBinary(resize);
 
         try {
-            int a = 9/0;
+//            int a = 9 / 0;
             System.out.println("eeeee");
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             System.out.println("bbb");
         }
         System.out.println("iiiiiiiiiiii");
+
+
+        System.out.println("-------------");
+//        Sub s = new Sub(4, "", "");
+        JJ j = new JJ(1);
+    }
+
+    public static class JJ {
+        public JJ(int a) {
+            this(a, "");
+            System.out.println("1");
+        }
+
+        public JJ(int a, String b) {
+            this(a, b, "");
+            System.out.println("2");
+        }
+
+        public JJ(int a, String b, String c) {
+            System.out.println("3");
+        }
+    }
+
+    public static class Sub extends JJ {
+
+        public Sub(int a) {
+            super(a);
+//            init(a);
+        }
+
+        public Sub(int a, String b) {
+            super(a, b);
+//            init(a);
+        }
+
+        public Sub(int a, String b, String c) {
+            super(a, b, c);
+            init(a);
+        }
+
+        private void init(int a) {
+            System.out.println("init" + a);
+        }
     }
 
 

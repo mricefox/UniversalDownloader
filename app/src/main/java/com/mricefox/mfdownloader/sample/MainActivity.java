@@ -1,5 +1,6 @@
 package com.mricefox.mfdownloader.sample;
 
+import android.app.DownloadManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
