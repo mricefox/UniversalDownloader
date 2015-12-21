@@ -1,7 +1,16 @@
 package com.mf.bourne;
 
 import java.io.Serializable;
+import java.text.DateFormatSymbols;
 import java.text.DecimalFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
@@ -219,35 +228,259 @@ public class Entrance {
 //        printBinary(RUNNING);
 //        printBinary(STOP);
 
-        printBinary(MODE_MASK);
-        int size = Integer.MAX_VALUE;
-        printBinary(size);
-        int mode = EXACTLY;
-        printBinary(mode);
-        int measureSpec = (size & ~MODE_MASK) | (mode & MODE_MASK);
-        printBinary(measureSpec);
+//        printBinary(MODE_MASK);
+//        int size = Integer.MAX_VALUE;
+//        printBinary(size);
+//        int mode = EXACTLY;
+//        printBinary(mode);
+//        int measureSpec = (size & ~MODE_MASK) | (mode & MODE_MASK);
+//        printBinary(measureSpec);
+//
+//        int remode = (measureSpec & MODE_MASK);
+//        printBinary(remode);
+//        int resize = (measureSpec & ~MODE_MASK);
+//        printBinary(resize);
+//
+//        try {
+////            int a = 9 / 0;
+//            System.out.println("eeeee");
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            System.out.println("bbb");
+//        }
+//        System.out.println("iiiiiiiiiiii");
+//
+//
+//        System.out.println("-------------");
+////        Sub s = new Sub(4, "", "");
+//        JJ j = new JJ(1);
+//
+//        BlockingQueue<Integer> abq = new ArrayBlockingQueue(3);
+//
+//        abq.offer(1);
+//        abq.addAll()
 
-        int remode = (measureSpec & MODE_MASK);
-        printBinary(remode);
-        int resize = (measureSpec & ~MODE_MASK);
-        printBinary(resize);
 
-        try {
-//            int a = 9 / 0;
-            System.out.println("eeeee");
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("bbb");
+//        BlockingQueue<Integer> q = new ArrayBlockingQueue(1, true);
+//        Producer p1 = new Producer(q, 1);
+//        Producer p2 = new Producer(q, 2);
+//        Producer p3 = new Producer(q, 3);
+//        Consumer c1 = new Consumer(q);
+//        Consumer c2 = new Consumer(q);
+//        new Thread(p1).start();
+//        new Thread(p2).start();
+//        new Thread(p3).start();
+//        new Thread(c1).start();
+//        new Thread(c2).start();
+
+//        BlockingQueue<Integer> pq = new PriorityBlockingQueue();
+//        pq.put(3);
+//        pq.put(5);
+//        pq.put(6);
+//        pq.put(2);
+//        pq.put(1);
+//        pq.put(4);
+//
+//        while (true) {
+//            int i = pq.take();
+//            System.out.println("i=" + i);
+//        }
+
+//        SynchronousQueue<Integer> sq = new SynchronousQueue();
+//        Producer p1 = new Producer(sq, 1);
+//        Producer p2 = new Producer(sq, 2);
+//        Producer p3 = new Producer(sq, 3);
+//        Consumer c1 = new Consumer(sq);
+//        Consumer c2 = new Consumer(sq);
+//        new Thread(p1).start();
+////        new Thread(p2).start();
+////        new Thread(p3).start();
+//        new Thread(c1).start();
+//        new Thread(c2).start();
+
+
+//        Calendar calendar = Calendar.getInstance();
+//        calendar.setTimeInMillis(convertDateStr2Millis("2015-12-01"));
+//        int i = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+//        System.out.println(calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+//        calendar.set(Calendar.DAY_OF_MONTH, i);
+//        System.out.println(calendar2Str(calendar));
+//        System.out.println("offset=" + getOffsetFirstDayOfWeek(Calendar.THURSDAY, Calendar.SUNDAY));
+
+//        Sub s = new Sub(1);
+//        CC c = new CC();
+//
+//        boolean a = s instanceof JJ;
+//        System.out.println("a:" + a);
+//        System.out.println(c instanceof INT);
+
+        List<Entity> entities = new ArrayList<>();
+        for (int i = 1; i <= 36500 * (2100 - 1900); ++i) {
+            Entity entity = new Entity();
+            entity.name = "name" + i;
+            entity.num = i;
+            entities.add(entity);
         }
-        System.out.println("iiiiiiiiiiii");
 
+        Entity target = new Entity();
+        target.name = "target";
+        target.num = 7199999;
 
-        System.out.println("-------------");
-//        Sub s = new Sub(4, "", "");
-        JJ j = new JJ(1);
+        System.out.println("start search");
+        long start = System.currentTimeMillis();
+        int index = Collections.binarySearch(entities, target, new Comparator<Entity>() {
+            @Override
+            public int compare(Entity o1, Entity o2) {
+                if (o1 == null && o2 != null) {//null in front
+                    return 1;
+                } else if (o1 != null && o2 == null) {
+                    return -1;
+                } else if (o1 == null && o2 == null) {
+                    return 0;
+                } else {
+                    if (o1.num > o2.num) {
+                        return 1;
+                    } else if (o1.num < o2.num) {
+                        return -1;
+                    } else {
+                        return 0;
+                    }
+                }
+            }
+        });
+//        System.out.println("search time:" + (System.currentTimeMillis() - start) + " index:" + index);
+//
+//        start = System.currentTimeMillis();
+//        Entity entity = search(entities, target);
+//        System.out.println("search time:" + (System.currentTimeMillis() - start) + " entity:" + entity);
+//
+//        System.out.println(convertDateStr2Millis("1900-01-01"));
+
+        DateFormatSymbols symbols = DateFormatSymbols.getInstance();
+        String[] arr = symbols.getShortWeekdays();
+        for (String s : arr) {
+            System.out.println("==s:" + s);
+        }
+
+//        JJ j1 = new JJ(1);
+//        JJ j2 = new JJ(1);
+//        Sub s1 = new Sub(1);
+//        Sub s2 = new Sub(1);
+
+        System.out.println(Math.ceil(40f / 15) - 1);
+        System.out.println(Math.ceil(30f / 15) - 1);
+        System.out.println(Math.ceil(45f / 15) - 1);
+        System.out.println(Math.ceil(46f / 15) - 1);
+    }
+
+    public static Entity search(List<Entity> list, Entity entity) {
+        int index = list.indexOf(entity);
+        if (index != -1)
+            return list.get(index);
+        else
+            return null;
+    }
+
+    public static class Entity {
+        int num;
+        String name;
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj instanceof Entity) {
+                return ((Entity) obj).num == num;
+            } else {
+                return false;
+            }
+        }
+    }
+
+    public static int getOffsetFirstDayOfWeek(int firstDayOfWeek, int weekDay) {
+        int offset = weekDay - firstDayOfWeek;
+        return offset > 0 ? offset : 7 + offset;
+    }
+
+    public static String calendar2Str(Calendar calendar) {
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        return format.format(calendar.getTime());
+    }
+
+    public static long convertDateStr2Millis(String date) {
+        if (date == null || date.trim().length() == 0)
+            return -1;
+        try {
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+            return format.parse(date).getTime();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    static class Producer implements Runnable {
+        private final BlockingQueue<Integer> queue;
+        private int id;
+        private int i = 0;
+
+        Producer(BlockingQueue<Integer> q, int id) {
+            queue = q;
+            this.id = id;
+        }
+
+        @Override
+        public void run() {
+            try {
+                while (true) {
+//                    Thread.sleep(1000);
+                    queue.put(produce());
+                    System.out.println(id + " put finish");
+                }
+            } catch (InterruptedException ex) {
+                ex.printStackTrace();
+            }
+        }
+
+        int produce() {
+            System.out.println(id + " produce " + i);
+            return ++i;
+        }
+    }
+
+    static class Consumer implements Runnable {
+        private final BlockingQueue<Integer> queue;
+
+        Consumer(BlockingQueue<Integer> q) {
+            queue = q;
+        }
+
+        public void run() {
+            try {
+                while (true) {
+                    Thread.sleep(2000);
+                    consume(queue.take());
+                    System.out.println("take finish");
+                }
+            } catch (InterruptedException ex) {
+                ex.printStackTrace();
+            }
+        }
+
+        void consume(int x) {
+            System.out.println("consume " + x);
+        }
+    }
+
+    public static int nnn() {
+        System.out.println("nnn");
+
+        return 1;
     }
 
     public static class JJ {
+        protected static int num = nnn();
+
         public JJ(int a) {
             this(a, "");
             System.out.println("1");
