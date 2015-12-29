@@ -16,10 +16,15 @@ public class MFLog {
     private static String methodName;
     private static int lineNumber;
 
-    private MFLog(){}
+    private MFLog() {
+    }
 
     public static void setDebugState(boolean enable) {
         DEBUG = enable;
+    }
+
+    public static boolean isDebug() {
+        return DEBUG;
     }
 
     private static String createLog(String log) {
@@ -87,6 +92,20 @@ public class MFLog {
         if (DEBUG) {
             getMethodNames(new Throwable().getStackTrace());
             Log.d(TAG, createLog(logContent));
+        }
+    }
+
+    public static void i(String logContent) {
+        if (DEBUG) {
+            getMethodNames(new Throwable().getStackTrace());
+            Log.i(TAG, createLog(logContent));
+        }
+    }
+
+    public static void w(String logContent) {
+        if (DEBUG) {
+            getMethodNames(new Throwable().getStackTrace());
+            Log.w(TAG, createLog(logContent));
         }
     }
 }

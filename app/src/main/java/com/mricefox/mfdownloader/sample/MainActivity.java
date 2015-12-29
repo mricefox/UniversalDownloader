@@ -1,6 +1,7 @@
 package com.mricefox.mfdownloader.sample;
 
-import android.app.DownloadManager;
+import android.annotation.TargetApi;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
@@ -130,6 +131,9 @@ public class MainActivity extends AppCompatActivity {
 //        downloaderManager.enqueue(download3);
 
         DownloaderManager.getInstance().registerObserver(downloadObserver);
+
+
+        dummyStorage();
     }
 
     private long d_id = -1;
@@ -156,5 +160,40 @@ public class MainActivity extends AppCompatActivity {
                     break;
             }
         }
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private void dummyStorage() {
+        MFLog.d("Environment.getDataDirectory():" + Environment.getDataDirectory());
+        MFLog.d("Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_ALARMS):" +
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_ALARMS));
+        MFLog.d("Environment.getDownloadCacheDirectory():" + Environment.getDownloadCacheDirectory());
+        MFLog.d("Environment.getExternalStorageDirectory():" + Environment.getExternalStorageDirectory());
+        MFLog.d("Environment.getRootDirectory():" + Environment.getRootDirectory());
+        MFLog.d("getCacheDir():" + getCacheDir());
+
+        MFLog.d("fileList-----");
+        for (String s : fileList()) {
+            MFLog.d("fileList():" + s);
+        }
+
+        MFLog.d("getExternalFilesDir(null):" + getExternalFilesDir(null));
+        MFLog.d("getExternalCacheDir():" + getExternalCacheDir());
+
+        MFLog.d("getExternalCacheDirs---");
+        for (File f : getExternalCacheDirs()) {
+            MFLog.d("getExternalCacheDirs():" + f);
+        }
+
+        MFLog.d("getExternalFilesDirs(null)---");
+        for (File f : getExternalFilesDirs(null)) {
+            MFLog.d("getExternalFilesDirs(null):" + f);
+        }
+
+
+//        MFLog.d("getExternalMediaDirs----");
+//        for (File f : getExternalMediaDirs()) {
+//            MFLog.d("getExternalMediaDirs:" + f);
+//        }
     }
 }

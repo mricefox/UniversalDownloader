@@ -54,7 +54,7 @@ public class XmlPersistence implements Persistence<Download> {
     private final static String D_ATTR_URI = "uri";
     private final static String D_ATTR_DIR = "dir";
     private final static String D_ATTR_PRIORITY = "pry";
-    private final static String D_ATTR_TIME = "time";
+    private final static String D_ATTR_ELAPSE_TIME = "time";
     private final static String D_ATTR_NAME = "name";
 
     private final static String B_ATTR_INDEX = "idx";
@@ -114,7 +114,7 @@ public class XmlPersistence implements Persistence<Download> {
         element.setAttribute(D_ATTR_TOTAL_BYTES, String.valueOf(download.getTotalBytes()));
         element.setAttribute(D_ATTR_CURRENT_BYTES, String.valueOf(download.getCurrentBytes()));
         element.setAttribute(D_ATTR_PRIORITY, String.valueOf(download.getPriority()));
-        element.setAttribute(D_ATTR_TIME, String.valueOf(download.getDownloadTimeMills()));
+        element.setAttribute(D_ATTR_ELAPSE_TIME, String.valueOf(download.getElapseTimeMills()));
         //serialize listener
 //        DownloadListener listener = download.getDownloadListener();
 //        String s = JavaSerializer.safeSerialize2String(listener);
@@ -141,7 +141,7 @@ public class XmlPersistence implements Persistence<Download> {
         element.setAttribute(D_ATTR_TOTAL_BYTES, String.valueOf(download.getTotalBytes()));
         element.setAttribute(D_ATTR_CURRENT_BYTES, String.valueOf(download.getCurrentBytes()));
         element.setAttribute(D_ATTR_PRIORITY, String.valueOf(download.getPriority()));
-        element.setAttribute(D_ATTR_TIME, String.valueOf(download.getDownloadTimeMills()));
+        element.setAttribute(D_ATTR_ELAPSE_TIME, String.valueOf(download.getElapseTimeMills()));
         //serialize listener
 //        DownloadListener listener = download.getDownloadListener();
 //        String s = JavaSerializer.safeSerialize2String(listener);
@@ -192,7 +192,7 @@ public class XmlPersistence implements Persistence<Download> {
                             String currentBytes = parser.getAttributeValue(null, D_ATTR_CURRENT_BYTES);
                             String totalBytes = parser.getAttributeValue(null, D_ATTR_TOTAL_BYTES);
                             String priority = parser.getAttributeValue(null, D_ATTR_PRIORITY);
-                            String time = parser.getAttributeValue(null, D_ATTR_TIME);
+                            String time = parser.getAttributeValue(null, D_ATTR_ELAPSE_TIME);
 
 //                            String str = parser.getAttributeValue(null, "dlistener");
 //                            Object o = JavaSerializer.safeDeserialize2Object(str);
@@ -207,7 +207,7 @@ public class XmlPersistence implements Persistence<Download> {
                             download.setStatus(Integer.valueOf(status));
                             download.setCurrentBytes(Long.valueOf(currentBytes));
                             download.setTotalBytes(Long.valueOf(totalBytes));
-                            download.setDownloadTimeMills(Long.valueOf(time));
+                            download.setElapseTimeMills(Long.valueOf(time));
                             blockList = new ArrayList<>();
                         } else if (parser.getName().equals(ELEMENT_BLOCK_TAG)) {
                             String index = parser.getAttributeValue(null, B_ATTR_INDEX);

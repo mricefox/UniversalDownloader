@@ -5,7 +5,7 @@ android {
     buildToolsVersion '23.0.2'
 
     defaultConfig {
-        applicationId "com.mf.bourne.mfdownloader"
+        applicationId "com.mricefox.mfdownloader.sample"
         minSdkVersion 19
         targetSdkVersion 21
         versionCode 1

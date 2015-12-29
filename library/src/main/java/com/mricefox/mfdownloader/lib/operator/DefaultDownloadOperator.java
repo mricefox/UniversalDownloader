@@ -57,7 +57,7 @@ public class DefaultDownloadOperator implements DownloadOperator {
             connection = (HttpURLConnection) new URL(uri).openConnection();
             connection.setConnectTimeout(DEFAULT_HTTP_CONNECT_TIMEOUT);
             connection.setReadTimeout(DEFAULT_HTTP_READ_TIMEOUT);
-            getHttpResponseHeader(connection);
+//            getHttpResponseHeader(connection);
             if (connection.getResponseCode() == 200) {//todo redirectCount
                 long length = connection.getContentLength();
                 if (length == -1) throw new IOException("Remote file length = -1");

@@ -42,7 +42,7 @@ public class Download {
     private long totalBytes;//persistence
     private long currentBytes;//persistence
     private int status;//persistence
-    private long downloadTimeMills;//persistence
+    private long elapseTimeMills;//persistence
     private long bytesPerSecondNow;
     private long bytesPerSecondMax;
     private long bytesPerSecondAverage;
@@ -169,12 +169,12 @@ public class Download {
         this.bytesPerSecondAverage = bytesPerSecondAverage;
     }
 
-    public long getDownloadTimeMills() {
-        return downloadTimeMills;
+    public long getElapseTimeMills() {
+        return elapseTimeMills;
     }
 
-    public void setDownloadTimeMills(long downloadTimeMills) {
-        this.downloadTimeMills = downloadTimeMills;
+    public void setElapseTimeMills(long elapseTimeMills) {
+        this.elapseTimeMills = elapseTimeMills;
     }
 
     public long getPrevBytes() {
@@ -210,7 +210,7 @@ public class Download {
     }
 
     public String showSpeed() {
-        return "bytes:" + StringUtil.displayFilesize(currentBytes) + " mills:" + downloadTimeMills / 1000 +
+        return "bytes:" + StringUtil.displayFilesize(currentBytes) + " mills:" + elapseTimeMills / 1000 +
                 " bpsn:" + StringUtil.displayFilesize(bytesPerSecondNow) + " bpsm:" +
                 StringUtil.displayFilesize(bytesPerSecondMax) +
                 " bpsa:" + StringUtil.displayFilesize(bytesPerSecondAverage);

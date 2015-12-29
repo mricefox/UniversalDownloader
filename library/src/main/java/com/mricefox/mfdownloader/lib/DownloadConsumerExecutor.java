@@ -29,14 +29,14 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Date:2015/11/23
  */
 class DownloadConsumerExecutor {
-    private ExecutorService downloadExecutor;
-    private DownloadOperator downloadOperator;
+    private final ExecutorService downloadExecutor;
+    private final DownloadOperator downloadOperator;
     private final ConcurrentHashMap<Long, Download> runningDownloads;
-    private Contract contract;
-    private ConcurrentHashMap<Long, CountDownLatch> downloadOnStopLocks;
-    private AtomicInteger maxDownloadCount;
+    private final Contract contract;
+    private final ConcurrentHashMap<Long, CountDownLatch> downloadOnStopLocks;
+    private final AtomicInteger maxDownloadCount;
     private boolean autoStartPending;
-    private ProgressMonitor progressMonitor;
+    private final ProgressMonitor progressMonitor;
 
     DownloadConsumerExecutor(DownloadOperator downloadOperator, Contract contract,
                              int maxDownloadCount, boolean autoStartPending, long monitorCallbackPeriod) {

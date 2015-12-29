@@ -108,12 +108,12 @@ public class ProgressMonitor {
         long currentBytes;
         synchronized (download) {
             currentBytes = download.getCurrentBytes();
-            download.setDownloadTimeMills(download.getDownloadTimeMills() + internalUpdatePeriod);
+            download.setElapseTimeMills(download.getElapseTimeMills() + internalUpdatePeriod);
             download.setBytesPerSecondNow((currentBytes - download.getPrevBytes()) * 1000 / internalUpdatePeriod);
             download.setPrevBytes(currentBytes);
             download.setBytesPerSecondMax(Math.max(download.getBytesPerSecondMax(), download.getBytesPerSecondNow()));
             download.setBytesPerSecondAverage(
-                    Math.round((currentBytes + .0f) * 1000 / download.getDownloadTimeMills()));
+                    Math.round((currentBytes + .0f) * 1000 / download.getElapseTimeMills()));
             if (download.getBytesPerSecondNow() <= 0) download.setTimeRemain(-1);
             else
                 download.setTimeRemain((download.getTotalBytes() - currentBytes) / download.getBytesPerSecondNow());
