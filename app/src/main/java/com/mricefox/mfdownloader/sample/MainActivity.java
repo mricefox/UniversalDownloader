@@ -1,7 +1,6 @@
 package com.mricefox.mfdownloader.sample;
 
-import android.annotation.TargetApi;
-import android.os.Build;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
@@ -15,6 +14,7 @@ import com.mricefox.mfdownloader.lib.DownloadObserver;
 import com.mricefox.mfdownloader.lib.DownloadParams;
 import com.mricefox.mfdownloader.lib.DownloaderManager;
 import com.mricefox.mfdownloader.lib.assist.MFLog;
+import com.mricefox.mfdownloader.lib.assist.StorageUtils;
 import com.mricefox.mfdownloader.lib.assist.StringUtil;
 import com.mricefox.mfdownloader.lib.operator.DefaultDownloadOperator;
 import com.mricefox.mfdownloader.lib.persistence.XmlPersistence;
@@ -105,8 +105,9 @@ public class MainActivity extends AppCompatActivity {
         final Button resumeBtn = (Button) findViewById(R.id.resume_btn);
         final Button cancelBtn = (Button) findViewById(R.id.cancel_btn);
 
+        File dir = StorageUtils.getFilesDirectory(getApplicationContext(), true);
         try {
-            XmlPersistence.getInstance().init(TargetDir);
+            XmlPersistence.getInstance().init(dir);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -131,9 +132,10 @@ public class MainActivity extends AppCompatActivity {
 //        downloaderManager.enqueue(download3);
 
         DownloaderManager.getInstance().registerObserver(downloadObserver);
-
-
-        dummyStorage();
+        File newFile = getDir("newFile", MODE_PRIVATE);
+        MFLog.d("newFile=" + newFile);
+        File db = getDatabasePath("new.db");
+        MFLog.d("db=" + db + " " + db.exists());
     }
 
     private long d_id = -1;
@@ -160,40 +162,5 @@ public class MainActivity extends AppCompatActivity {
                     break;
             }
         }
-    }
-
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private void dummyStorage() {
-        MFLog.d("Environment.getDataDirectory():" + Environment.getDataDirectory());
-        MFLog.d("Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_ALARMS):" +
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_ALARMS));
-        MFLog.d("Environment.getDownloadCacheDirectory():" + Environment.getDownloadCacheDirectory());
-        MFLog.d("Environment.getExternalStorageDirectory():" + Environment.getExternalStorageDirectory());
-        MFLog.d("Environment.getRootDirectory():" + Environment.getRootDirectory());
-        MFLog.d("getCacheDir():" + getCacheDir());
-
-        MFLog.d("fileList-----");
-        for (String s : fileList()) {
-            MFLog.d("fileList():" + s);
-        }
-
-        MFLog.d("getExternalFilesDir(null):" + getExternalFilesDir(null));
-        MFLog.d("getExternalCacheDir():" + getExternalCacheDir());
-
-        MFLog.d("getExternalCacheDirs---");
-        for (File f : getExternalCacheDirs()) {
-            MFLog.d("getExternalCacheDirs():" + f);
-        }
-
-        MFLog.d("getExternalFilesDirs(null)---");
-        for (File f : getExternalFilesDirs(null)) {
-            MFLog.d("getExternalFilesDirs(null):" + f);
-        }
-
-
-//        MFLog.d("getExternalMediaDirs----");
-//        for (File f : getExternalMediaDirs()) {
-//            MFLog.d("getExternalMediaDirs:" + f);
-//        }
     }
 }

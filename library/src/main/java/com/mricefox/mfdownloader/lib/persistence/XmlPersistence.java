@@ -77,7 +77,7 @@ public class XmlPersistence implements Persistence<Download> {
         return instance;
     }
 
-    public synchronized void init(String dir) throws IOException {
+    public synchronized void init(File dir) throws IOException {
         long time = System.currentTimeMillis();
         xmlFile = new File(dir, XML_FILE_NAME);
         if (!xmlFile.exists()) {

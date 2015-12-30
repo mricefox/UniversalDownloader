@@ -1,6 +1,7 @@
 package com.mricefox.mfdownloader.lib.persistence.sqlite;
 
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
 
 /**
  * Author:zengzifeng email:zeng163mail@163.com
@@ -8,10 +9,17 @@ import android.database.sqlite.SQLiteDatabase;
  * Date:2015/12/29
  */
 public class SqlHelper {
+    static String QUERY_ALL_DOWNLOAD_SQL;
+    static String QUERY_BLOCK_BY_DOWNLOAD_ID_SQL;
     private SQLiteDatabase db;
+
+    private SQLiteStatement insertDownloadStatement;
 
     public SqlHelper(SQLiteDatabase db) {
         this.db = db;
+        QUERY_ALL_DOWNLOAD_SQL = "SELECT * FROM " + DbOpenHelper.DOWNLOAD_TABLE_NAME;
+        QUERY_BLOCK_BY_DOWNLOAD_ID_SQL = "SELECT * FROM " + DbOpenHelper.BLOCK_TABLE_NAME
+                + " WHERE " + DbOpenHelper.BLOCK_DOWNLOAD_ID_COLUMN + " = ?";
     }
 
     static class Property {
@@ -61,5 +69,18 @@ public class SqlHelper {
         }
         builder.append(" );");
         return builder.toString();
+    }
+
+    public SQLiteStatement getInsertDownloadStatement() {
+        if (insertDownloadStatement == null) {
+            StringBuilder builder = new StringBuilder("INSERT INTO ").append(DbOpenHelper.DOWNLOAD_TABLE_NAME);
+            builder.append(" VALUES (");
+            for (int i = 0; i < DbOpenHelper.DOWNLOAD_TABLE_COLUMN_NUM; ++i) {
+                builder.append(i > 0 ? ",?" : "?");
+            }
+            builder.append(")");
+            insertDownloadStatement = db.compileStatement(builder.toString());
+        }
+        return insertDownloadStatement;
     }
 }

@@ -13,7 +13,7 @@ public class DownloadParams {
 
     private String fileName;
     private int priority;
-    private Handler callbackHandler;
+//    private Handler callbackHandler;
 
     public DownloadParams(String uri, String targetDir) {
         this.uri = uri;
@@ -36,10 +36,10 @@ public class DownloadParams {
         return this;
     }
 
-    public DownloadParams callbackHandler(Handler handler) {
-        this.callbackHandler = handler;
-        return this;
-    }
+//    public DownloadParams callbackHandler(Handler handler) {
+//        this.callbackHandler = handler;
+//        return this;
+//    }
 
     public String getUri() {
         return uri;
@@ -57,7 +57,7 @@ public class DownloadParams {
         return priority;
     }
 
-    public Handler getCallbackHandler() {
-        return callbackHandler;
-    }
+//    public Handler getCallbackHandler() {
+//        return callbackHandler;
+//    }
 }

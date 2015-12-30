@@ -1,8 +1,5 @@
 package com.mricefox.mfdownloader.lib;
 
-import android.os.Handler;
-import android.os.Looper;
-
 import com.mricefox.mfdownloader.lib.assist.StringUtil;
 
 import java.util.ArrayList;
@@ -35,9 +32,9 @@ public class Download {
     private final String targetDir;//persistence
     private String fileName;
     private final int priority;//persistence
-    private final Handler callbackHandler;
+//    private final Handler callbackHandler;
 
-    private long id;//persistence
+    private long id = -1L;//persistence
     private List<Block> blocks;//persistence
     private long totalBytes;//persistence
     private long currentBytes;//persistence
@@ -57,12 +54,12 @@ public class Download {
         this.priority = params.getPriority();
         this.blocks = new ArrayList<>();
 
-        Handler h = params.getCallbackHandler();
+//        Handler h = params.getCallbackHandler();
         //define a ui handler if constructor run in ui thread
-        if (h == null && Looper.myLooper() == Looper.getMainLooper())
-            this.callbackHandler = new Handler();
-        else
-            this.callbackHandler = h;
+//        if (h == null && Looper.myLooper() == Looper.getMainLooper())
+//            this.callbackHandler = new Handler();
+//        else
+//            this.callbackHandler = h;
 
 //        reset();
     }
@@ -141,9 +138,9 @@ public class Download {
         this.status = status;
     }
 
-    public Handler getCallbackHandler() {
-        return callbackHandler;
-    }
+//    public Handler getCallbackHandler() {
+//        return callbackHandler;
+//    }
 
     public long getBytesPerSecondNow() {
         return bytesPerSecondNow;

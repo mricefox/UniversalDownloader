@@ -19,7 +19,7 @@ public class DbOpenHelper extends SQLiteOpenHelper {
     static final String BLOCK_TABLE_NAME = "block";
 
     //download attributes
-    static final SqlHelper.Property DOWNLOAD_ID_COLUMN = new SqlHelper.Property("_id", "INTEGER", 0);
+    static final SqlHelper.Property DOWNLOAD_ID_COLUMN = new SqlHelper.Property("_id", "LONG", 0);
     static final SqlHelper.Property TOTAL_BYTES_COLUMN = new SqlHelper.Property("total_bytes", "LONG", 1);
     static final SqlHelper.Property CURRENT_BYTES_COLUMN = new SqlHelper.Property("current_bytes", "LONG", 2);
     static final SqlHelper.Property STATUS_COLUMN = new SqlHelper.Property("status", "INTEGER", 3);
@@ -28,14 +28,15 @@ public class DbOpenHelper extends SQLiteOpenHelper {
     static final SqlHelper.Property PRIORITY_COLUMN = new SqlHelper.Property("priority", "TEXT", 6);
     static final SqlHelper.Property ELAPSE_TIME_COLUMN = new SqlHelper.Property("elapse_time", "LONG", 7);
     static final SqlHelper.Property NAME_COLUMN = new SqlHelper.Property("name", "TEXT", 8);
+    static final int DOWNLOAD_TABLE_COLUMN_NUM = 9;
 
     //block attributes
-    static final SqlHelper.Property BLOCK_ID_COLUMN = new SqlHelper.Property("_id", "INTEGER", 0);
+    static final SqlHelper.Property BLOCK_ID_COLUMN = new SqlHelper.Property("_id", "LONG", 0);
     static final SqlHelper.Property BLOCK_INDEX_COLUMN = new SqlHelper.Property("block_index", "INTEGER", 1);
     static final SqlHelper.Property START_POSITION_COLUMN = new SqlHelper.Property("start_position", "LONG", 2);
     static final SqlHelper.Property END_POSITION_COLUMN = new SqlHelper.Property("end_position", "LONG", 3);
     static final SqlHelper.Property CURRENT_POSITION_COLUMN = new SqlHelper.Property("current_position", "LONG", 4);
-    static final SqlHelper.Property BLOCK_DOWNLOAD_ID_COLUMN = new SqlHelper.Property("download_id", "INTEGER", 5, new SqlHelper.ForeignKey(DOWNLOAD_TABLE_NAME, DOWNLOAD_ID_COLUMN.columnName));
+    static final SqlHelper.Property BLOCK_DOWNLOAD_ID_COLUMN = new SqlHelper.Property("download_id", "LONG", 5, new SqlHelper.ForeignKey(DOWNLOAD_TABLE_NAME, DOWNLOAD_ID_COLUMN.columnName));
 
     public DbOpenHelper(Context context, String name) {
         super(context, name, null, DB_VERSION);
