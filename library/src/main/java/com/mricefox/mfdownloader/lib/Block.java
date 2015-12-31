@@ -4,20 +4,22 @@ package com.mricefox.mfdownloader.lib;
  * Created by Bourne on 15/11/25.
  */
 public class Block {
+    private long id = -1;//persistence
+    private long downloadId;//persistence foreign key to download id
     private int index;//persistence
     private long startPos, endPos;//persistence
     private long downloadedBytes;//persistence
-//    private transient boolean stop = false;
-
-//    public Block(int index, long startPos, long endPos, long downloadedBytes, boolean stop) {
-//        this.index = index;
-//        this.startPos = startPos;
-//        this.endPos = endPos;
-//        this.downloadedBytes = downloadedBytes;
-//        this.stop = stop;
-//    }
 
     public Block(int index, long startPos, long endPos, long downloadedBytes) {
+        this.index = index;
+        this.startPos = startPos;
+        this.endPos = endPos;
+        this.downloadedBytes = downloadedBytes;
+    }
+
+    public Block(long id, long downloadId, int index, long startPos, long endPos, long downloadedBytes) {
+        this.id = id;
+        this.downloadId = downloadId;
         this.index = index;
         this.startPos = startPos;
         this.endPos = endPos;
@@ -56,13 +58,21 @@ public class Block {
         this.downloadedBytes = downloadedBytes;
     }
 
-//    public boolean isStop() {
-//        return stop;
-//    }
-//
-//    public void setStop(boolean stop) {
-//        this.stop = stop;
-//    }
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public long getDownloadId() {
+        return downloadId;
+    }
+
+    public void setDownloadId(long downloadId) {
+        this.downloadId = downloadId;
+    }
 
     public long getSize() {
         return endPos - startPos + 1;

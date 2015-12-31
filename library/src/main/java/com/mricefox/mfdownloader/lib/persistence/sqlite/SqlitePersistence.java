@@ -21,7 +21,7 @@ import java.util.List;
  * Date:2015/12/29
  */
 public class SqlitePersistence implements Persistence<Download> {
-    private final static String TargetDir
+    private final static String TestDir
             = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "temp" + File.separator;
     private static final String DB_NAME = "downloads.db";
 
@@ -30,7 +30,7 @@ public class SqlitePersistence implements Persistence<Download> {
     private SqlHelper sqlHelper;
 
     public SqlitePersistence(Context context, boolean testMode) {
-        dbOpenHelper = new DbOpenHelper(context, testMode ? TargetDir + DB_NAME : DB_NAME);
+        dbOpenHelper = new DbOpenHelper(context, testMode ? TestDir + DB_NAME : DB_NAME);
         db = dbOpenHelper.getWritableDatabase();
         sqlHelper = new SqlHelper(db);
     }
@@ -54,8 +54,26 @@ public class SqlitePersistence implements Persistence<Download> {
     }
 
     @Override
-    public long insert(Download entity) {
-        return 0;
+    public long insert(Download download) {
+        SQLiteStatement downloadStmt = sqlHelper.getInsertDownloadStatement();
+        SQLiteStatement blockStmt = sqlHelper.getInsertBlockStatement();
+        downloadStmt.clearBindings();
+        blockStmt.clearBindings();
+        bindDownloadValues(downloadStmt, download);
+        long id = downloadStmt.executeInsert();
+        download.setId(id);
+
+        db.execSQL();
+
+        block
+        for(int i=0;i<;++i)
+
+            finally{
+            downloadStmt.close();
+        }
+
+
+        return id;
     }
 
     @Override
@@ -89,17 +107,19 @@ public class SqlitePersistence implements Persistence<Download> {
     }
 
     private Block createBlockFromCursor(Cursor cursor) {
-        Block block = new Block(cursor.getInt(DbOpenHelper.BLOCK_INDEX_COLUMN.columnIndex),
+        Block block = new Block(cursor.getLong(DbOpenHelper.BLOCK_ID_COLUMN.columnIndex),
+                cursor.getLong(DbOpenHelper.BLOCK_DOWNLOAD_ID_COLUMN.columnIndex),
+                cursor.getInt(DbOpenHelper.BLOCK_INDEX_COLUMN.columnIndex),
                 cursor.getLong(DbOpenHelper.START_POSITION_COLUMN.columnIndex),
                 cursor.getLong(DbOpenHelper.END_POSITION_COLUMN.columnIndex),
-                cursor.getLong(DbOpenHelper.CURRENT_POSITION_COLUMN.columnIndex));
+                cursor.getLong(DbOpenHelper.DOWNLOADED_BYTES_COLUMN.columnIndex));
         return block;
     }
 
     private Download createDownloadFromCursor(Cursor cursor) {
         DownloadParams params = new DownloadParams(cursor.getString(DbOpenHelper.URI_COLUMN.columnIndex),
                 cursor.getString(DbOpenHelper.DIR_COLUMN.columnIndex))
-                .fileName(cursor.getString(DbOpenHelper.NAME_COLUMN.columnIndex))
+                .fileName(cursor.getString(DbOpenHelper.FILE_NAME_COLUMN.columnIndex))
                 .priority(cursor.getInt(DbOpenHelper.PRIORITY_COLUMN.columnIndex));
         Download download = new Download(params);
         download.setId(cursor.getLong(DbOpenHelper.DOWNLOAD_ID_COLUMN.columnIndex));
@@ -114,5 +134,26 @@ public class SqlitePersistence implements Persistence<Download> {
         if (download.getId() > -1) {
             stmt.bindLong(DbOpenHelper.DOWNLOAD_ID_COLUMN.columnIndex + 1, download.getId());
         }
+        stmt.bindLong(DbOpenHelper.TOTAL_BYTES_COLUMN.columnIndex + 1, download.getTotalBytes());
+        stmt.bindLong(DbOpenHelper.CURRENT_BYTES_COLUMN.columnIndex + 1, download.getCurrentBytes());
+        stmt.bindLong(DbOpenHelper.STATUS_COLUMN.columnIndex + 1, download.getStatus());
+        stmt.bindString(DbOpenHelper.URI_COLUMN.columnIndex + 1, download.getUri());
+        stmt.bindString(DbOpenHelper.DIR_COLUMN.columnIndex + 1, download.getTargetDir());
+        stmt.bindLong(DbOpenHelper.PRIORITY_COLUMN.columnIndex + 1, download.getPriority());
+        stmt.bindLong(DbOpenHelper.ELAPSE_TIME_COLUMN.columnIndex + 1, download.getElapseTimeMills());
+        stmt.bindString(DbOpenHelper.FILE_NAME_COLUMN.columnIndex + 1, download.getFileName());
     }
+
+    private void bindBlockValues(SQLiteStatement stmt, Block block) {
+        if (block.getId() > -1) {
+            stmt.bindLong(DbOpenHelper.BLOCK_ID_COLUMN.columnIndex + 1, block.getId());
+        }
+        stmt.bindLong(DbOpenHelper.BLOCK_INDEX_COLUMN.columnIndex + 1, block.getIndex());
+        stmt.bindLong(DbOpenHelper.START_POSITION_COLUMN.columnIndex + 1, block.getStartPos());
+        stmt.bindLong(DbOpenHelper.END_POSITION_COLUMN.columnIndex + 1, block.getEndPos());
+        stmt.bindLong(DbOpenHelper.DOWNLOADED_BYTES_COLUMN.columnIndex + 1, block.getDownloadedBytes());
+        stmt.bindLong(DbOpenHelper.BLOCK_DOWNLOAD_ID_COLUMN.columnIndex + 1, block.getDownloadId());
+    }
+
+    private SQLiteStatement get
 }

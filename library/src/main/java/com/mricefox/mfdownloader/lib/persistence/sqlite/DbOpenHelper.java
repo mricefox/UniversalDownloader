@@ -25,9 +25,9 @@ public class DbOpenHelper extends SQLiteOpenHelper {
     static final SqlHelper.Property STATUS_COLUMN = new SqlHelper.Property("status", "INTEGER", 3);
     static final SqlHelper.Property URI_COLUMN = new SqlHelper.Property("uri", "TEXT", 4);
     static final SqlHelper.Property DIR_COLUMN = new SqlHelper.Property("dir", "TEXT", 5);
-    static final SqlHelper.Property PRIORITY_COLUMN = new SqlHelper.Property("priority", "TEXT", 6);
+    static final SqlHelper.Property PRIORITY_COLUMN = new SqlHelper.Property("priority", "INTEGER", 6);
     static final SqlHelper.Property ELAPSE_TIME_COLUMN = new SqlHelper.Property("elapse_time", "LONG", 7);
-    static final SqlHelper.Property NAME_COLUMN = new SqlHelper.Property("name", "TEXT", 8);
+    static final SqlHelper.Property FILE_NAME_COLUMN = new SqlHelper.Property("name", "TEXT", 8);
     static final int DOWNLOAD_TABLE_COLUMN_NUM = 9;
 
     //block attributes
@@ -35,8 +35,9 @@ public class DbOpenHelper extends SQLiteOpenHelper {
     static final SqlHelper.Property BLOCK_INDEX_COLUMN = new SqlHelper.Property("block_index", "INTEGER", 1);
     static final SqlHelper.Property START_POSITION_COLUMN = new SqlHelper.Property("start_position", "LONG", 2);
     static final SqlHelper.Property END_POSITION_COLUMN = new SqlHelper.Property("end_position", "LONG", 3);
-    static final SqlHelper.Property CURRENT_POSITION_COLUMN = new SqlHelper.Property("current_position", "LONG", 4);
+    static final SqlHelper.Property DOWNLOADED_BYTES_COLUMN = new SqlHelper.Property("current_position", "LONG", 4);
     static final SqlHelper.Property BLOCK_DOWNLOAD_ID_COLUMN = new SqlHelper.Property("download_id", "LONG", 5, new SqlHelper.ForeignKey(DOWNLOAD_TABLE_NAME, DOWNLOAD_ID_COLUMN.columnName));
+    static final int BLOCK_TABLE_COLUMN_NUM = 6;
 
     public DbOpenHelper(Context context, String name) {
         super(context, name, null, DB_VERSION);
@@ -57,14 +58,14 @@ public class DbOpenHelper extends SQLiteOpenHelper {
                 DIR_COLUMN,
                 PRIORITY_COLUMN,
                 ELAPSE_TIME_COLUMN,
-                NAME_COLUMN);
+                FILE_NAME_COLUMN);
         db.execSQL(createDownloadTableSql);
 
         String createBlockTableSql = SqlHelper.create(BLOCK_TABLE_NAME, BLOCK_ID_COLUMN,
                 BLOCK_INDEX_COLUMN,
                 START_POSITION_COLUMN,
                 END_POSITION_COLUMN,
-                CURRENT_POSITION_COLUMN,
+                DOWNLOADED_BYTES_COLUMN,
                 BLOCK_DOWNLOAD_ID_COLUMN);
         db.execSQL(createBlockTableSql);
     }

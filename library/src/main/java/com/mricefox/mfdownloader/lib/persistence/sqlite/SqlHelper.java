@@ -14,6 +14,7 @@ public class SqlHelper {
     private SQLiteDatabase db;
 
     private SQLiteStatement insertDownloadStatement;
+    private SQLiteStatement insertBlockStatement;
 
     public SqlHelper(SQLiteDatabase db) {
         this.db = db;
@@ -82,5 +83,34 @@ public class SqlHelper {
             insertDownloadStatement = db.compileStatement(builder.toString());
         }
         return insertDownloadStatement;
+    }
+
+    public SQLiteStatement getInsertBlockStatement() {
+        if (insertBlockStatement == null) {
+            StringBuilder builder = new StringBuilder("INSERT INTO ").append(DbOpenHelper.BLOCK_TABLE_NAME);
+            builder.append(" VALUES (");
+            for (int i = 0; i < DbOpenHelper.BLOCK_TABLE_COLUMN_NUM; ++i) {
+                builder.append(i > 0 ? ",?" : "?");
+            }
+            builder.append(")");
+            insertBlockStatement = db.compileStatement(builder.toString());
+        }
+        return insertBlockStatement;
+    }
+
+    public SQLiteStatement createInsertBlockListStatement(int num) {
+        StringBuilder builder = new StringBuilder("INSERT INTO ").append(DbOpenHelper.BLOCK_TABLE_NAME);
+
+        SQLiteStatement insertBlockListStmt = new SQLiteStatement(db, );
+
+//            StringBuilder builder = new StringBuilder("INSERT INTO ").append(DbOpenHelper.BLOCK_TABLE_NAME);
+//            builder.append(" VALUES (");
+//            for (int i = 0; i < DbOpenHelper.BLOCK_TABLE_COLUMN_NUM; ++i) {
+//                builder.append(i > 0 ? ",?" : "?");
+//            }
+//            builder.append(")");
+//            insertBlockListStatement = db.compileStatement(builder.toString());
+        return insertBlockListStmt;
+        ;
     }
 }

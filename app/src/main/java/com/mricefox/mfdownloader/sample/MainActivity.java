@@ -1,6 +1,5 @@
 package com.mricefox.mfdownloader.sample;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
@@ -18,6 +17,7 @@ import com.mricefox.mfdownloader.lib.assist.StorageUtils;
 import com.mricefox.mfdownloader.lib.assist.StringUtil;
 import com.mricefox.mfdownloader.lib.operator.DefaultDownloadOperator;
 import com.mricefox.mfdownloader.lib.persistence.XmlPersistence;
+import com.mricefox.mfdownloader.lib.persistence.sqlite.SqlitePersistence;
 
 import java.io.File;
 import java.io.IOException;
@@ -161,6 +161,22 @@ public class MainActivity extends AppCompatActivity {
 //                    DownloaderManager.getInstance().cancel(d_id);
                     break;
             }
+        }
+    }
+
+    private void testStmtInsert() {
+        SqlitePersistence persistence = new SqlitePersistence(getApplicationContext(), true);
+        persistence.insert()
+    }
+
+    private class DbThread extends Thread {
+        SqlitePersistence persistence;
+        @Override
+        public void run() {
+            super.run();
+
+            for(int i=0;i<;++i)
+
         }
     }
 }
