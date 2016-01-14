@@ -56,24 +56,28 @@ public class SqlitePersistence implements Persistence<Download> {
     @Override
     public long insert(Download download) {
         SQLiteStatement downloadStmt = sqlHelper.getInsertDownloadStatement();
-        SQLiteStatement blockStmt = sqlHelper.getInsertBlockStatement();
+
         downloadStmt.clearBindings();
-        blockStmt.clearBindings();
         bindDownloadValues(downloadStmt, download);
-        long id = downloadStmt.executeInsert();
-        download.setId(id);
 
-        db.execSQL();
+        long d_id = downloadStmt.executeInsert();
+        download.setId(d_id);
 
-        block
-        for(int i=0;i<;++i)
+        List<Block> blocks = download.getBlocks();
+        if (blocks != null) {
+            for (int i = 0, size = blocks.size(); i < size; ++i) {
+                Block block = blocks.get(i);
+                SQLiteStatement blockStmt = sqlHelper.getInsertBlockStatement();
+                blockStmt.clearBindings();
+                bindBlockValues(blockStmt, block);
 
-            finally{
-            downloadStmt.close();
+                long b_id = blockStmt.executeInsert();
+                block.setId(b_id);
+                block.setDownloadId(d_id);
+            }
         }
 
-
-        return id;
+        return d_id;
     }
 
     @Override
@@ -155,5 +159,4 @@ public class SqlitePersistence implements Persistence<Download> {
         stmt.bindLong(DbOpenHelper.BLOCK_DOWNLOAD_ID_COLUMN.columnIndex + 1, block.getDownloadId());
     }
 
-    private SQLiteStatement get
 }

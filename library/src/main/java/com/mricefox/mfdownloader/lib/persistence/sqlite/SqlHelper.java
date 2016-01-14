@@ -3,6 +3,8 @@ package com.mricefox.mfdownloader.lib.persistence.sqlite;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 
+import java.sql.SQLTimeoutException;
+
 /**
  * Author:zengzifeng email:zeng163mail@163.com
  * Description:
@@ -15,6 +17,8 @@ public class SqlHelper {
 
     private SQLiteStatement insertDownloadStatement;
     private SQLiteStatement insertBlockStatement;
+    private SQLiteStatement updateDownloadStatement;
+    private SQLiteStatement updateBlockStatement;
 
     public SqlHelper(SQLiteDatabase db) {
         this.db = db;
@@ -98,19 +102,11 @@ public class SqlHelper {
         return insertBlockStatement;
     }
 
-    public SQLiteStatement createInsertBlockListStatement(int num) {
-        StringBuilder builder = new StringBuilder("INSERT INTO ").append(DbOpenHelper.BLOCK_TABLE_NAME);
-
-        SQLiteStatement insertBlockListStmt = new SQLiteStatement(db, );
-
-//            StringBuilder builder = new StringBuilder("INSERT INTO ").append(DbOpenHelper.BLOCK_TABLE_NAME);
-//            builder.append(" VALUES (");
-//            for (int i = 0; i < DbOpenHelper.BLOCK_TABLE_COLUMN_NUM; ++i) {
-//                builder.append(i > 0 ? ",?" : "?");
-//            }
-//            builder.append(")");
-//            insertBlockListStatement = db.compileStatement(builder.toString());
-        return insertBlockListStmt;
-        ;
+    public SQLiteStatement getUpdateDownloadStatement() {
+        if (updateDownloadStatement == null) {// TODO: 2016/1/14 update conflict or use replace
+            StringBuilder builder = new StringBuilder("UPDATE ").append(DbOpenHelper.DOWNLOAD_TABLE_NAME);
+            builder.append(" SET ");
+        }
+        return updateDownloadStatement;
     }
 }
