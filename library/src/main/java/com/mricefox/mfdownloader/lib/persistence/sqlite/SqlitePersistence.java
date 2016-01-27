@@ -81,18 +81,68 @@ public class SqlitePersistence implements Persistence<Download> {
     }
 
     @Override
-    public long update(Download entity) {
+    public long update(Download download) {
+        SQLiteStatement updateDownloadStmt = sqlHelper.getUpdateDownloadStatement();
+
+        updateDownloadStmt.clearBindings();
+        bindDownloadValues(updateDownloadStmt, download);
+        updateDownloadStmt.bindLong(DbOpenHelper.DOWNLOAD_TABLE_COLUMN_NUM + 1, download.getId());
+
+        updateDownloadStmt.execute();
+
+        List<Block> blocks = download.getBlocks();
+        if (blocks != null) {
+            for (int i = 0, size = blocks.size(); i < size; ++i) {
+                Block block = blocks.get(i);
+                SQLiteStatement blockStmt = sqlHelper.getUpdateBlockStatement();
+                blockStmt.clearBindings();
+                blockStmt.bindLong(DbOpenHelper.BLOCK_TABLE_COLUMN_NUM + 1, download.getId());
+                bindBlockValues(blockStmt, block);
+
+                blockStmt.execute();
+            }
+        }
         return 0;
     }
 
     @Override
-    public long delete(Download entity) {
+    public long delete(Download download) {
+        SQLiteStatement deleteDownloadStmt = sqlHelper.getDeleteDownloadStatement();
+        deleteDownloadStmt.clearBindings();
+        deleteDownloadStmt.bindLong(1, download.getId());
+
+        deleteDownloadStmt.execute();
+
+        List<Block> blocks = download.getBlocks();
+        if (blocks != null) {
+            for (int i = 0, size = blocks.size(); i < size; ++i) {
+//                Block block = blocks.get(i);
+                SQLiteStatement deleteBlockStmt = sqlHelper.getDeleteBlockStatement();
+                deleteBlockStmt.clearBindings();
+                deleteBlockStmt.bindLong(1, download.getId());
+
+                deleteBlockStmt.execute();
+            }
+        }
         return 0;
     }
 
     @Override
     public Download query(long id) {
-        return null;
+        Cursor cursor = db.rawQuery(SqlHelper.QUERY_DOWNLOAD_BY_ID_SQL, new String[]{String.valueOf(id)});
+        Download download = null;
+
+        try {
+            if (cursor.moveToFirst()) {
+                download = createDownloadFromCursor(cursor);
+
+                List<Block> blocks = queryBlockByDownloadId(download.getId());
+                download.setBlocks(blocks);
+            }
+        } finally {
+            cursor.close();
+        }
+        return download;
     }
 
     private List<Block> queryBlockByDownloadId(long id) {

@@ -3,8 +3,6 @@ package com.mricefox.mfdownloader.lib.persistence.sqlite;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 
-import java.sql.SQLTimeoutException;
-
 /**
  * Author:zengzifeng email:zeng163mail@163.com
  * Description:
@@ -13,18 +11,23 @@ import java.sql.SQLTimeoutException;
 public class SqlHelper {
     static String QUERY_ALL_DOWNLOAD_SQL;
     static String QUERY_BLOCK_BY_DOWNLOAD_ID_SQL;
+    static String QUERY_DOWNLOAD_BY_ID_SQL;
     private SQLiteDatabase db;
 
     private SQLiteStatement insertDownloadStatement;
     private SQLiteStatement insertBlockStatement;
     private SQLiteStatement updateDownloadStatement;
     private SQLiteStatement updateBlockStatement;
+    private SQLiteStatement deleteDownloadStatement;
+    private SQLiteStatement deleteBlockStatement;
 
     public SqlHelper(SQLiteDatabase db) {
         this.db = db;
         QUERY_ALL_DOWNLOAD_SQL = "SELECT * FROM " + DbOpenHelper.DOWNLOAD_TABLE_NAME;
         QUERY_BLOCK_BY_DOWNLOAD_ID_SQL = "SELECT * FROM " + DbOpenHelper.BLOCK_TABLE_NAME
                 + " WHERE " + DbOpenHelper.BLOCK_DOWNLOAD_ID_COLUMN + " = ?";
+        QUERY_DOWNLOAD_BY_ID_SQL = "SELECT * FROM " + DbOpenHelper.DOWNLOAD_TABLE_NAME +
+                " WHERE " + DbOpenHelper.DOWNLOAD_ID_COLUMN + " = ?";
     }
 
     static class Property {
@@ -69,7 +72,9 @@ public class SqlHelper {
                 ForeignKey key = property.foreignKey;
                 builder.append(", FOREIGN KEY(").append(property.columnName)
                         .append(") REFERENCES ").append(key.targetTable).append("(")
-                        .append(key.targetFieldName).append(") ON DELETE CASCADE");
+                        .append(key.targetFieldName).append(")");
+//                        .append(key.targetFieldName).append(") ON DELETE CASCADE");
+// DELETE CASCADE just set foreign key-download_id to 0
             }
         }
         builder.append(" );");
@@ -103,10 +108,62 @@ public class SqlHelper {
     }
 
     public SQLiteStatement getUpdateDownloadStatement() {
-        if (updateDownloadStatement == null) {// TODO: 2016/1/14 update conflict or use replace
+        if (updateDownloadStatement == null) {
             StringBuilder builder = new StringBuilder("UPDATE ").append(DbOpenHelper.DOWNLOAD_TABLE_NAME);
             builder.append(" SET ");
+
+            for (int i = 0; i < DbOpenHelper.DOWNLOAD_TABLE_COLUMN_NUM; ++i) {
+                builder.append('\'');
+                builder.append(DbOpenHelper.DOWNLOAD_TABLE_COLUMN_ARR[i].columnName);
+                builder.append('\'').append("=?");
+                if (i < DbOpenHelper.DOWNLOAD_TABLE_COLUMN_NUM - 1) {
+                    builder.append(',');
+                }
+                builder.append(" WHERE ").append(DbOpenHelper.DOWNLOAD_ID_COLUMN.columnName);
+                builder.append("=?");
+            }
+            updateDownloadStatement = db.compileStatement(builder.toString());
         }
         return updateDownloadStatement;
+    }
+
+    public SQLiteStatement getUpdateBlockStatement() {
+        if (updateBlockStatement == null) {
+            StringBuilder builder = new StringBuilder("UPDATE ").append(DbOpenHelper.BLOCK_TABLE_NAME);
+            builder.append(" SET ");
+
+            for (int i = 0; i < DbOpenHelper.BLOCK_TABLE_COLUMN_NUM; ++i) {
+                builder.append('\'');
+                builder.append(DbOpenHelper.BLOCK_TABLE_COLUMN_ARR[i].columnName);
+                builder.append('\'').append("=?");
+                if (i < DbOpenHelper.BLOCK_TABLE_COLUMN_NUM - 1) {
+                    builder.append(',');
+                }
+                builder.append(" WHERE ").append(DbOpenHelper.BLOCK_DOWNLOAD_ID_COLUMN.columnName);//bind download id here
+                builder.append("=?");
+            }
+            updateBlockStatement = db.compileStatement(builder.toString());
+        }
+        return updateBlockStatement;
+    }
+
+    public SQLiteStatement getDeleteDownloadStatement() {
+        if (deleteDownloadStatement == null) {
+            StringBuilder builder = new StringBuilder("DELETE FROM ").append(DbOpenHelper.DOWNLOAD_TABLE_NAME);
+            builder.append(" WHERE ").append(DbOpenHelper.DOWNLOAD_ID_COLUMN.columnName);
+            builder.append("=?");
+            deleteDownloadStatement = db.compileStatement(builder.toString());
+        }
+        return deleteDownloadStatement;
+    }
+
+    public SQLiteStatement getDeleteBlockStatement() {
+        if (deleteBlockStatement == null) {
+            StringBuilder builder = new StringBuilder("DELETE FROM ").append(DbOpenHelper.BLOCK_TABLE_NAME);
+            builder.append(" WHERE ").append(DbOpenHelper.BLOCK_DOWNLOAD_ID_COLUMN.columnName);
+            builder.append("=?");
+            deleteBlockStatement = db.compileStatement(builder.toString());
+        }
+        return deleteBlockStatement;
     }
 }

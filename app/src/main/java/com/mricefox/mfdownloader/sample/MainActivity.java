@@ -2,7 +2,11 @@ package com.mricefox.mfdownloader.sample;
 
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
@@ -21,6 +25,7 @@ import com.mricefox.mfdownloader.lib.persistence.sqlite.SqlitePersistence;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Author:zengzifeng email:zeng163mail@163.com
@@ -164,19 +169,20 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void testStmtInsert() {
-        SqlitePersistence persistence = new SqlitePersistence(getApplicationContext(), true);
-        persistence.insert()
-    }
+//    private void testStmtInsert() {
+//        SqlitePersistence persistence = new SqlitePersistence(getApplicationContext(), true);
+//        persistence.insert()
+//    }
+//
+//    private class DbThread extends Thread {
+//        SqlitePersistence persistence;
+//        @Override
+//        public void run() {
+//            super.run();
+//
+//            for(int i=0;i<;++i)
+//
+//        }
+//    }
 
-    private class DbThread extends Thread {
-        SqlitePersistence persistence;
-        @Override
-        public void run() {
-            super.run();
-
-            for(int i=0;i<;++i)
-
-        }
-    }
 }
