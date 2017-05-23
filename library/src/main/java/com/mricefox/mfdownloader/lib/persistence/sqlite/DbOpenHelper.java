@@ -19,7 +19,7 @@ public class DbOpenHelper extends SQLiteOpenHelper {
     static final String BLOCK_TABLE_NAME = "block";
 
     //download attributes
-    static final SqlHelper.Property DOWNLOAD_ID_COLUMN = new SqlHelper.Property("_id", "LONG", 0);
+    static final SqlHelper.Property DOWNLOAD_ID_COLUMN = new SqlHelper.Property("_id", "INTEGER", 0);
     static final SqlHelper.Property TOTAL_BYTES_COLUMN = new SqlHelper.Property("total_bytes", "LONG", 1);
     static final SqlHelper.Property CURRENT_BYTES_COLUMN = new SqlHelper.Property("current_bytes", "LONG", 2);
     static final SqlHelper.Property STATUS_COLUMN = new SqlHelper.Property("status", "INTEGER", 3);
@@ -33,7 +33,7 @@ public class DbOpenHelper extends SQLiteOpenHelper {
             STATUS_COLUMN, URI_COLUMN, DIR_COLUMN, PRIORITY_COLUMN, ELAPSE_TIME_COLUMN, FILE_NAME_COLUMN};
 
     //block attributes
-    static final SqlHelper.Property BLOCK_ID_COLUMN = new SqlHelper.Property("_id", "LONG", 0);
+    static final SqlHelper.Property BLOCK_ID_COLUMN = new SqlHelper.Property("_id", "INTEGER", 0);
     static final SqlHelper.Property BLOCK_INDEX_COLUMN = new SqlHelper.Property("block_index", "INTEGER", 1);
     static final SqlHelper.Property START_POSITION_COLUMN = new SqlHelper.Property("start_position", "LONG", 2);
     static final SqlHelper.Property END_POSITION_COLUMN = new SqlHelper.Property("end_position", "LONG", 3);
